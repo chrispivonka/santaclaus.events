@@ -34,7 +34,8 @@ window.addEventListener('DOMContentLoaded', event => {
     if (mainNav) {
         new bootstrap.ScrollSpy(document.body, {
             target: '#mainNav',
-            rootMargin: '0px 0px -40%',
+            // reduce negative bottom margin so bottom-most sections activate at page end
+            rootMargin: '0px 0px -10%',
         });
     };
 
