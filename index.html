@@ -197,17 +197,17 @@
                 <!-- To make this form functional, sign up at-->
                 <!-- https://startbootstrap.com/solution/contact-forms-->
                 <!-- to get an API token!-->
-                <form id="contactForm" data-sb-form-api-token="API_TOKEN">
+                <form id="contactForm" action="https://script.google.com/macros/s/AKfycbxmjMNXSgWOpeqGmnugN8ocPxfOdUAQoOkkTCINgTEgMQqztv2NIzw10W5xOhrG2sGY/exec" method="POST" target="hidden_iframe">
                     <div class="row align-items-stretch mb-5">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <!-- Name input-->
-                                <input class="form-control" id="name" type="text" placeholder="Your Name *" data-sb-validations="required" />
+                                <input class="form-control" id="name" name="name" type="text" placeholder="Your Name *" data-sb-validations="required" />
                                 <div class="invalid-feedback" data-sb-feedback="name:required">You need to tell Santa your name!</div>
                             </div>
                             <div class="form-group">
                                 <!-- Email address input-->
-                                <input class="form-control" id="email" type="email" placeholder="Your Email *" data-sb-validations="required,email" />
+                                <input class="form-control" id="email" name="email" type="email" placeholder="Your Email *" data-sb-validations="required,email" />
                                 <div class="invalid-feedback" data-sb-feedback="email:required">Santa needs your email so the elves can RSVP!</div>
                                 <div class="invalid-feedback" data-sb-feedback="email:email">That doesn't look like a valid email — even reindeer know one!</div>
                             </div>
@@ -215,7 +215,7 @@
                         <div class="col-md-6">
                             <div class="form-group form-group-textarea mb-md-0">
                                 <!-- Message input-->
-                                <textarea class="form-control" id="message" placeholder="Your Message *" data-sb-validations="required"></textarea>
+                                <textarea class="form-control" id="message" name="message" placeholder="Your Message *" data-sb-validations="required"></textarea>
                                 <div class="invalid-feedback" data-sb-feedback="message:required">The North Pole can't read silence — please write your message to Santa!</div>
                             </div>
                         </div>
@@ -233,6 +233,8 @@
                     <div class="d-none" id="submitErrorMessage"><div class="text-center text-danger mb-3">Ho-ho-oh no! Your letter to Santa got caught in a digital snowdrift and didn't make it to the North Pole. Give it another jingle — check your connection and try again (Santa accepts retries and extra cookies)!</div></div>
                     <!-- Submit Button-->
                     <div class="text-center"><button class="btn btn-primary btn-xl text-uppercase disabled" id="submitButton" type="submit">Send Letter</button></div>
+                    <!-- Honeypot field -->
+                    <input type="text" name="website" style="display:none" aria-hidden="true">
                 </form>
             </div>
         </section>
@@ -440,9 +442,9 @@
                     var name = form.querySelector('#name');
                     var email = form.querySelector('#email');
                     var message = form.querySelector('#message');
-                    if (!name || !name.value.trim()){ problems.push({el:name, msg:'Please tell Santa your name.'}); }
-                    if (!email || !email.value.trim() || !isValidEmail(email.value.trim())){ problems.push({el:email, msg:'Please provide a valid email address.'}); }
-                    if (!message || !message.value.trim()){ problems.push({el:message, msg:'Please write your message to Santa.'}); }
+                    if (!name || !name.value.trim()){ problems.push({el:name, msg:'You need to tell Santa your name!'}); }
+                    if (!email || !email.value.trim() || !isValidEmail(email.value.trim())){ problems.push({el:email, msg:'Santa needs your email so the elves can RSVP!'}); }
+                    if (!message || !message.value.trim()){ problems.push({el:message, msg:'The North Pole can\'t read silence — please write your message to Santa!'}); }
                     problems.forEach(function(p){ if (p.el) p.el.classList.add('is-invalid'); });
                     return problems;
                 }
@@ -488,7 +490,7 @@
         <!-- * *                               SB Forms JS                               * *-->
         <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
         <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-        <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+
         <script>
             (function(){
                 try{
