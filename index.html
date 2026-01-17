@@ -63,13 +63,22 @@
 
             /* About section larger text */
             .about-table h4{ font-size:1.6rem; }
-            .about-table #about-blurb{ font-size:1.15rem; line-height:1.5; }
+            .about-table .about-blurb{ font-size:1.5rem !important; line-height:1.7; font-weight:500; color:rgba(17,17,17,0.96) !important; }
+            [data-theme="dark"] .about-blurb{ color:rgba(255,255,255,0.98) !important; }
 
             /* Navbar and footer tweaks using variables */
             #mainNav{ background:transparent; transition:background-color .25s ease; }
             #mainNav.navbar-shrink{ background:var(--surface); }
             #mainNav .nav-link{ color:var(--text); }
             footer.footer{ background:var(--footer-bg); color:var(--muted); }
+            /* Ensure nav remains readable when shrunk on light surfaces */
+            #mainNav.navbar-shrink .navbar-brand,
+            #mainNav.navbar-shrink .nav-link,
+            #mainNav.navbar-shrink .navbar-toggler{
+                color: var(--text) !important;
+            }
+            #mainNav.navbar-shrink .navbar-nav .nav-link.active{ color: var(--primary) !important; }
+            #mainNav.navbar-shrink .navbar-toggler{ border-color: rgba(0,0,0,0.15); }
 
             /* Form controls and buttons (respect theme variables) */
             .form-control, textarea.form-control{ background:var(--surface); color:var(--text); border:1px solid rgba(0,0,0,0.08); transition:background .2s ease, color .2s ease, border-color .2s ease; }
@@ -170,7 +179,7 @@
                     </div>
                     <div class="col-md-8">
                         <h4 class="mb-2">About</h4>
-                        <p id="about-blurb" class="text-muted">Add a short blurb here to introduce your site, Santa, or the events. Replace this placeholder text with your content.</p>
+                        <p id="about-blurb" class="about-blurb">Add a short blurb here to introduce your site, Santa, or the events. Replace this placeholder text with your content.</p>
                     </div>
                 </div>
             </div>
