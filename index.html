@@ -21,17 +21,17 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" type="image/png" href="assets/img/favicon.png" />
-    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
-    <link rel="manifest" href="site.webmanifest" />
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet" />
+    <!-- The fonts the first screen needs, fetched in parallel with the stylesheet -->
+    <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="css/styles.css" />
 
     <!-- Applies the saved theme before first paint to avoid a flash -->
-    <script src="js/theme-init.js"></script>
+    <script src="/js/theme-init.js"></script>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -151,7 +151,8 @@
                 <div class="hero-media">
                     <div class="photo-frame">
                         <picture>
-                            <source srcset="assets/img/cabin.webp" type="image/webp" />
+                            <source srcset="assets/img/cabin-480.avif 480w, assets/img/cabin.avif 736w" sizes="min(26rem, 100vw)" type="image/avif" />
+                            <source srcset="assets/img/cabin-480.webp 480w, assets/img/cabin.webp 736w" sizes="min(26rem, 100vw)" type="image/webp" />
                             <img src="assets/img/cabin.jpg" width="736" height="1000" alt="Santa's cabin glowing with Christmas lights and candy canes at night" fetchpriority="high" />
                         </picture>
                     </div>
@@ -230,9 +231,11 @@
                     <p>Santa's schedule fills up fast this time of year. Check back often as new visits are added.</p>
                 </div>
                 <div class="calendar-card reveal">
+                    <!-- main.js sets the src with the visitor's time zone, so the calendar loads once instead of twice -->
                     <iframe id="calendarEmbed"
-                        src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver&mode=AGENDA&showTitle=0&showPrint=0&showTabs=1&showCalendars=0"
+                        data-src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver&mode=AGENDA&showTitle=0&showPrint=0&showTabs=1&showCalendars=0"
                         title="Santa's events calendar" loading="lazy"></iframe>
+                    <noscript><iframe src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver&mode=AGENDA&showTitle=0&showPrint=0&showTabs=1&showCalendars=0" title="Santa's events calendar"></iframe></noscript>
                 </div>
                 <p class="calendar-link">
                     <a href="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver" target="_blank" rel="noopener">Open the full calendar in Google Calendar</a>
@@ -353,7 +356,8 @@
         <section class="section section-alt" id="about">
             <div class="container about-grid">
                 <picture class="about-photo reveal">
-                    <source srcset="assets/img/santa-and-elves.webp" type="image/webp" />
+                    <source srcset="assets/img/santa-and-elves-480.avif 480w, assets/img/santa-and-elves.avif 736w" sizes="min(26rem, 100vw)" type="image/avif" />
+                    <source srcset="assets/img/santa-and-elves-480.webp 480w, assets/img/santa-and-elves.webp 736w" sizes="min(26rem, 100vw)" type="image/webp" />
                     <img src="assets/img/santa-and-elves.jpg" width="736" height="1000" alt="Santa and Mrs. Claus sitting together with two of their elves" loading="lazy" />
                 </picture>
                 <div class="about-copy reveal">
@@ -475,7 +479,7 @@
     <!-- Filled in when someone prints their Nice List certificate -->
     <div class="print-area" id="printArea"></div>
 
-    <script src="js/main.js" defer></script>
-    <script src="js/fun.js" defer></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/fun.js"></script>
 </body>
 </html>

@@ -2,17 +2,22 @@
 
 Source for the website [santaclaus.events](https://santaclaus.events).
 
-It's a single static page with no build step:
+It's a single static page, plain HTML, CSS and JavaScript with no framework. [Vite](https://vite.dev) builds it into `dist/`, minifying everything, fingerprinting file names so browsers can cache them for a year, inlining the stylesheet and generating the Content-Security-Policy.
 
 - `index.html`: the page
 - `css/styles.css`: all styles (light and dark themes are color tokens at the top)
 - `js/main.js`: countdown, theme toggle, mobile menu and the letter form
 - `js/fun.js`: the playful extras: snow and confetti, twinkling lights, the flying sleigh, North Pole status board, advent calendar, Nice List checker, elf name generator, reindeer cards, synthesized sleigh-bell sounds, the waving snowman, the hide-and-seek friends that peek out of sections, and the secret blizzard code
 - `js/theme-init.js`: applies the saved light/dark choice before the page paints
-- `assets/img/`: photos (WebP with JPEG fallback), icons and social preview image
-- `404.html`, `robots.txt`, `sitemap.xml`, `site.webmanifest`: the usual site extras
+- `assets/img/`: photos as AVIF and WebP (phone and desktop sizes) with the original JPEG as fallback
+- `assets/fonts/`: self-hosted fonts, trimmed to the characters and weights the site uses
+- `public/`: files copied as-is with fixed URLs: icons, social preview image, `robots.txt`, `sitemap.xml`, `site.webmanifest`
+- `404.html`: the not-found page
+- `vite.config.js`: the build, including the Content-Security-Policy
 
-To preview locally, run `python3 -m http.server` in the repo root and open http://localhost:8000.
+To work on it locally, run `npm install` once, then `npm run dev` and open the link it prints. `npm run build` makes the production site in `dist/` and `npm run preview` serves it.
+
+After adding or replacing a photo, put the JPEG in `assets/img/`, add it to `scripts/images.js`, run `npm run images` and commit the new AVIF and WebP files. `npm run fonts` regenerates the fonts the same way.
 
 ## Updating content
 
@@ -32,10 +37,10 @@ The site is hosted on [Vercel](https://vercel.com) (free Hobby plan) with the Gi
 - Every push to `main` deploys to production at santaclaus.events.
 - Every pull request gets its own preview link, posted on the PR.
 
-There's no build step; `vercel.json` serves the repo root as-is and sets cache and security headers.
+Vercel runs `npm run build` and serves `dist/`. `vercel.json` caches fingerprinted files in `/static/` for a year and sets the security headers.
 
-The Content-Security-Policy in `vercel.json` only allows the outside services the page uses (Google Fonts, the Google Calendar embed and the Apps Script letter endpoint). If you add another one, such as analytics or a new embed, add its domain there too.
+The Content-Security-Policy lives in `vite.config.js` and only allows the outside services the page uses (the Google Calendar embed and the Apps Script letter endpoint). If you add another one, such as analytics or a new embed, add its domain there.
 
 ## Checks
 
-`.github/workflows/check.yml` runs on every pull request: it validates the HTML, checks the JSON config files parse, and makes sure every local file the pages reference exists.
+`.github/workflows/check.yml` runs on every pull request: it validates the HTML, builds the site, makes sure every file the built pages reference exists, and runs Lighthouse three times against the build. It fails if performance drops below 90, accessibility or best practices below 95, SEO below 100, the layout shifts, or the page logs an error. The Lighthouse report link is in the job log.

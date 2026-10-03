@@ -118,14 +118,12 @@
     try {
         var iframe = document.getElementById('calendarEmbed');
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (iframe && tz) {
-            var url = new URL(iframe.getAttribute('src'));
-            if (url.searchParams.get('ctz') !== tz) {
-                url.searchParams.set('ctz', tz);
-                iframe.src = url.toString();
-            }
-        }
-    } catch (e) {}
+        var url = new URL(iframe.getAttribute('data-src'));
+        if (tz) url.searchParams.set('ctz', tz);
+        iframe.src = url.toString();
+    } catch (e) {
+        if (iframe && !iframe.src) iframe.src = iframe.getAttribute('data-src');
+    }
 
     // ---- Footer year ----
     document.getElementById('year').textContent = new Date().getFullYear();
