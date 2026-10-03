@@ -23,15 +23,25 @@
     <link rel="icon" type="image/png" href="assets/img/favicon.png" />
     <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/styles.css" />
 
-    <!-- Apply the saved theme before first paint to avoid a flash -->
-    <script>
-        try { var t = localStorage.getItem('site-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    <!-- Applies the saved theme before first paint to avoid a flash -->
+    <script src="js/theme-init.js"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Santa Claus Events",
+        "url": "https://santaclaus.events/",
+        "logo": "https://santaclaus.events/assets/img/apple-touch-icon.png",
+        "image": "https://santaclaus.events/assets/img/og-image.jpg",
+        "sameAs": ["https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/"]
+    }
     </script>
 </head>
 <body>
@@ -45,7 +55,7 @@
                 <img src="assets/img/favicon.png" alt="" width="28" height="28" />
                 <span>Santa Claus Events</span>
             </a>
-            <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks">
+            <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks">
                 <span class="visually-hidden">Menu</span>
                 <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
             </button>

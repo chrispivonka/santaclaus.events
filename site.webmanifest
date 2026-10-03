@@ -1,0 +1,12 @@
+{
+    "name": "Santa Claus Events",
+    "short_name": "Santa",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0d1626",
+    "theme_color": "#c8102e",
+    "icons": [
+        { "src": "/assets/img/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+        { "src": "/assets/img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+}
