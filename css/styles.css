@@ -672,13 +672,13 @@ h3 { font-family: var(--font-display); line-height: 1.2; margin: 0 0 .75rem; fon
     border: 1px solid var(--border); background: transparent; color: var(--text); font: 600 .9rem/1 var(--font-body); cursor: pointer;
 }
 .footer-pill:hover { background: var(--surface-alt); }
-.footer-pill[aria-pressed="false"] { opacity: .7; }
+.footer-pill[aria-pressed="false"] { border-style: dashed; }
 .footer-social {
     display: inline-grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%;
     border: 1px solid var(--border); color: var(--text);
 }
 .footer-social:hover { color: #fff; background: #1877f2; border-color: #1877f2; }
-.footer-secret { margin-top: 1.25rem; margin-bottom: 0; font-size: .78rem; opacity: .7; }
+.footer-secret { margin-top: 1.25rem; margin-bottom: 0; font-size: .8rem; color: var(--muted); }
 kbd {
     display: inline-block; min-width: 1.4em; margin: 0 .1em; padding: .05em .35em; border-radius: 5px;
     border: 1px solid var(--border); border-bottom-width: 2px; font: 600 .75rem/1.4 var(--font-body); text-align: center;
