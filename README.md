@@ -43,4 +43,4 @@ The Content-Security-Policy lives in `vite.config.js` and only allows the outsid
 
 ## Checks
 
-`.github/workflows/check.yml` runs on every pull request: it validates the HTML, builds the site, makes sure every file the built pages reference exists, and runs Lighthouse three times against the build. It fails if performance drops below 90, accessibility or best practices below 95, SEO below 100, the layout shifts, or the page logs an error. The Lighthouse report link is in the job log.
+`.github/workflows/check.yml` runs on every pull request: it validates the HTML, builds the site, makes sure every file the built pages reference exists, and runs Lighthouse three times against the build. It fails if performance drops below 90, best practices below 95, accessibility or SEO below 100, the layout shifts, or the page logs an error. The Lighthouse report link is in the job log.
