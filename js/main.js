@@ -1,4 +1,5 @@
-// Santa Claus Events: small, dependency-free page scripts.
+// Santa Claus Events: core page scripts (theme, menu, countdown, letter form).
+// The playful extras live in js/fun.js.
 (function () {
     'use strict';
 
@@ -72,23 +73,40 @@
         countdownTitle.textContent = text;
         countdown.classList.toggle('is-christmas', isChristmas);
     }
+    var sleeps = document.getElementById('countdownSleeps');
     function pad(n) { return String(n).padStart(2, '0'); }
+    function setUnit(name, value) {
+        var el = units[name];
+        if (el.textContent === String(value)) return;
+        el.textContent = value;
+        if (!reduceMotion) {
+            el.classList.remove('tick');
+            void el.offsetWidth; // restart the little flip animation
+            el.classList.add('tick');
+        }
+    }
+    function setSleeps(text) { if (sleeps.textContent !== text) sleeps.textContent = text; }
     function tick() {
         var now = new Date();
         var year = now.getFullYear();
         // All of Christmas Day is celebrated; the countdown restarts on the 26th.
         if (now.getMonth() === 11 && now.getDate() === 25) {
             setTitle('Merry Christmas!', true);
+            setSleeps('Santa came! Go check your stocking.');
             return;
         }
         setTitle('Countdown to Christmas', false);
         var target = new Date(year, 11, 25);
         if (now > target) target = new Date(year + 1, 11, 25);
         var diff = Math.max(0, target - now);
-        units.days.textContent = Math.floor(diff / 864e5);
-        units.hours.textContent = pad(Math.floor(diff / 36e5) % 24);
-        units.minutes.textContent = pad(Math.floor(diff / 6e4) % 60);
-        units.seconds.textContent = pad(Math.floor(diff / 1e3) % 60);
+        setUnit('days', Math.floor(diff / 864e5));
+        setUnit('hours', pad(Math.floor(diff / 36e5) % 24));
+        setUnit('minutes', pad(Math.floor(diff / 6e4) % 60));
+        setUnit('seconds', pad(Math.floor(diff / 1e3) % 60));
+        // "Sleeps" counts calendar nights, the way kids count them.
+        var today = new Date(year, now.getMonth(), now.getDate());
+        var nights = Math.round((target - today) / 864e5);
+        setSleeps(nights === 1 ? 'Santa comes tonight! Time for bed.' : 'Only ' + nights + ' sleeps to go!');
     }
     tick();
     setInterval(tick, 1000);
@@ -143,6 +161,22 @@
         signoff.textContent = e.target.value.trim() || 'me';
     });
 
+    // Wish idea chips add a line to the letter
+    var wishButtons = Array.prototype.slice.call(form.querySelectorAll('[data-wish]'));
+    var message = document.getElementById('message');
+    wishButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var line = 'I would love ' + button.dataset.wish + '.';
+            if (message.value.indexOf(line) === -1) {
+                var text = message.value.replace(/\s+$/, '');
+                message.value = (text ? text + '\n' : '') + line;
+                button.classList.add('added');
+                if (message.getAttribute('aria-invalid') === 'true') validateField(message);
+            }
+            message.scrollTop = message.scrollHeight;
+        });
+    });
+
     function showStatus(message, isError) {
         status.hidden = false;
         status.textContent = message;
@@ -173,7 +207,9 @@
             .then(function () {
                 form.reset();
                 signoff.textContent = 'me';
+                wishButtons.forEach(function (b) { b.classList.remove('added'); });
                 fields.forEach(function (f) { f.removeAttribute('aria-invalid'); });
+                form.dispatchEvent(new CustomEvent('letter:sent', { bubbles: true }));
                 showStatus('Ho ho ho! Your letter slid down the digital chimney and landed on Santa’s desk. Keep an eye on your stocking (and your inbox)!');
             })
             .catch(function () {
@@ -184,54 +220,4 @@
                 submitLabel.textContent = 'Send my letter';
             });
     });
-
-    // ---- Gentle snowfall on a single canvas (skipped for reduced motion) ----
-    var canvas = document.getElementById('snow');
-    if (reduceMotion || !canvas.getContext) {
-        canvas.remove();
-        return;
-    }
-    var ctx = canvas.getContext('2d');
-    var flakes = [];
-    var width = 0, height = 0, dpr = 1;
-    function resize() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        var target = Math.round(Math.min(70, width / 18));
-        while (flakes.length < target) flakes.push(makeFlake(true));
-        flakes.length = target;
-    }
-    function makeFlake(anywhere) {
-        return {
-            x: Math.random() * width,
-            y: anywhere ? Math.random() * height : -10,
-            r: Math.random() * 2.2 + 0.8,
-            speed: Math.random() * 0.6 + 0.35,
-            drift: Math.random() * 0.6 - 0.3,
-            phase: Math.random() * Math.PI * 2,
-            alpha: Math.random() * 0.5 + 0.4
-        };
-    }
-    function frame(t) {
-        ctx.clearRect(0, 0, width, height);
-        var color = root.getAttribute('data-theme') === 'light' ? '150, 170, 200' : '255, 255, 255';
-        for (var i = 0; i < flakes.length; i++) {
-            var f = flakes[i];
-            f.y += f.speed;
-            f.x += f.drift + Math.sin(t / 1600 + f.phase) * 0.3;
-            if (f.y > height + 10 || f.x < -10 || f.x > width + 10) { flakes[i] = makeFlake(false); continue; }
-            ctx.beginPath();
-            ctx.fillStyle = 'rgba(' + color + ',' + f.alpha + ')';
-            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        requestAnimationFrame(frame);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(frame);
 })();
