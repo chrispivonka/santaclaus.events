@@ -19,4 +19,9 @@ To preview locally, run `python3 -m http.server` in the repo root and open http:
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/deploy-s3.yml`, which syncs the site to S3 and invalidates CloudFront when `CLOUDFRONT_DISTRIBUTION_ID` is set. It can also be run by hand from the Actions tab.
+The site is hosted on [Vercel](https://vercel.com) (free Hobby plan) with the GitHub integration:
+
+- Every push to `main` deploys to production at santaclaus.events.
+- Every pull request gets its own preview link, posted on the PR.
+
+There's no build step; `vercel.json` serves the repo root as-is and sets cache headers.
