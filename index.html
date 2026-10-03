@@ -1,503 +1,198 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <title>Santa Claus Events</title>
-        <!-- Favicon-->
-        <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
-        <link rel="icon" type="image/png" href="assets/img/favicon.png" />
-        <!-- Font Awesome icons (free version)-->
-        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-        <!-- Google fonts-->
-        <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-        <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700" rel="stylesheet" type="text/css" />
-        <!-- Core theme CSS (includes Bootstrap)--> 
-        <link href="css/styles.css" rel="stylesheet" />
-        <style>
-            /* Theme variables */
-            :root{
-                --bg: #ffffff;
-                --surface: #f8f9fa;
-                --text: #222222;
-                --muted: #6c757d;
-                --primary: #0d6efd;
-                --masthead-bg: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0));
-                --card-bg: rgba(220,30,50,0.95);
-                --card-text: #fff;
-                --footer-bg: #f8f9fa;
-                --btn-primary-bg: #0d6efd;
-            }
-            @media (prefers-color-scheme: dark){
-                :root:not([data-theme]){ --bg: #0b1020; --surface:#0f1724; --text:#e6eef8; --muted:#98a8bf; --primary:#7ab4ff; --masthead-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)); --card-bg: rgba(30,40,60,0.95); --card-text:#fff; --footer-bg:#071028; --btn-primary-bg:#1e90ff; }
-            }
-            [data-theme="dark"]{ --bg:#0b1020; --surface:#0f1724; --text:#e6eef8; --muted:#98a8bf; --primary:#7ab4ff; --masthead-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)); --card-bg: rgba(30,40,60,0.95); --card-text:#fff; --footer-bg:#071028; --btn-primary-bg:#1e90ff; }
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Santa Claus Events | Visit Santa this Christmas season</title>
+    <meta name="description" content="Find out where Santa Claus will be this Christmas season, count down to the big day, and send Santa a letter straight to the North Pole." />
+    <link rel="canonical" href="https://santaclaus.events/" />
+    <meta name="theme-color" content="#0d1626" />
+    <meta name="color-scheme" content="dark light" />
 
-            html,body{ background:var(--bg); color:var(--text); transition: background-color .25s ease, color .25s ease; }
-            .masthead{ position:relative; background:var(--masthead-bg); }
-            /* Position countdown to the right on larger screens without affecting centered header text */
-            #countdown{ position:absolute; right:1.5rem; top:50%; transform:translateY(-50%); text-align:right; line-height:1; }
-            /* Calendar-style card for countdown (larger) */
-            .calendar-card{ background:var(--card-bg); color:var(--card-text); border-radius:12px; padding:1rem 1.25rem; min-width:340px; text-align:center; box-shadow:0 18px 44px rgba(0,0,0,0.26); }
-            .calendar-card .calendar-top{ font-size:.95rem; font-weight:700; letter-spacing:.08em; opacity:.98; }
-            .calendar-card .calendar-day{ font-size:4.2rem; font-weight:900; line-height:1; margin-top:.05rem; }
-            .calendar-card .calendar-label{ font-size:1.5rem; opacity:1; margin-top:.1rem; font-weight:700; }
-            .calendar-card .calendar-timer{ margin-top:.35rem; font-size:1.8rem; }
-            .calendar-card{ background-image:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.06)); }
+    <!-- Social previews -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Santa Claus Events" />
+    <meta property="og:title" content="Hello from Santa Claus!" />
+    <meta property="og:description" content="See where Santa will be this season and send him a letter." />
+    <meta property="og:url" content="https://santaclaus.events/" />
+    <meta property="og:image" content="https://santaclaus.events/assets/img/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
 
-            /* Dark-mode filter for third-party embeds (visual workaround) */
-            .calendar-embed{ transition:filter .25s ease, opacity .25s ease; }
-            [data-theme="dark"] .calendar-embed{ filter: invert(.95) hue-rotate(180deg) brightness(.95) contrast(.9); }
-            /* Snow styles */
-            .snowflake{ position:fixed; top:-10vh; z-index:9999; pointer-events:none; color:#fff; user-select:none; will-change:transform; }
-            @keyframes snow-fall{ 0%{ transform:translateY(-10vh) translateX(0) rotate(0deg);} 100%{ transform:translateY(110vh) translateX(30px) rotate(360deg);} }
-            @media (max-width:767.98px){ #countdown{ position:static; transform:none; text-align:center; margin-top:0.75rem; } .calendar-card{ min-width:220px; padding:.5rem .75rem; } }
+    <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
 
-            /* Back-to-top floating button (hidden by default, fades in/out) */
-            #backToTop{ position:fixed; right:1rem; bottom:1rem; z-index:1080; width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:50%; box-shadow:0 6px 18px rgba(0,0,0,0.15); opacity:0; transform:translateY(8px); transition:opacity .35s ease, transform .35s ease; pointer-events:none; }
-            #backToTop.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
-            #backToTop img{ width:28px; height:28px; border-radius:50%; display:none; }
-            #backToTop i{ font-size:1.1rem; display:inline-block; }
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
 
-            /* About section larger text */
-            .about-table h4{ font-size:1.6rem; }
-            .about-table .about-blurb{ font-size:1.5rem !important; line-height:1.7; font-weight:500; color:rgba(17,17,17,0.96) !important; }
-            [data-theme="dark"] .about-blurb{ color:rgba(255,255,255,0.98) !important; }
+    <!-- Apply the saved theme before first paint to avoid a flash -->
+    <script>
+        try { var t = localStorage.getItem('site-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    </script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <canvas id="snow" aria-hidden="true"></canvas>
 
-            /* Navbar and footer tweaks using variables */
-            #mainNav{ background:transparent; transition:background-color .25s ease; }
-            #mainNav.navbar-shrink{ background:var(--surface); }
-            #mainNav .nav-link{ color:var(--text); }
-            footer.footer{ background:var(--footer-bg); color:var(--muted); }
-            /* Ensure nav remains readable when shrunk on light surfaces */
-            #mainNav.navbar-shrink .navbar-brand,
-            #mainNav.navbar-shrink .nav-link,
-            #mainNav.navbar-shrink .navbar-toggler{
-                color: var(--text) !important;
-            }
-            #mainNav.navbar-shrink .navbar-nav .nav-link.active{ color: var(--primary) !important; }
-            #mainNav.navbar-shrink .navbar-toggler{ border-color: rgba(0,0,0,0.15); }
-
-            /* Form controls and buttons (respect theme variables) */
-            .form-control, textarea.form-control{ background:var(--surface); color:var(--text); border:1px solid rgba(0,0,0,0.08); transition:background .2s ease, color .2s ease, border-color .2s ease; }
-            /* Larger inputs in contact section */
-            #contact .form-control, #contact textarea.form-control{ font-size:1.25rem; padding:0.9rem 1rem; }
-            /* Make contact heading match other section headings */
-            #contact .section-heading{ font-size:2.5rem; margin-bottom:1rem; }
-            /* Stronger invalid/error visuals for contact form */
-            #contact .invalid-feedback{ font-size:1.15rem; font-weight:700; }
-            #contact .form-control.is-invalid{ border-color:#dc3545; box-shadow:0 0 0 .14rem rgba(220,53,69,0.18); }
-            #submitErrorMessage .text-danger{ font-size:1.15rem; font-weight:800; }
-            /* Prominent inline error banner for accessibility and visibility */
-            .contact-error-banner{ font-size:1.6rem; font-weight:800; padding:1.1rem 1.25rem; margin:1rem 0; }
-
-            /* Larger modal title/body for contact errors */
-            #contactErrorModal .modal-title{ font-size:1.6rem; font-weight:800; }
-            #contactErrorModal .modal-body{ font-size:1.25rem; font-weight:600; }
-            .form-control:focus, textarea.form-control:focus{ background:var(--surface); color:var(--text); box-shadow:0 0 0 .15rem rgba(0,123,255,0.12); }
-            .form-control::placeholder, textarea.form-control::placeholder{ color:var(--muted); opacity:0.9; }
-            [data-theme="dark"] .form-control, [data-theme="dark"] textarea.form-control{ background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08); color:var(--text); }
-            [data-theme="dark"] .form-control:focus, [data-theme="dark"] textarea.form-control:focus{ box-shadow:0 0 0 .15rem rgba(122,180,255,0.12); }
-            [data-theme="dark"] .form-control::placeholder, [data-theme="dark"] textarea.form-control::placeholder{ color:rgba(230,238,248,0.6); }
-
-            .btn-primary{ background-color:var(--btn-primary-bg); border-color:var(--btn-primary-bg); color:#fff; }
-            .btn-primary:focus, .btn-primary:hover{ filter:brightness(.95); }
-        </style>
-    </head>
-    <body>
-        <div id="page-top"></div>
-        <!-- Navigation-->
-        <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
-            <div class="container">
-                <a class="navbar-brand" href="#page-top">Santa Claus Events</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                    Menu
-                    <i class="fas fa-bars ms-1"></i>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarResponsive">
-                    <ul class="navbar-nav text-uppercase ms-auto py-4 py-lg-0">
-                        <li class="nav-item"><a class="nav-link" href="#page-top">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#upcoming-events">Upcoming Events</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact">Send Santa a Letter!</a></li>
-                        <li class="nav-item">
-                            <button id="themeToggle" class="nav-link btn btn-link p-0 ms-2" aria-pressed="false" title="Toggle dark mode">
-                                <span id="themeIcon" aria-hidden="true"></span>
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+    <!-- Navigation -->
+    <header class="site-header" id="siteHeader">
+        <nav class="nav container" aria-label="Main">
+            <a class="brand" href="#top">
+                <img src="assets/img/favicon.png" alt="" width="28" height="28" />
+                <span>Santa Claus Events</span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks">
+                <span class="visually-hidden">Menu</span>
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#events">Events</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#letter" class="nav-cta">Write to Santa</a></li>
+                <li>
+                    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode">
+                        <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5h0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1zm0 17a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zM3 11h2a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm16 0h2a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2zM5.6 4.2l1.4 1.4A1 1 0 1 1 5.6 7L4.2 5.6a1 1 0 0 1 1.4-1.4zm12.8 12.8 1.4 1.4a1 1 0 0 1-1.4 1.4L17 18.4a1 1 0 0 1 1.4-1.4zM19.8 5.6 18.4 7A1 1 0 1 1 17 5.6l1.4-1.4a1 1 0 0 1 1.4 1.4zM7 18.4l-1.4 1.4a1 1 0 0 1-1.4-1.4L5.6 17A1 1 0 0 1 7 18.4z"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    </button>
+                </li>
+            </ul>
         </nav>
-        <!-- Masthead-->
-        <header class="masthead">
-            <div class="container">
-                <div class="d-flex align-items-center justify-content-center flex-column flex-md-row">
-                    <div>
-                        <div class="masthead-subheading">It's Nice To Meet You!</div>
-                        <div class="masthead-heading text-uppercase">Hello from Santa Claus!</div>
-                    </div>
-                    <div id="countdown" class="text-md-end mt-3 mt-md-0">
-                        <div class="calendar-card text-white d-inline-block">
+    </header>
 
-                            <div class="calendar-day">Christmas</div>
-                            <div class="calendar-label">Countdown</div>
-                            <div id="countdown-timer" class="masthead-subheading fw-bold text-white calendar-timer" aria-live="polite">Loading...</div>
-                        </div>
+    <main id="main">
+        <!-- Hero -->
+        <section class="hero" id="top">
+            <div class="container hero-grid">
+                <div class="hero-copy">
+                    <p class="eyebrow">It's nice to meet you!</p>
+                    <h1>Hello from <span class="accent">Santa&nbsp;Claus!</span></h1>
+                    <p class="lede">The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting this season, or send a letter straight to the North Pole.</p>
+                    <div class="hero-actions">
+                        <a class="btn btn-primary" href="#events">See where Santa will be</a>
+                        <a class="btn btn-ghost" href="#letter">Write Santa a letter</a>
                     </div>
                 </div>
-            </div>
-        </header>
-        <!-- Upcoming Events-->
-        <section class="page-section" id="upcoming-events">
-            <div class="container">
-                <div class="text-center">
-                    <h2 class="section-heading text-uppercase">Upcoming Events</h2>
-                </div>
-                <!-- Google Calendar embed (read-only) - replace YOUR_CALENDAR_ID with your public calendar ID -->
-                <div class="row justify-content-center mb-4">
-                    <div class="col-lg-8">
-                        <div class="ratio ratio-16x9">
-                            <iframe class="calendar-embed" src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver" style="border:0" frameborder="0" scrolling="no" title="Santa Events Calendar"></iframe>
+                <div class="hero-media">
+                    <picture>
+                        <source srcset="assets/img/cabin.webp" type="image/webp" />
+                        <img src="assets/img/cabin.jpg" width="736" height="1000" alt="Santa's cabin glowing with Christmas lights and candy canes at night" fetchpriority="high" />
+                    </picture>
+                    <div class="countdown" id="countdown" aria-live="polite">
+                        <p class="countdown-title" id="countdownTitle">Countdown to Christmas</p>
+                        <div class="countdown-units">
+                            <div><span data-unit="days">--</span><small>days</small></div>
+                            <div><span data-unit="hours">--</span><small>hrs</small></div>
+                            <div><span data-unit="minutes">--</span><small>min</small></div>
+                            <div><span data-unit="seconds">--</span><small>sec</small></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- About-->
-        <section class="page-section" id="about">
+        <!-- Events -->
+        <section class="section" id="events">
             <div class="container">
-                <div class="text-center">
-                    <h2 class="section-heading text-uppercase">About</h2>
+                <div class="section-head">
+                    <p class="eyebrow">Where to find Santa</p>
+                    <h2>Upcoming events</h2>
+                    <p>Santa's schedule fills up fast this time of year. Check back often as new visits are added.</p>
                 </div>
-                <div class="row align-items-center about-table py-4">
-                    <div class="col-md-4 text-center">
-                        <img src="assets/img/about.jpeg" alt="Santa with child" class="img-fluid rounded mb-3 mb-md-0" />
-                    </div>
-                    <div class="col-md-8">
-                        <h4 class="mb-2">About</h4>
-                        <p id="about-blurb" class="about-blurb">Add a short blurb here to introduce your site, Santa, or the events. Replace this placeholder text with your content.</p>
-                    </div>
+                <div class="calendar-card">
+                    <iframe id="calendarEmbed"
+                        src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver&mode=AGENDA&showTitle=0&showPrint=0&showTabs=1&showCalendars=0"
+                        title="Santa's events calendar" loading="lazy"></iframe>
+                </div>
+                <p class="calendar-link">
+                    <a href="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver" target="_blank" rel="noopener">Open the full calendar in Google Calendar</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section class="section section-alt" id="about">
+            <div class="container about-grid">
+                <picture class="about-photo">
+                    <source srcset="assets/img/santa-and-elves.webp" type="image/webp" />
+                    <img src="assets/img/santa-and-elves.jpg" width="736" height="1000" alt="Santa and Mrs. Claus sitting together with two of their elves" loading="lazy" />
+                </picture>
+                <div class="about-copy">
+                    <p class="eyebrow">About</p>
+                    <h2>Meet Santa, Mrs. Claus &amp; the elves</h2>
+                    <p class="about-blurb">Every year Santa and Mrs. Claus take a break from the workshop to visit with families, hear Christmas wishes, and spread a little holiday cheer. Come say hello, bring your list, and don't forget to smile for a photo!</p>
+                    <a class="btn btn-ghost" href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4.3V10H7v4h3v8h4v-8h3l1-4h-4V8.6c0-.4.3-.6.6-.6z"/></svg>
+                        Follow Santa on Facebook
+                    </a>
                 </div>
             </div>
         </section>
-        <!-- Contact-->
-        <section class="page-section" id="contact">
+
+        <!-- Letter to Santa -->
+        <section class="section letter-section" id="letter">
             <div class="container">
-                <div class="text-center">
-                    <h2 class="section-heading text-uppercase">Send a letter to Santa!</h2>
+                <div class="section-head section-head-light">
+                    <p class="eyebrow">Straight to the North Pole</p>
+                    <h2>Send a letter to Santa</h2>
                 </div>
-                <!-- * * * * * * * * * * * * * * *-->
-                <!-- * * SB Forms Contact Form * *-->
-                <!-- * * * * * * * * * * * * * * *-->
-                <!-- This form is pre-integrated with SB Forms.-->
-                <!-- To make this form functional, sign up at-->
-                <!-- https://startbootstrap.com/solution/contact-forms-->
-                <!-- to get an API token!-->
-                <form id="contactForm" action="https://script.google.com/macros/s/AKfycbxmjMNXSgWOpeqGmnugN8ocPxfOdUAQoOkkTCINgTEgMQqztv2NIzw10W5xOhrG2sGY/exec" method="POST" target="hidden_iframe">
-                    <div class="row align-items-stretch mb-5">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <!-- Name input-->
-                                <input class="form-control" id="name" name="name" type="text" placeholder="Your Name *" data-sb-validations="required" />
-                                <div class="invalid-feedback" data-sb-feedback="name:required">You need to tell Santa your name!</div>
-                            </div>
-                            <div class="form-group">
-                                <!-- Email address input-->
-                                <input class="form-control" id="email" name="email" type="email" placeholder="Your Email *" data-sb-validations="required,email" />
-                                <div class="invalid-feedback" data-sb-feedback="email:required">Santa needs your email so the elves can RSVP!</div>
-                                <div class="invalid-feedback" data-sb-feedback="email:email">That doesn't look like a valid email — even reindeer know one!</div>
-                            </div>
+
+                <form class="letter" id="letterForm" action="https://script.google.com/macros/s/AKfycbxmjMNXSgWOpeqGmnugN8ocPxfOdUAQoOkkTCINgTEgMQqztv2NIzw10W5xOhrG2sGY/exec" method="POST" novalidate>
+                    <p class="letter-greeting">Dear Santa,</p>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="name">Your name</label>
+                            <input id="name" name="name" type="text" autocomplete="name" required
+                                data-error="You need to tell Santa your name!" />
+                            <p class="field-error" id="name-error" aria-live="polite"></p>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-textarea mb-md-0">
-                                <!-- Message input-->
-                                <textarea class="form-control" id="message" name="message" placeholder="Your Message *" data-sb-validations="required"></textarea>
-                                <div class="invalid-feedback" data-sb-feedback="message:required">The North Pole can't read silence — please write your message to Santa!</div>
-                            </div>
+                        <div class="field">
+                            <label for="email">Grown-up's email</label>
+                            <input id="email" name="email" type="email" autocomplete="email" required
+                                data-error="Santa needs a valid email so the elves can write back!" />
+                            <p class="field-error" id="email-error" aria-live="polite"></p>
                         </div>
                     </div>
-                    <!-- Submit success message-->
-                    <!---->
-                    <!-- This is what your users will see when the form-->
-                    <!-- has successfully submitted-->
-                    <div class="d-none" id="submitSuccessMessage">
-                        <div class="text-center text-white mb-3">
-                            <div class="fw-bolder">Ho-ho-ho! Your letter slid down the digital chimney and landed on Santa’s desk — delivered! Keep an eye on your stocking (and inbox)!</div>
-                        </div>
+                    <div class="field">
+                        <label for="message">Your letter</label>
+                        <textarea id="message" name="message" rows="6" required
+                            placeholder="This year I have been very good..."
+                            data-error="The North Pole can't read silence. Please write your letter to Santa!"></textarea>
+                        <p class="field-error" id="message-error" aria-live="polite"></p>
                     </div>
-                    <!-- Submit error message (kept as hidden source for modal)-->
-                    <div class="d-none" id="submitErrorMessage"><div class="text-center text-danger mb-3">Ho-ho-oh no! Your letter to Santa got caught in a digital snowdrift and didn't make it to the North Pole. Give it another jingle — check your connection and try again (Santa accepts retries and extra cookies)!</div></div>
-                    <!-- Submit Button-->
-                    <div class="text-center"><button class="btn btn-primary btn-xl text-uppercase disabled" id="submitButton" type="submit">Send Letter</button></div>
-                    <!-- Honeypot field -->
-                    <input type="text" name="website" style="display:none" aria-hidden="true">
+                    <!-- Honeypot field for bots; real visitors never see it -->
+                    <div class="honeypot" aria-hidden="true">
+                        <label for="website">Leave this empty</label>
+                        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+                    </div>
+                    <div class="letter-footer">
+                        <button class="btn btn-primary" id="submitButton" type="submit">
+                            <span class="btn-label">Send my letter</span>
+                        </button>
+                        <p class="letter-signoff">Love, <span id="signoffName">me</span></p>
+                    </div>
+                    <div class="form-status" id="formStatus" role="status" aria-live="polite" hidden></div>
                 </form>
             </div>
         </section>
+    </main>
 
-        <!-- Contact Error Modal -->
-        <div class="modal fade" id="contactErrorModal" tabindex="-1" aria-labelledby="contactErrorModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="contactErrorModalLabel">Oops — problem sending your letter</h4>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body"></div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; <span id="year">2026</span> Santa Claus Events</p>
+            <a class="footer-social" href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/" target="_blank" rel="noopener" aria-label="Santa on Facebook">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4.3V10H7v4h3v8h4v-8h3l1-4h-4V8.6c0-.4.3-.6.6-.6z"/></svg>
+            </a>
         </div>
-        <!-- Footer-->
-        <footer class="footer py-4">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-4 text-lg-start">Copyright &copy; Santa Claus Events <span id="copyright-year"></span></div>
-                    <div class="col-lg-4 my-3 my-lg-0">
-                        <a class="btn btn-dark btn-social mx-2" href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    </div>
-                </div>
-            </div>
-        </footer>
-        
-        <!-- Countdown script (shows time until next Dec 25 in America/Denver) -->
-        <script>
-            (function(){
-                function getNextChristmasInTZ() {
-                    var now = new Date();
-                    var year = now.getFullYear();
-                    // Target is Dec 25 at 00:00 in America/Denver
-                    var target = new Date(Date.UTC(year,11,25,7,0,0));
-                    // Date.UTC with 07:00 UTC approximates 00:00 MST/MDT offset handling; for countdown relative differences it's sufficient.
-                    if (now.getTime() > target.getTime()) {
-                        target = new Date(Date.UTC(year+1,11,25,7,0,0));
-                    }
-                    return target;
-                }
-                var target = getNextChristmasInTZ();
-                function updateCountdown(){
-                    var now = new Date();
-                    var diff = target - now;
-                    var el = document.getElementById('countdown-timer');
-                    if (!el) return;
-                    if (diff <= 0) {
-                        el.textContent = 'Merry Christmas!';
-                        clearInterval(interval);
-                        return;
-                    }
-                    var days = Math.floor(diff / (1000*60*60*24));
-                    var hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-                    var minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-                    var seconds = Math.floor((diff % (1000*60)) / 1000);
-                    el.textContent = days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's';
-                }
-                updateCountdown();
-                var interval = setInterval(updateCountdown,1000);
-            })();
-        </script>
-        <!-- Back-to-top button markup -->
-        <button id="backToTop" class="btn btn-primary" aria-label="Back to top">
-            <img id="backSantaImg" src="assets/img/santa-up.png" alt="Santa looking up" />
-            <i class="fas fa-chevron-up" aria-hidden="true"></i>
-        </button>
-        <script>
-            (function(){
-                var btn = document.getElementById('backToTop');
-                var img = document.getElementById('backSantaImg');
-                var icon = btn.querySelector('i');
-                // Image load fallback: show image if it loads, otherwise show icon
-                if (img) {
-                    img.onload = function(){ img.style.display = 'inline-block'; if (icon) icon.style.display = 'none'; };
-                    img.onerror = function(){ img.style.display = 'none'; if (icon) icon.style.display = 'inline-block'; };
-                    // trigger check in case cached
-                    if (img.complete && img.naturalWidth) { img.style.display = 'inline-block'; if (icon) icon.style.display = 'none'; }
-                }
+    </footer>
 
-                if (!btn) return;
-                function toggle(){
-                    if (window.scrollY > 300) {
-                        btn.classList.add('show');
-                    } else {
-                        btn.classList.remove('show');
-                    }
-                }
-                window.addEventListener('scroll', toggle);
-                document.addEventListener('DOMContentLoaded', toggle);
-                btn.addEventListener('click', function(){
-                    var anchor = document.getElementById('page-top');
-                    if (anchor) anchor.scrollIntoView({ behavior: 'smooth' });
-                    else window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            })();
-        </script>
-        <!-- Snowfall script (lightweight, respects prefers-reduced-motion) -->
-        <script>
-            (function(){
-                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-                var maxFlakes = 28;
-                var createInterval = 300; // ms
-                var body = document.body;
-                function rand(min, max){ return Math.random()*(max-min)+min; }
-                function makeFlake(){
-                    if (document.querySelectorAll('.snowflake').length >= maxFlakes) return;
-                    var flake = document.createElement('div');
-                    flake.className = 'snowflake';
-                    flake.textContent = '❄';
-                    var size = rand(0.9, 2.2); // rem roughly
-                    flake.style.fontSize = (size) + 'rem';
-                    flake.style.left = rand(0, 100) + 'vw';
-                    var dur = rand(8, 18); // seconds
-                    flake.style.animation = 'snow-fall ' + dur + 's linear forwards';
-                    flake.style.opacity = rand(0.6, 1);
-                    body.appendChild(flake);
-                    flake.addEventListener('animationend', function(){ flake.remove(); });
-                }
-                var t = setInterval(function(){
-                    if (document.visibilityState === 'hidden') return;
-                    makeFlake();
-                }, createInterval);
-                document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') { /* do nothing */ } });
-            })();
-        </script>
-        <!-- Theme toggle script (persists preference and respects system setting) -->
-        <script>
-            (function(){
-                var root = document.documentElement;
-                var toggle = document.getElementById('themeToggle');
-                var icon = document.getElementById('themeIcon');
-                function applyTheme(name){
-                    if (name === 'dark') root.setAttribute('data-theme','dark');
-                    else root.setAttribute('data-theme','light');
-                    if (icon){
-                        var sunSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10 9h2v-3h-2v3zm7.03-2.03l1.79 1.79 1.79-1.79-1.79-1.79-1.79 1.79zM20 11v2h3v-2h-3zM4.24 19.17l1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79zM12 6a6 6 0 100 12 6 6 0 000-12zM12 2h-2v3h2V2zm6.24 2.84l-1.8 1.79 1.79 1.79 1.8-1.79-1.79-1.79z"/></svg>';
-                        var moonSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
-                        icon.innerHTML = (name === 'dark') ? sunSVG : moonSVG;
-                    }
-                    if (toggle){
-                        toggle.setAttribute('aria-pressed', name === 'dark');
-                        toggle.setAttribute('aria-label', name === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-                    }
-                }
-                function currentPreference(){
-                    var stored = localStorage.getItem('site-theme');
-                    if (stored) return stored;
-                    // Default to dark for first-time visitors; user can toggle to light
-                    return 'dark';
-                }
-                // initialize
-                var theme = currentPreference();
-                applyTheme(theme);
-                if (toggle) toggle.addEventListener('click', function(){
-                    var now = (root.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
-                    applyTheme(now);
-                    try { localStorage.setItem('site-theme', now); } catch(e){}
-                });
-            })();
-        </script>
-        <!-- Update Google Calendar embed to user's local timezone (if available) -->
-        <script>
-            (function(){
-                try{
-                    var iframe = document.querySelector('iframe.calendar-embed');
-                    if (!iframe) return;
-                    var tz = (Intl && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
-                    if (!tz) return;
-                    var src = iframe.src || iframe.getAttribute('src');
-                    if (!src) return;
-                    var url = new URL(src, window.location.href);
-                    url.searchParams.set('ctz', tz);
-                    var newSrc = url.toString();
-                    if (newSrc !== src) iframe.src = newSrc;
-                }catch(e){ console.warn('Could not update calendar timezone', e); }
-            })();
-        </script>
-        <!-- Bootstrap core JS-->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Contact form validation: show modal on invalid submit -->
-        <script>
-            (function(){
-                var form = document.getElementById('contactForm');
-                var src = document.getElementById('submitErrorMessage');
-                var modalEl = document.getElementById('contactErrorModal');
-                if (!form) return;
+    <button class="back-to-top" id="backToTop" type="button" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 7.6 4.7 15l1.4 1.4 5.9-5.9 5.9 5.9 1.4-1.4z"/></svg>
+    </button>
 
-                function isValidEmail(val){
-                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-                }
-
-                function clearInvalids(){
-                    Array.from(form.querySelectorAll('.is-invalid')).forEach(function(el){ el.classList.remove('is-invalid'); });
-                    if (src) src.classList.add('d-none');
-                }
-
-                function validateFields(){
-                    clearInvalids();
-                    var problems = [];
-                    var name = form.querySelector('#name');
-                    var email = form.querySelector('#email');
-                    var message = form.querySelector('#message');
-                    if (!name || !name.value.trim()){ problems.push({el:name, msg:'You need to tell Santa your name!'}); }
-                    if (!email || !email.value.trim() || !isValidEmail(email.value.trim())){ problems.push({el:email, msg:'Santa needs your email so the elves can RSVP!'}); }
-                    if (!message || !message.value.trim()){ problems.push({el:message, msg:'The North Pole can\'t read silence — please write your message to Santa!'}); }
-                    problems.forEach(function(p){ if (p.el) p.el.classList.add('is-invalid'); });
-                    return problems;
-                }
-
-                form.addEventListener('submit', function(e){
-                    var problems = validateFields();
-                    if (problems.length){
-                        e.preventDefault(); e.stopPropagation();
-                        // build HTML summary
-                        var html = '<div class="fw-bold text-danger mb-2">Please fix the following:</div><ul>'; 
-                        problems.forEach(function(p){ html += '<li>' + p.msg + '</li>'; });
-                        html += '</ul>';
-                        // show modal
-                        if (modalEl){
-                            var body = modalEl.querySelector('.modal-body');
-                            if (body) body.innerHTML = html;
-                            var modal = new bootstrap.Modal(modalEl);
-                            modal.show();
-                        }
-                        // also show inline error summary as a prominent, dismissable alert
-                        if (src){
-                            src.classList.remove('d-none');
-                            src.innerHTML = '<div class="alert alert-danger alert-dismissible fade show contact-error-banner" role="alert" aria-live="assertive">' + html + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
-                        }
-                        // focus first invalid field
-                        if (problems[0] && problems[0].el) problems[0].el.focus();
-                        return false;
-                    }
-                    // allow submit — SB Forms will handle the request
-                }, false);
-
-                // clear invalid state on input
-                ['#name','#email','#message'].forEach(function(sel){
-                    var el = form.querySelector(sel);
-                    if (!el) return;
-                    el.addEventListener('input', function(){ this.classList.remove('is-invalid'); if (src) src.classList.add('d-none'); });
-                });
-            })();
-        </script>
-        <!-- Core theme JS-->
-        <script src="js/scripts.js"></script>
-        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-        <!-- * *                               SB Forms JS                               * *-->
-        <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
-        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-
-        <script>
-            (function(){
-                try{
-                    var el = document.getElementById('copyright-year');
-                    if (el) el.textContent = new Date().getFullYear();
-                }catch(e){}
-            })();
-        </script>
-    </body>
+    <script src="js/main.js" defer></script>
+</body>
 </html>
