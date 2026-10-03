@@ -7,7 +7,7 @@ It's a single static page with no build step:
 - `index.html`: the page
 - `css/styles.css`: all styles (light and dark themes are color tokens at the top)
 - `js/main.js`: countdown, theme toggle, mobile menu and the letter form
-- `js/fun.js`: the playful extras: snow and confetti, twinkling lights, the flying sleigh, North Pole status board, advent calendar, Nice List checker, elf name generator, reindeer cards, synthesized sleigh-bell sounds and the secret blizzard code
+- `js/fun.js`: the playful extras: snow and confetti, twinkling lights, the flying sleigh, North Pole status board, advent calendar, Nice List checker, elf name generator, reindeer cards, synthesized sleigh-bell sounds, the waving snowman, the hide-and-seek friends that peek out of sections, and the secret blizzard code
 - `js/theme-init.js`: applies the saved light/dark choice before the page paints
 - `assets/img/`: photos (WebP with JPEG fallback), icons and social preview image
 - `404.html`, `robots.txt`, `sitemap.xml`, `site.webmanifest`: the usual site extras

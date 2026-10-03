@@ -665,4 +665,106 @@
             root.classList.remove('blizzard');
         }, 14000);
     });
+
+    // ---- "Santa Claus!" letters drop in, hop now and then, and boing when touched ----
+    var accent = document.querySelector('.hero h1 .accent');
+    if (accent && !reduceMotion) {
+        var label = accent.textContent;
+        accent.textContent = '';
+        var hiddenLabel = document.createElement('span');
+        hiddenLabel.className = 'visually-hidden';
+        hiddenLabel.textContent = label;
+        var letters = document.createElement('span');
+        letters.setAttribute('aria-hidden', 'true');
+        Array.prototype.forEach.call(label, function (ch, i) {
+            var l = document.createElement('span');
+            l.className = 'ltr';
+            l.textContent = ch;
+            l.style.setProperty('--i', i);
+            letters.appendChild(l);
+        });
+        accent.appendChild(hiddenLabel);
+        accent.appendChild(letters);
+        accent.classList.add('lettered');
+        letters.addEventListener('pointerover', function (e) {
+            var l = e.target.closest('.ltr');
+            if (!l || l.classList.contains('boing')) return;
+            l.classList.add('boing');
+            l.addEventListener('animationend', function done() { l.classList.remove('boing'); l.removeEventListener('animationend', done); });
+            play('boop');
+        });
+    }
+
+    // ---- The waving snowman ----
+    var snowman = $('snowman');
+    snowman.addEventListener('click', function () {
+        snowman.classList.remove('excited');
+        void snowman.offsetWidth;
+        snowman.classList.add('excited');
+        setTimeout(function () { snowman.classList.remove('excited'); }, 1600);
+        var p = centerOf(snowman);
+        floatAt('ho-bubble', pick(['Hi there!', 'Brrr!', 'I love hugs!', 'Let it snow!']), p.x, p.y - 50);
+        play('chime');
+    });
+
+    // ---- A sparkle trail follows the mouse across the hero ----
+    var hero = document.querySelector('.hero');
+    if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
+        var lastSpark = 0, sparkCount = 0;
+        hero.addEventListener('pointermove', function (e) {
+            var now = performance.now();
+            if (now - lastSpark < 45 || sparkCount > 30) return;
+            lastSpark = now;
+            sparkCount++;
+            var el = floatAt('trail', pick(['✦', '✧', '❄', '⋆', '✦']), e.clientX, e.clientY);
+            el.style.setProperty('--c', pick(['#ffe08a', '#ffffff', '#ff8fa0', '#9be7c4', '#a8d8ff']));
+            el.style.setProperty('--size', random(10, 20).toFixed(0) + 'px');
+            el.style.setProperty('--dx', random(-20, 20).toFixed(0) + 'px');
+            el.addEventListener('animationend', function () { sparkCount--; });
+        });
+    }
+
+    // ---- Hearts and stars float up while someone writes their letter ----
+    var letterBox = $('message');
+    var keystrokes = 0;
+    if (!reduceMotion) {
+        letterBox.addEventListener('input', function () {
+            if (++keystrokes % 5) return;
+            var r = letterBox.getBoundingClientRect();
+            var el = floatAt('type-spark', pick(['❤️', '⭐', '✨', '🎄', '💌']), r.left + random(r.width * 0.15, r.width * 0.9), r.top + random(10, Math.min(r.height, 120)));
+            el.style.setProperty('--dx', random(-30, 30).toFixed(0) + 'px');
+        });
+    }
+
+    // ---- Hide and seek: five friends peek out around the page ----
+    var peekers = Array.prototype.slice.call(document.querySelectorAll('.peeker'));
+    var seekCount = $('seekCount');
+    var found = {};
+    try { found = JSON.parse(load('seek-found') || '{}') || {}; } catch (e) {}
+    function countFound() { return peekers.filter(function (p) { return found[p.dataset.name]; }).length; }
+    peekers.forEach(function (peeker, i) {
+        if (found[peeker.dataset.name]) peeker.classList.add('found');
+        // Each friend keeps their own rhythm so they rarely peek at the same time.
+        peeker.style.setProperty('--every', (14 + i * 3) + 's');
+        peeker.style.setProperty('--delay', (-random(2, 12)).toFixed(1) + 's');
+        peeker.addEventListener('click', function () {
+            if (found[peeker.dataset.name]) return;
+            found[peeker.dataset.name] = true;
+            save('seek-found', JSON.stringify(found));
+            var p = centerOf(peeker);
+            burst(p.x, p.y, 40);
+            peeker.classList.add('found');
+            var n = countFound();
+            seekCount.textContent = n;
+            if (n === peekers.length) {
+                toast('🎉 You found all five friends! The whole North Pole is cheering for you!');
+                play('song');
+                burst(window.innerWidth / 2, window.innerHeight / 3, 220);
+            } else {
+                toast('👀 You found ' + peeker.dataset.name + '! ' + n + ' of ' + peekers.length + ' found.');
+                play('fanfare');
+            }
+        });
+    });
+    seekCount.textContent = countFound();
 })();

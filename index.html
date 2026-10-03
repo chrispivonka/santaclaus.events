@@ -141,7 +141,6 @@
 
             <div class="container hero-grid">
                 <div class="hero-copy">
-                    <p class="eyebrow">It's nice to meet you!</p>
                     <h1>Hello from <span class="accent">Santa&nbsp;Claus!</span></h1>
                     <p class="lede">The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting this season, open a door on the advent calendar, or send a letter straight to the North Pole.</p>
                     <div class="hero-actions">
@@ -169,6 +168,30 @@
                 </div>
             </div>
 
+            <button class="snowman" id="snowman" type="button" aria-label="Say hi to the snowman">
+                <svg viewBox="0 0 110 120" aria-hidden="true">
+                    <rect x="70" y="92" width="22" height="22" rx="2" fill="#1f6b4a" />
+                    <rect x="79" y="92" width="4" height="22" fill="#e0b052" />
+                    <rect x="70" y="101" width="22" height="4" fill="#e0b052" />
+                    <path d="M81 92c-6-8-12-2-4 0m4 0c6-8 12-2 4 0" fill="none" stroke="#e0b052" stroke-width="2.5" />
+                    <rect x="92" y="102" width="14" height="12" rx="2" fill="#c8102e" />
+                    <rect x="97" y="102" width="3" height="12" fill="#fff" />
+                    <path d="M26 72 6 60" stroke="#6b4320" stroke-width="3" stroke-linecap="round" />
+                    <g class="snowman-arm"><path d="M54 72l20-14m-6 4 2-8m-2 8 7 1" fill="none" stroke="#6b4320" stroke-width="3" stroke-linecap="round" /></g>
+                    <circle cx="40" cy="98" r="19" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <circle cx="40" cy="70" r="14" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <circle cx="40" cy="47" r="11" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <path d="M28 57h24l-2 6H30z" fill="#c8102e" />
+                    <path d="M44 59l4 14h-6l-1-13z" fill="#c8102e" />
+                    <circle cx="36" cy="45" r="1.6" fill="#1d2433" /><circle cx="44" cy="45" r="1.6" fill="#1d2433" />
+                    <path d="M40 48l10 2.5-10 1.5z" fill="#f08a24" />
+                    <path d="M35 52q5 3 10 0" fill="none" stroke="#1d2433" stroke-width="1.4" stroke-linecap="round" />
+                    <circle cx="40" cy="68" r="1.6" fill="#1d2433" /><circle cx="40" cy="76" r="1.6" fill="#1d2433" />
+                    <rect x="31" y="34" width="18" height="4" rx="1" fill="#1d2433" />
+                    <rect x="34" y="22" width="12" height="13" rx="1" fill="#1d2433" />
+                    <rect x="34" y="31" width="12" height="3" fill="#c8102e" />
+                </svg>
+            </button>
             <svg class="hills" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
                 <path class="hill-back" d="M0 70C180 30 330 30 520 62s360 40 560 6 300-20 360-8v60H0z" />
                 <g class="trees">
@@ -176,6 +199,7 @@
                 </g>
                 <path class="hill-front" d="M0 96C240 64 420 70 720 92s520 10 720-18v46H0z" />
             </svg>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Snowball the polar bear" aria-label="Someone is hiding here">🐻‍❄️</button></div>
         </section>
 
         <!-- Live status from the workshop -->
@@ -214,6 +238,7 @@
                     <a href="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver" target="_blank" rel="noopener">Open the full calendar in Google Calendar</a>
                 </p>
             </div>
+            <div class="peek-hole peek-left"><button class="peeker" type="button" data-name="Pip the elf" aria-label="Someone is hiding here">🧝</button></div>
         </section>
 
         <!-- Advent calendar -->
@@ -226,6 +251,7 @@
                 </div>
                 <ol class="advent-grid reveal" id="adventGrid"></ol>
             </div>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Waddles the penguin" aria-label="Someone is hiding here">🐧</button></div>
         </section>
 
         <!-- Games -->
@@ -235,6 +261,7 @@
                     <p class="eyebrow">North Pole games</p>
                     <h2>Fun with the elves</h2>
                     <p>Check whether you made the Nice List, find out your elf name, and meet the reindeer.</p>
+                    <p class="seek-progress"><span aria-hidden="true">🔍</span> Five North Pole friends are peeking out around this page. Can you spot them all? <b><span id="seekCount">0</span> of 5 found</b></p>
                 </div>
 
                 <div class="fun-grid">
@@ -319,6 +346,7 @@
                     <ul class="reindeer-grid" id="reindeerGrid"></ul>
                 </div>
             </div>
+            <div class="peek-hole peek-left"><button class="peeker" type="button" data-name="Juniper the arctic fox" aria-label="Someone is hiding here">🦊</button></div>
         </section>
 
         <!-- About -->
@@ -338,6 +366,7 @@
                     </a>
                 </div>
             </div>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Sprinkles the baby reindeer" aria-label="Someone is hiding here">🦌</button></div>
         </section>
 
         <!-- Letter to Santa -->
