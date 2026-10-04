@@ -145,7 +145,7 @@ test.describe('outside requests', () => {
         });
         await page.goto('/');
         await page.locator('#events').scrollIntoViewIfNeeded();
-        await expect(page.locator('#calendarEmbed')).toHaveAttribute('src', /calendar\.google\.com/);
+        await expect(page.locator('#calendarEmbed')).toHaveAttribute('src', /^https:\/\/calendar\.google\.com\//);
         await page.waitForLoadState('networkidle');
         expect([...outside]).toEqual(['calendar.google.com']);
     });
