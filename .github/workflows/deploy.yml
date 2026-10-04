@@ -166,7 +166,16 @@ jobs:
           deployment=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --token="$VERCEL_TOKEN" \
             --meta githubCommitSha="$GITHUB_SHA" --meta githubBranch="development")
           host="${PREPROD_URL#https://}"; host="${host%%/*}"
-          npx --yes "$VERCEL_CLI" alias set "$deployment" "$host" --token="$VERCEL_TOKEN"
+          # Point the preprod domain at this deployment through the REST API: `vercel alias set`
+          # looks up the token's user first, which a team-scoped token cannot do ("User not found").
+          api="https://api.vercel.com"; auth="Authorization: Bearer $VERCEL_TOKEN"
+          id=$(curl -fsS -H "$auth" "$api/v13/deployments/${deployment#https://}?teamId=$VERCEL_ORG_ID" | jq -r '.id')
+          if ! out=$(curl -fsS -H "$auth" -H 'Content-Type: application/json' \
+              -X POST "$api/v2/deployments/$id/aliases?teamId=$VERCEL_ORG_ID" -d "{\"alias\":\"$host\"}"); then
+            echo "::error::Could not alias $deployment to $host. Add $host to the Vercel project (Settings → Domains) and check its DNS."
+            exit 1
+          fi
+          echo "$out" | jq -r '"Alias \(.alias) -> \(.uid)"'
           echo "Preprod: $PREPROD_URL ($deployment)"
           echo "url=$PREPROD_URL" >> "$GITHUB_OUTPUT"
 
