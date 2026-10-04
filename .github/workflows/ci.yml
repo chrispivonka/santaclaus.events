@@ -81,6 +81,8 @@ jobs:
           name: dist
           path: dist
           retention-days: 7
+          # dist/.well-known/security.txt is a hidden path and would otherwise be left out
+          include-hidden-files: true
 
   e2e:
     name: Tests (${{ matrix.engine }})
