@@ -48,6 +48,53 @@
     <a class="skip-link" href="#main">Skip to content</a>
     <canvas id="snow" aria-hidden="true"></canvas>
 
+    <!-- Sleigh and reindeer artwork, reused by the hero and the 404 page -->
+    <svg class="svg-defs" aria-hidden="true" focusable="false">
+        <defs>
+            <g id="reindeer">
+                <ellipse cx="18" cy="26" rx="13" ry="6.5" />
+                <path d="M26 24 33 12l4 2-5 13z" />
+                <ellipse cx="37" cy="12.5" rx="5.5" ry="3.6" />
+                <path d="M7 24c-4-1-6 1-7 3 2 0 5 0 7-1z" />
+                <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                    <path d="M28 30l7 5 3 3" class="leg-front" />
+                    <path d="M25 31l5 7" class="leg-front2" />
+                    <path d="M11 30l-8 4-3 2" class="leg-back" />
+                    <path d="M13 31l-5 7" class="leg-back2" />
+                </g>
+                <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                    <path d="M35 9 32 2M33.4 5.5 29 4.5M37.5 9l2-6.5M38.7 5.2l3.6-1.8" />
+                </g>
+            </g>
+            <g id="sleigh-art">
+                <!-- reins -->
+                <path d="M74 40C110 30 150 26 290 16" fill="none" stroke="#e0b052" stroke-width="1.2" opacity=".85" />
+                <!-- reindeer team -->
+                <g class="team">
+                    <use href="#reindeer" x="96" y="18" class="deer" />
+                    <use href="#reindeer" x="146" y="12" class="deer" />
+                    <use href="#reindeer" x="196" y="8" class="deer" />
+                    <use href="#reindeer" x="246" y="2" class="deer rudolph" />
+                    <circle cx="288.5" cy="14.5" r="2.6" class="nose" />
+                </g>
+                <!-- toy sack -->
+                <circle cx="22" cy="40" r="13" fill="#8a5a2b" />
+                <path d="M16 28c3-4 9-4 12 0" fill="none" stroke="#6b4320" stroke-width="2" />
+                <!-- Santa -->
+                <circle cx="44" cy="40" r="10" fill="#c8102e" />
+                <circle cx="47" cy="27" r="5.5" fill="#f4c7a8" />
+                <path d="M41 29c1 9 11 9 12 0-2 3-10 3-12 0z" fill="#fff" />
+                <path d="M41 25c1-7 9-9 14-4l4 5-3 1-3-3c-4-1-8 0-12 1z" fill="#c8102e" />
+                <circle cx="58.5" cy="27" r="2.2" fill="#fff" />
+                <rect x="40.5" y="23.5" width="13" height="3" rx="1.5" fill="#fff" />
+                <!-- sleigh body -->
+                <path d="M8 46h52c8 0 10-10 14-12l4 1c-3 4-4 20-16 24H18C10 59 8 54 8 46z" fill="#c8102e" />
+                <path d="M8 46h52c8 0 10-10 14-12" fill="none" stroke="#e0b052" stroke-width="2.4" stroke-linecap="round" />
+                <path d="M2 66h62c8 0 12-4 14-9M18 59v7M54 59v7" fill="none" stroke="#e0b052" stroke-width="2.6" stroke-linecap="round" />
+            </g>
+        </defs>
+    </svg>
+
     <!-- Navigation -->
     <header class="site-header" id="siteHeader">
         <nav class="nav container" aria-label="Main">
@@ -55,42 +102,59 @@
                 <img src="assets/img/favicon.png" alt="" width="28" height="28" />
                 <span>Santa Claus Events</span>
             </a>
-            <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks">
-                <span class="visually-hidden">Menu</span>
-                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-            </button>
+            <div class="nav-tools">
+                <button class="icon-btn sound-toggle" id="soundToggle" type="button" aria-pressed="false" aria-label="Turn on Christmas sounds">
+                    <svg class="icon-sound-on" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a1.5 1.5 0 0 1 1.5 1.5v.6A6.5 6.5 0 0 1 18.5 10.5V15l2 2.5V19h-17v-1.5l2-2.5v-4.5A6.5 6.5 0 0 1 10.5 4.1v-.6A1.5 1.5 0 0 1 12 2zm-2.5 18h5a2.5 2.5 0 0 1-5 0z"/></svg>
+                    <svg class="icon-sound-off" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3.3 2.3 21.7 20.7l-1.4 1.4-3-3H3.5v-1.5l2-2.5v-4.5c0-1 .2-2 .6-2.9L1.9 3.7zM12 2a1.5 1.5 0 0 1 1.5 1.5v.6A6.5 6.5 0 0 1 18.5 10.5v4.1L8.3 4.4a6.5 6.5 0 0 1 2.2-.3v-.6A1.5 1.5 0 0 1 12 2zm-2.5 18h5a2.5 2.5 0 0 1-5 0z"/></svg>
+                </button>
+                <button class="icon-btn theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode">
+                    <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5h0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1zm0 17a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zM3 11h2a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm16 0h2a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2zM5.6 4.2l1.4 1.4A1 1 0 1 1 5.6 7L4.2 5.6a1 1 0 0 1 1.4-1.4zm12.8 12.8 1.4 1.4a1 1 0 0 1-1.4 1.4L17 18.4a1 1 0 0 1 1.4-1.4zM19.8 5.6 18.4 7A1 1 0 1 1 17 5.6l1.4-1.4a1 1 0 0 1 1.4 1.4zM7 18.4l-1.4 1.4a1 1 0 0 1-1.4-1.4L5.6 17A1 1 0 0 1 7 18.4z"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                </button>
+                <button class="icon-btn nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks">
+                    <span class="visually-hidden">Menu</span>
+                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+                </button>
+            </div>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#events">Events</a></li>
+                <li><a href="#advent">Advent</a></li>
+                <li><a href="#fun">Games</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#letter" class="nav-cta">Write to Santa</a></li>
-                <li>
-                    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode">
-                        <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5h0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1zm0 17a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zM3 11h2a1 1 0 0 1 0 2H3a1 1 0 0 1 0-2zm16 0h2a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2zM5.6 4.2l1.4 1.4A1 1 0 1 1 5.6 7L4.2 5.6a1 1 0 0 1 1.4-1.4zm12.8 12.8 1.4 1.4a1 1 0 0 1-1.4 1.4L17 18.4a1 1 0 0 1 1.4-1.4zM19.8 5.6 18.4 7A1 1 0 1 1 17 5.6l1.4-1.4a1 1 0 0 1 1.4 1.4zM7 18.4l-1.4 1.4a1 1 0 0 1-1.4-1.4L5.6 17A1 1 0 0 1 7 18.4z"/></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-                    </button>
-                </li>
             </ul>
         </nav>
+        <!-- A string of twinkling lights; bulbs are added by js/fun.js -->
+        <ul class="lights" id="lights" aria-hidden="true"></ul>
     </header>
 
     <main id="main">
         <!-- Hero -->
         <section class="hero" id="top">
+            <div class="sky" aria-hidden="true">
+                <div class="stars" id="stars"></div>
+                <div class="moon" id="moon"></div>
+            </div>
+            <button class="sleigh" id="sleigh" type="button" aria-label="Wave at Santa's sleigh">
+                <svg viewBox="0 0 300 72" aria-hidden="true"><use href="#sleigh-art" /></svg>
+            </button>
+
             <div class="container hero-grid">
                 <div class="hero-copy">
-                    <p class="eyebrow">It's nice to meet you!</p>
                     <h1>Hello from <span class="accent">Santa&nbsp;Claus!</span></h1>
-                    <p class="lede">The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting this season, or send a letter straight to the North Pole.</p>
+                    <p class="lede">The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting this season, open a door on the advent calendar, or send a letter straight to the North Pole.</p>
                     <div class="hero-actions">
                         <a class="btn btn-primary" href="#events">See where Santa will be</a>
                         <a class="btn btn-ghost" href="#letter">Write Santa a letter</a>
                     </div>
                 </div>
                 <div class="hero-media">
-                    <picture>
-                        <source srcset="assets/img/cabin.webp" type="image/webp" />
-                        <img src="assets/img/cabin.jpg" width="736" height="1000" alt="Santa's cabin glowing with Christmas lights and candy canes at night" fetchpriority="high" />
-                    </picture>
+                    <div class="photo-frame">
+                        <picture>
+                            <source srcset="assets/img/cabin.webp" type="image/webp" />
+                            <img src="assets/img/cabin.jpg" width="736" height="1000" alt="Santa's cabin glowing with Christmas lights and candy canes at night" fetchpriority="high" />
+                        </picture>
+                    </div>
                     <div class="countdown" id="countdown" aria-live="polite">
                         <p class="countdown-title" id="countdownTitle">Countdown to Christmas</p>
                         <div class="countdown-units">
@@ -99,7 +163,60 @@
                             <div><span data-unit="minutes">--</span><small>min</small></div>
                             <div><span data-unit="seconds">--</span><small>sec</small></div>
                         </div>
+                        <p class="countdown-sleeps" id="countdownSleeps"></p>
                     </div>
+                </div>
+            </div>
+
+            <button class="snowman" id="snowman" type="button" aria-label="Say hi to the snowman">
+                <svg viewBox="0 0 110 120" aria-hidden="true">
+                    <rect x="70" y="92" width="22" height="22" rx="2" fill="#1f6b4a" />
+                    <rect x="79" y="92" width="4" height="22" fill="#e0b052" />
+                    <rect x="70" y="101" width="22" height="4" fill="#e0b052" />
+                    <path d="M81 92c-6-8-12-2-4 0m4 0c6-8 12-2 4 0" fill="none" stroke="#e0b052" stroke-width="2.5" />
+                    <rect x="92" y="102" width="14" height="12" rx="2" fill="#c8102e" />
+                    <rect x="97" y="102" width="3" height="12" fill="#fff" />
+                    <path d="M26 72 6 60" stroke="#6b4320" stroke-width="3" stroke-linecap="round" />
+                    <g class="snowman-arm"><path d="M54 72l20-14m-6 4 2-8m-2 8 7 1" fill="none" stroke="#6b4320" stroke-width="3" stroke-linecap="round" /></g>
+                    <circle cx="40" cy="98" r="19" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <circle cx="40" cy="70" r="14" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <circle cx="40" cy="47" r="11" fill="#fbfdff" stroke="#d5e1ef" stroke-width="2" />
+                    <path d="M28 57h24l-2 6H30z" fill="#c8102e" />
+                    <path d="M44 59l4 14h-6l-1-13z" fill="#c8102e" />
+                    <circle cx="36" cy="45" r="1.6" fill="#1d2433" /><circle cx="44" cy="45" r="1.6" fill="#1d2433" />
+                    <path d="M40 48l10 2.5-10 1.5z" fill="#f08a24" />
+                    <path d="M35 52q5 3 10 0" fill="none" stroke="#1d2433" stroke-width="1.4" stroke-linecap="round" />
+                    <circle cx="40" cy="68" r="1.6" fill="#1d2433" /><circle cx="40" cy="76" r="1.6" fill="#1d2433" />
+                    <rect x="31" y="34" width="18" height="4" rx="1" fill="#1d2433" />
+                    <rect x="34" y="22" width="12" height="13" rx="1" fill="#1d2433" />
+                    <rect x="34" y="31" width="12" height="3" fill="#c8102e" />
+                </svg>
+            </button>
+            <svg class="hills" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+                <path class="hill-back" d="M0 70C180 30 330 30 520 62s360 40 560 6 300-20 360-8v60H0z" />
+                <g class="trees">
+                    <path d="M120 58l14-34 14 34zM150 54l10-24 10 24zM1180 52l14-34 14 34zM1212 56l10-24 10 24zM760 66l12-28 12 28z" />
+                </g>
+                <path class="hill-front" d="M0 96C240 64 420 70 720 92s520 10 720-18v46H0z" />
+            </svg>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Snowball the polar bear" aria-label="Someone is hiding here">🐻‍❄️</button></div>
+        </section>
+
+        <!-- Live status from the workshop -->
+        <section class="north-pole" id="status" aria-labelledby="statusTitle">
+            <div class="container">
+                <div class="status-board reveal">
+                    <div class="status-now">
+                        <p class="live-pill"><span class="live-dot"></span> Live from the North Pole</p>
+                        <h2 id="statusTitle" class="status-title">Santa is <span id="santaStatus">checking his list</span></h2>
+                        <p class="status-sub" id="santaStatusSub">The elves are busy in the workshop.</p>
+                    </div>
+                    <ul class="meters" id="meters">
+                        <li class="meter" data-meter="toys"><span class="meter-label"><span aria-hidden="true">🧸</span> Toys built</span><span class="meter-track"><span class="meter-fill"></span></span><span class="meter-value">--</span></li>
+                        <li class="meter" data-meter="reindeer"><span class="meter-label"><span aria-hidden="true">🦌</span> Reindeer flight training</span><span class="meter-track"><span class="meter-fill"></span></span><span class="meter-value">--</span></li>
+                        <li class="meter" data-meter="cookies"><span class="meter-label"><span aria-hidden="true">🍪</span> Cookies taste-tested</span><span class="meter-track"><span class="meter-fill"></span></span><span class="meter-value">--</span></li>
+                        <li class="meter" data-meter="sleigh"><span class="meter-label"><span aria-hidden="true">🛷</span> Sleigh polished</span><span class="meter-track"><span class="meter-fill"></span></span><span class="meter-value">--</span></li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -107,12 +224,12 @@
         <!-- Events -->
         <section class="section" id="events">
             <div class="container">
-                <div class="section-head">
+                <div class="section-head reveal">
                     <p class="eyebrow">Where to find Santa</p>
                     <h2>Upcoming events</h2>
                     <p>Santa's schedule fills up fast this time of year. Check back often as new visits are added.</p>
                 </div>
-                <div class="calendar-card">
+                <div class="calendar-card reveal">
                     <iframe id="calendarEmbed"
                         src="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver&mode=AGENDA&showTitle=0&showPrint=0&showTabs=1&showCalendars=0"
                         title="Santa's events calendar" loading="lazy"></iframe>
@@ -121,16 +238,125 @@
                     <a href="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver" target="_blank" rel="noopener">Open the full calendar in Google Calendar</a>
                 </p>
             </div>
+            <div class="peek-hole peek-left"><button class="peeker" type="button" data-name="Pip the elf" aria-label="Someone is hiding here">🧝</button></div>
+        </section>
+
+        <!-- Advent calendar -->
+        <section class="section section-alt advent-section" id="advent">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">24 days of fun</p>
+                    <h2>Santa's advent calendar</h2>
+                    <p id="adventIntro">A new door opens every day from December 1st. Behind each one is a joke, a North Pole fact, or something fun to do.</p>
+                </div>
+                <ol class="advent-grid reveal" id="adventGrid"></ol>
+            </div>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Waddles the penguin" aria-label="Someone is hiding here">🐧</button></div>
+        </section>
+
+        <!-- Games -->
+        <section class="section fun-section" id="fun">
+            <div class="container">
+                <div class="section-head reveal">
+                    <p class="eyebrow">North Pole games</p>
+                    <h2>Fun with the elves</h2>
+                    <p>Check whether you made the Nice List, find out your elf name, and meet the reindeer.</p>
+                    <p class="seek-progress"><span aria-hidden="true">🔍</span> Five North Pole friends are peeking out around this page. Can you spot them all? <b><span id="seekCount">0</span> of 5 found</b></p>
+                </div>
+
+                <div class="fun-grid">
+                    <!-- Nice list checker -->
+                    <article class="fun-card nice-card reveal" aria-labelledby="niceTitle">
+                        <div class="fun-card-head">
+                            <span class="fun-icon" aria-hidden="true">📜</span>
+                            <h3 id="niceTitle">Am I on the Nice List?</h3>
+                        </div>
+                        <form class="mini-form" id="niceForm">
+                            <label for="niceName">Your first name</label>
+                            <div class="mini-row">
+                                <input id="niceName" name="niceName" type="text" autocomplete="given-name" maxlength="30" required />
+                                <button class="btn btn-primary" type="submit">Check the list</button>
+                            </div>
+                        </form>
+                        <div class="nice-result" id="niceResult" aria-live="polite">
+                            <div class="scroll-paper" id="niceScroll" hidden>
+                                <ul class="scroll-names" id="scrollNames"></ul>
+                            </div>
+                            <div class="nice-outcome" id="niceOutcome" hidden>
+                                <div class="gauge" id="niceGauge">
+                                    <span class="gauge-label">Nice-o-meter</span>
+                                    <span class="gauge-track"><span class="gauge-fill" id="gaugeFill"></span></span>
+                                    <span class="gauge-ends"><span>Naughty</span><span>Nice</span></span>
+                                </div>
+                                <p class="nice-verdict" id="niceVerdict"></p>
+                                <p class="nice-note" id="niceNote"></p>
+                                <button class="btn btn-ghost btn-small" id="printCert" type="button">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M6 2h12v5H6zM4 8h16a2 2 0 0 1 2 2v6h-4v6H6v-6H2v-6a2 2 0 0 1 2-2zm4 8v4h8v-4z"/></svg>
+                                    Print my Nice List certificate
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Elf name -->
+                    <article class="fun-card elf-card reveal" aria-labelledby="elfTitle">
+                        <div class="fun-card-head">
+                            <span class="fun-icon" aria-hidden="true">🧝</span>
+                            <h3 id="elfTitle">What's your elf name?</h3>
+                        </div>
+                        <form class="mini-form" id="elfForm">
+                            <div class="field-row compact">
+                                <div>
+                                    <label for="elfFirst">First name</label>
+                                    <input id="elfFirst" name="elfFirst" type="text" autocomplete="given-name" maxlength="30" required />
+                                </div>
+                                <div>
+                                    <label for="elfMonth">Birthday month</label>
+                                    <select id="elfMonth" name="elfMonth" required>
+                                        <option value="">Pick one</option>
+                                        <option value="0">January</option>
+                                        <option value="1">February</option>
+                                        <option value="2">March</option>
+                                        <option value="3">April</option>
+                                        <option value="4">May</option>
+                                        <option value="5">June</option>
+                                        <option value="6">July</option>
+                                        <option value="7">August</option>
+                                        <option value="8">September</option>
+                                        <option value="9">October</option>
+                                        <option value="10">November</option>
+                                        <option value="11">December</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-green" type="submit">Make me an elf</button>
+                        </form>
+                        <div class="elf-badge" id="elfBadge" aria-live="polite" hidden>
+                            <span class="elf-badge-hat" aria-hidden="true"></span>
+                            <p class="elf-badge-small">Hello, my elf name is</p>
+                            <p class="elf-name" id="elfName"></p>
+                            <p class="elf-job" id="elfJob"></p>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- Reindeer -->
+                <div class="reindeer-wrap reveal">
+                    <h3 class="reindeer-title">Reindeer roll call <span>Tap a reindeer to learn their secret talent</span></h3>
+                    <ul class="reindeer-grid" id="reindeerGrid"></ul>
+                </div>
+            </div>
+            <div class="peek-hole peek-left"><button class="peeker" type="button" data-name="Juniper the arctic fox" aria-label="Someone is hiding here">🦊</button></div>
         </section>
 
         <!-- About -->
         <section class="section section-alt" id="about">
             <div class="container about-grid">
-                <picture class="about-photo">
+                <picture class="about-photo reveal">
                     <source srcset="assets/img/santa-and-elves.webp" type="image/webp" />
                     <img src="assets/img/santa-and-elves.jpg" width="736" height="1000" alt="Santa and Mrs. Claus sitting together with two of their elves" loading="lazy" />
                 </picture>
-                <div class="about-copy">
+                <div class="about-copy reveal">
                     <p class="eyebrow">About</p>
                     <h2>Meet Santa, Mrs. Claus &amp; the elves</h2>
                     <p class="about-blurb">Every year Santa and Mrs. Claus take a break from the workshop to visit with families, hear Christmas wishes, and spread a little holiday cheer. Come say hello, bring your list, and don't forget to smile for a photo!</p>
@@ -140,17 +366,19 @@
                     </a>
                 </div>
             </div>
+            <div class="peek-hole peek-right"><button class="peeker" type="button" data-name="Sprinkles the baby reindeer" aria-label="Someone is hiding here">🦌</button></div>
         </section>
 
         <!-- Letter to Santa -->
         <section class="section letter-section" id="letter">
             <div class="container">
-                <div class="section-head section-head-light">
+                <div class="section-head section-head-light reveal">
                     <p class="eyebrow">Straight to the North Pole</p>
                     <h2>Send a letter to Santa</h2>
                 </div>
 
                 <form class="letter" id="letterForm" action="https://script.google.com/macros/s/AKfycbxmjMNXSgWOpeqGmnugN8ocPxfOdUAQoOkkTCINgTEgMQqztv2NIzw10W5xOhrG2sGY/exec" method="POST" novalidate>
+                    <span class="letter-stamp" aria-hidden="true"><span>North Pole</span><b>🎅</b><span>Air mail</span></span>
                     <p class="letter-greeting">Dear Santa,</p>
                     <div class="field-row">
                         <div class="field">
@@ -173,6 +401,19 @@
                             data-error="The North Pole can't read silence. Please write your letter to Santa!"></textarea>
                         <p class="field-error" id="message-error" aria-live="polite"></p>
                     </div>
+                    <div class="wish-ideas">
+                        <p class="wish-ideas-label" id="wishLabel">Need ideas? Tap to add a wish:</p>
+                        <ul class="wish-chips" aria-labelledby="wishLabel">
+                            <li><button type="button" data-wish="a cuddly teddy bear">🧸 Teddy bear</button></li>
+                            <li><button type="button" data-wish="a shiny new bike">🚲 Bike</button></li>
+                            <li><button type="button" data-wish="a big box of art supplies">🎨 Art set</button></li>
+                            <li><button type="button" data-wish="building blocks to make a castle">🧱 Blocks</button></li>
+                            <li><button type="button" data-wish="some new books to read">📚 Books</button></li>
+                            <li><button type="button" data-wish="a fast sled for snow days">🛷 Sled</button></li>
+                            <li><button type="button" data-wish="a puppy (if my grown-ups say yes!)">🐶 Puppy</button></li>
+                            <li><button type="button" data-wish="happiness for my whole family">❤️ Family joy</button></li>
+                        </ul>
+                    </div>
                     <!-- Honeypot field for bots; real visitors never see it -->
                     <div class="honeypot" aria-hidden="true">
                         <label for="website">Leave this empty</label>
@@ -191,18 +432,50 @@
     </main>
 
     <footer class="site-footer">
+        <svg class="footer-snow" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 40V18c60 10 120 14 180 8s110-20 180-14 120 22 190 18 120-22 190-20 130 20 200 18 110-16 180-18 120 12 160 10 50-6 60-6v26z" />
+        </svg>
         <div class="container footer-inner">
-            <p>&copy; <span id="year">2026</span> Santa Claus Events</p>
-            <a class="footer-social" href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/" target="_blank" rel="noopener" aria-label="Santa on Facebook">
-                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4.3V10H7v4h3v8h4v-8h3l1-4h-4V8.6c0-.4.3-.6.6-.6z"/></svg>
-            </a>
+            <div>
+                <p class="footer-brand">Santa Claus Events</p>
+                <p>&copy; <span id="year">2026</span> Santa Claus Events. Made with cocoa at the North Pole.</p>
+            </div>
+            <div class="footer-actions">
+                <button class="footer-pill" id="snowToggle" type="button" aria-pressed="true">
+                    <span aria-hidden="true">❄️</span> <span id="snowToggleLabel">Snow on</span>
+                </button>
+                <a class="footer-social" href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/" target="_blank" rel="noopener" aria-label="Santa on Facebook">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 8h3V4h-3c-2.8 0-4 1.8-4 4.3V10H7v4h3v8h4v-8h3l1-4h-4V8.6c0-.4.3-.6.6-.6z"/></svg>
+                </a>
+            </div>
         </div>
+        <p class="container footer-secret">Psst&hellip; elves know a secret code: <kbd>&uarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&darr;</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>B</kbd><kbd>A</kbd></p>
     </footer>
 
     <button class="back-to-top" id="backToTop" type="button" aria-label="Back to top">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 7.6 4.7 15l1.4 1.4 5.9-5.9 5.9 5.9 1.4-1.4z"/></svg>
     </button>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="advent-dialog" id="adventDialog" aria-labelledby="adventDialogTitle">
+        <form method="dialog" class="advent-dialog-inner">
+            <p class="advent-dialog-day" id="adventDialogDay"></p>
+            <p class="advent-dialog-icon" id="adventDialogIcon" aria-hidden="true"></p>
+            <h3 id="adventDialogTitle">Advent surprise</h3>
+            <p class="advent-dialog-text" id="adventDialogText"></p>
+            <p class="advent-dialog-answer" id="adventDialogAnswer" hidden></p>
+            <div class="advent-dialog-actions">
+                <button class="btn btn-green" type="button" id="adventReveal" hidden>Tell me the answer!</button>
+                <button class="btn btn-ghost" type="submit" value="close">Close</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Filled in when someone prints their Nice List certificate -->
+    <div class="print-area" id="printArea"></div>
+
     <script src="js/main.js" defer></script>
+    <script src="js/fun.js" defer></script>
 </body>
 </html>
