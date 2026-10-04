@@ -4,6 +4,8 @@ name: Deploy
 # Git integration stays off, so nothing deploys unless this workflow does it:
 #
 #   pull request      -> preview deployment, URL posted on the pull request, smoke-tested
+#   push to development -> preprod: a preview deployment aliased to the stable preprod URL
+#                        (https://preprod.santaclaus.events), smoke-tested
 #   release tag       -> production deployment, smoke-tested, security-scanned; the smoke
 #                        tests failing rolls production back to the previous deployment
 #
@@ -16,6 +18,8 @@ name: Deploy
 # optionally VERCEL_AUTOMATION_BYPASS_SECRET so the tests can reach protected previews.
 on:
   pull_request:
+  push:
+    branches: [development]
   workflow_dispatch:
     inputs:
       tag:
@@ -26,8 +30,8 @@ on:
 permissions: {}
 
 concurrency:
-  group: deploy-${{ github.event.pull_request.number || inputs.tag }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: deploy-${{ github.event.pull_request.number || inputs.tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   VERCEL_CLI: vercel@62.2.0
@@ -107,6 +111,65 @@ jobs:
             gh api --method POST "repos/$GH_REPO/issues/$PR_NUMBER/comments" -f body="$body" >/dev/null
           fi
 
+  preprod:
+    name: Preprod deployment (development)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment:
+      name: preprod
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check the Vercel secrets are present
+        id: gate
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::No preprod deployment: add the VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID repository secrets (see CONTRIBUTING.md)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: steps.gate.outputs.run == 'true'
+        run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - name: Build with the preview settings
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          npx --yes "$VERCEL_CLI" pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build --token="$VERCEL_TOKEN"
+      - name: Deploy the prebuilt output and point the preprod URL at it
+        id: deploy
+        if: steps.gate.outputs.run == 'true'
+        env:
+          PREPROD_URL: ${{ vars.PREPROD_URL || 'https://preprod.santaclaus.events' }}
+        # A preview deployment (so it never touches production) aliased to the fixed preprod
+        # domain, which must be added to the Vercel project once (Settings -> Domains).
+        run: |
+          deployment=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --token="$VERCEL_TOKEN" \
+            --meta githubCommitSha="$GITHUB_SHA" --meta githubBranch="development")
+          host="${PREPROD_URL#https://}"; host="${host%%/*}"
+          npx --yes "$VERCEL_CLI" alias set "$deployment" "$host" --token="$VERCEL_TOKEN"
+          echo "Preprod: $PREPROD_URL ($deployment)"
+          echo "url=$PREPROD_URL" >> "$GITHUB_OUTPUT"
+
   production:
     name: Production deployment
     if: github.event_name == 'workflow_dispatch'
@@ -162,14 +225,14 @@ jobs:
 
   verify:
     name: Verify the deployment
-    needs: [preview, production]
-    if: always() && (needs.preview.result == 'success' || needs.production.result == 'success') && (needs.preview.outputs.url != '' || needs.production.outputs.url != '')
+    needs: [preview, preprod, production]
+    if: always() && contains(needs.*.result, 'success') && (needs.preview.outputs.url != '' || needs.preprod.outputs.url != '' || needs.production.outputs.url != '')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
     env:
-      BASE_URL: ${{ needs.production.outputs.url || needs.preview.outputs.url }}
+      BASE_URL: ${{ needs.production.outputs.url || needs.preprod.outputs.url || needs.preview.outputs.url }}
       IS_PRODUCTION: ${{ needs.production.result == 'success' }}
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     steps:

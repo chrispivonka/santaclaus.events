@@ -27,8 +27,8 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 
 ## Branches
 
-- **`development`** is where work lands. Open pull requests against it; they're squash-merged.
-- **`main`** is production. It only changes through a release pull request from `development`.
+- **`development`** is where work lands. Open pull requests against it; they're squash-merged. Every push to it deploys **preprod**: https://preprod.santaclaus.events (a Vercel preview deployment aliased to that domain, smoke-tested after each deploy).
+- **`main`** is production (https://santaclaus.events). It only changes through a release pull request from `development`, and deploys only from the release tag.
 - Every pull request gets a Vercel preview deployment (the Deploy workflow posts the link as a comment) and has to pass the **CI passed** check.
 
 ## What CI checks on every pull request
@@ -53,7 +53,7 @@ Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the 
 
 Deploys come from GitHub Actions only. Vercel's Git integration is off, so nothing reaches production except through this flow:
 
-1. On the **Actions** tab, open **Release** and click **Run workflow**. It opens (or refreshes) a pull request from `development` to `main` listing everything that will ship. That pull request gets a preview deployment like any other; check it.
+1. Check preprod (https://preprod.santaclaus.events), which always shows the current `development`. On the **Actions** tab, open **Release** and click **Run workflow**. It opens (or refreshes) a pull request from `development` to `main` listing everything that will ship.
 2. Check the list, then merge it with **Create a merge commit** (not squash, so the branches stay in sync).
 3. CI runs on `main`. When it is green, the Release workflow tags a GitHub Release named for the date (for example `v2026.12.01`) with notes grouped by label, and dispatches the **Deploy** workflow with that tag.
 4. Deploy checks the tag is on `main`, builds it with `vercel build`, deploys the prebuilt output with `vercel deploy --prebuilt --prod`, then runs the smoke, accessibility and header tests against https://santaclaus.events, followed by an OWASP ZAP baseline scan and the MDN HTTP Observatory (grade A required; findings open an issue).
@@ -72,7 +72,7 @@ These live in GitHub and Vercel settings, not in the code:
 3. **Actions:** Settings → Actions → General → Workflow permissions → tick **Allow GitHub Actions to create and approve pull requests** (the Release workflow opens the release pull request).
 4. **Security:** Settings → Advanced Security → turn on **Dependency graph** (the dependency-review check on pull requests is skipped with a warning until it's on), **Private vulnerability reporting**, **Dependabot alerts**, **Dependabot security updates**, **Secret scanning** and **Push protection**.
 5. **Pull requests:** Settings → General → keep **Automatically delete head branches** on. When stacking pull requests, base them on `development` instead of on another pull request's branch. Otherwise GitHub closes the stacked one when the first merges.
-6. **Vercel project, with the Git integration off:** the project `santaclaus.events` already exists in Vercel. Project → Settings → Git → **Disconnect** the GitHub repository, so Vercel stops building on its own and GitHub Actions is the only deployer (while it is connected, every push deploys twice). Add the domain `santaclaus.events` (and `www`) under Settings → Domains.
-7. **Vercel secrets in GitHub:** Settings → Secrets and variables → Actions → add `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, scoped to the team, because `vercel pull` reads the team), `VERCEL_PROJECT_ID` (Project → Settings → General → Project ID) and `VERCEL_ORG_ID` (Team → Settings → General → Team ID; both also appear in `.vercel/project.json` after `npx vercel@62 link`). Optionally the repository variable `PRODUCTION_URL` if production is not `https://santaclaus.events`.
+6. **Vercel project, with the Git integration off:** the project `santaclaus.events` already exists in Vercel. Project → Settings → Git → **Disconnect** the GitHub repository, so Vercel stops building on its own and GitHub Actions is the only deployer (while it is connected, every push deploys twice). Add the domains `santaclaus.events` (and `www`) and `preprod.santaclaus.events` under Settings → Domains (the preprod one needs a `CNAME preprod → cname.vercel-dns.com` record at the DNS provider). Leave the preprod domain unassigned to any Git branch; the Deploy workflow points it at the latest `development` deployment with `vercel alias set`. Vercel sends `X-Robots-Tag: noindex` on non-production deployments, so preprod stays out of search engines.
+7. **Vercel secrets in GitHub:** Settings → Secrets and variables → Actions → add `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, scoped to the team, because `vercel pull` reads the team), `VERCEL_PROJECT_ID` (Project → Settings → General → Project ID) and `VERCEL_ORG_ID` (Team → Settings → General → Team ID; both also appear in `.vercel/project.json` after `npx vercel@62 link`). Optionally the repository variables `PRODUCTION_URL` and `PREPROD_URL` if those are not `https://santaclaus.events` and `https://preprod.santaclaus.events`.
 8. **Production environment (recommended):** Settings → Environments → `production` → tick **Required reviewers** and add yourself if you want a manual approval before each production deploy; otherwise releases deploy on their own once CI is green on `main`.
 9. **Preview checks (optional):** Vercel → Project → Settings → Deployment Protection → **Protection Bypass for Automation** → create a secret, then add it in GitHub as the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`. Without it, deployment checks run on production only.
