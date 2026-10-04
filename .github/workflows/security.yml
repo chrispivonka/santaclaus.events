@@ -1,0 +1,50 @@
+name: Security
+
+# Supply-chain and secret checks that complement CodeQL (code) and Dependabot (updates).
+on:
+  pull_request:
+  push:
+    branches: [main, development]
+  schedule:
+    - cron: '53 7 * * 1'
+
+permissions: {}
+
+jobs:
+  dependencies:
+    name: Known vulnerabilities in dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: npm audit (advisory; OSV-Scanner below is the gate and carries the reviewed exceptions)
+        run: npm audit --audit-level=high || echo "::warning::npm audit found issues. OSV-Scanner decides; reviewed exceptions live in .github/osv-scanner.toml"
+      - name: OSV-Scanner on package-lock.json
+        uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |
+            --lockfile=package-lock.json
+            --config=.github/osv-scanner.toml
+
+  secrets:
+    name: Leaked secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks over the full history
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

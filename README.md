@@ -2,7 +2,7 @@
 
 Source for the website [santaclaus.events](https://santaclaus.events).
 
-It's a single static page, plain HTML, CSS and JavaScript with no framework. [Vite](https://vite.dev) builds it into `dist/`, minifying everything, fingerprinting file names so browsers can cache them for a year, inlining the stylesheet and generating the Content-Security-Policy.
+It's a single static page, plain HTML, CSS and JavaScript with no framework. [Vite+](https://viteplus.dev) (Vite 8 with Rolldown, plus Oxlint and Oxfmt) builds it into `dist/`, minifying everything, fingerprinting file names so browsers can cache them for a year, inlining the stylesheet and generating the Content-Security-Policy.
 
 - `index.html`: the page
 - `css/styles.css`: all styles (light and dark themes are color tokens at the top)
@@ -15,9 +15,7 @@ It's a single static page, plain HTML, CSS and JavaScript with no framework. [Vi
 - `404.html`: the not-found page
 - `vite.config.js`: the build, including the Content-Security-Policy
 
-To work on it locally, run `npm install` once, then `npm run dev` and open the link it prints. `npm run build` makes the production site in `dist/` and `npm run preview` serves it.
-
-After adding or replacing a photo, put the JPEG in `assets/img/`, add it to `scripts/images.js`, run `npm run images` and commit the new AVIF and WebP files. `npm run fonts` regenerates the fonts the same way.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, commands, the branch and release flow, and what CI checks.
 
 ## Updating content
 
@@ -34,7 +32,7 @@ Sounds are off by default and are synthesized in the browser (no audio files). E
 
 The site is hosted on [Vercel](https://vercel.com) (free Hobby plan) with the GitHub integration:
 
-- Every push to `main` deploys to production at santaclaus.events.
+- Every push to `main` deploys to production at santaclaus.events. `main` only changes through release pull requests (see [Releasing](CONTRIBUTING.md#releasing)).
 - Every pull request gets its own preview link, posted on the PR.
 
 Vercel runs `npm run build` and serves `dist/`. `vercel.json` caches fingerprinted files in `/static/` for a year and sets the security headers.
@@ -43,4 +41,4 @@ The Content-Security-Policy lives in `vite.config.js` and only allows the outsid
 
 ## Checks
 
-`.github/workflows/check.yml` runs on every pull request: it validates the HTML, builds the site, makes sure every file the built pages reference exists, and runs Lighthouse three times against the build. It fails if performance drops below 90, best practices below 95, accessibility or SEO below 100, the layout shifts, or the page logs an error. The Lighthouse report link is in the job log.
+Every pull request runs formatting, linting, a build, Playwright tests in three browser engines, accessibility checks, Lighthouse with byte budgets, link checks, dependency review and CodeQL. Details are in [CONTRIBUTING.md](CONTRIBUTING.md#what-ci-checks-on-every-pull-request).

@@ -1,0 +1,8 @@
+{
+  "recurse": true,
+  "verbosity": "error",
+  "retry": true,
+  "retryErrors": true,
+  "retryErrorsCount": 3,
+  "skip": ["^https://script\\.google\\.com", "^https://(www\\.)?facebook\\.com", "^https://santaclaus\\.events"]
+}

@@ -1,0 +1,56 @@
+name: Weekly link check
+
+# Checks every link on the live site, including outside ones that can break without
+# any change here, and opens (or updates) an issue when something is broken.
+on:
+  schedule:
+    - cron: '17 14 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  links:
+    name: Check links on the live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://santaclaus.events' }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Crawl the site
+        id: crawl
+        run: |
+          set +e
+          npx --yes linkinator@8.1.0 "$SITE_URL" --recurse --retry --retry-errors --skip '^https://script\.google\.com' --skip '^https://(www\.)?facebook\.com' --format csv > links.csv
+          status=$?
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          grep -v ',200,\|,OK,' links.csv | head -50 > broken.csv || true
+      - name: Report broken links
+        if: steps.crawl.outputs.status != '0'
+        run: |
+          {
+            echo "The weekly link check found broken links on $SITE_URL:"
+            echo
+            echo '```'
+            cat broken.csv
+            echo '```'
+            echo
+            echo "Run: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID"
+          } > body.md
+          existing=$(gh issue list --label broken-links --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+          else
+            gh label create broken-links --color d93f0b --description "Found by the weekly link check" --force
+            gh issue create --title "Broken links on the live site" --label broken-links --body-file body.md
+          fi
+          exit 1

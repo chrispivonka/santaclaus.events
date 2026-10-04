@@ -6,11 +6,27 @@
 
     var root = document.documentElement;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function $(id) { return document.getElementById(id); }
-    function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
-    function save(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
-    function random(min, max) { return Math.random() * (max - min) + min; }
-    function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+    function $(id) {
+        return document.getElementById(id);
+    }
+    function load(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    }
+    function save(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {}
+    }
+    function random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+    function pick(list) {
+        return list[Math.floor(Math.random() * list.length)];
+    }
     function hash(text) {
         var h = 0;
         for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) >>> 0;
@@ -28,7 +44,9 @@
         toastEl.textContent = message;
         toastEl.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3600);
+        toastTimer = setTimeout(function () {
+            toastEl.classList.remove('show');
+        }, 3600);
     }
 
     // ---- Sounds, synthesized with Web Audio so there are no files to download ----
@@ -85,10 +103,38 @@
             src.stop(t + 0.2);
         }
     }
-    function midi(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+    function midi(n) {
+        return 440 * Math.pow(2, (n - 69) / 12);
+    }
     // "Jingle Bells" (public domain): [note, beats]
-    var song = [[64,1],[64,1],[64,2],[64,1],[64,1],[64,2],[64,1],[67,1],[60,1.5],[62,.5],[64,4],
-        [65,1],[65,1],[65,1.5],[65,.5],[65,1],[64,1],[64,1],[64,.5],[64,.5],[64,1],[62,1],[62,1],[64,1],[62,2],[67,2]];
+    var song = [
+        [64, 1],
+        [64, 1],
+        [64, 2],
+        [64, 1],
+        [64, 1],
+        [64, 2],
+        [64, 1],
+        [67, 1],
+        [60, 1.5],
+        [62, 0.5],
+        [64, 4],
+        [65, 1],
+        [65, 1],
+        [65, 1.5],
+        [65, 0.5],
+        [65, 1],
+        [64, 1],
+        [64, 1],
+        [64, 0.5],
+        [64, 0.5],
+        [64, 1],
+        [62, 1],
+        [62, 1],
+        [64, 1],
+        [62, 2],
+        [67, 2],
+    ];
     function play(name) {
         if (!soundOn || !getAudio()) return;
         var t = audio.currentTime + 0.02;
@@ -105,7 +151,9 @@
             bell(midi(84), t, 1.2);
             bell(midi(88), t + 0.12, 1.4);
         } else if (name === 'fanfare') {
-            [72, 76, 79, 84].forEach(function (n, i) { bell(midi(n), t + i * 0.11, 1.4, 0.16); });
+            [72, 76, 79, 84].forEach(function (n, i) {
+                bell(midi(n), t + i * 0.11, 1.4, 0.16);
+            });
             sleighBells(t + 0.4, 5);
         } else if (name === 'boop') {
             bell(midi(67), t, 0.4, 0.12);
@@ -120,7 +168,10 @@
         soundOn = !soundOn;
         save('site-sound', soundOn ? 'on' : 'off');
         renderSound();
-        if (soundOn) { play('song'); toast('🔔 Sleigh bells on! Tap things around the page to hear them.'); }
+        if (soundOn) {
+            play('song');
+            toast('🔔 Sleigh bells on! Tap things around the page to hear them.');
+        }
     });
 
     // ---- Snow and confetti, sharing one canvas ----
@@ -132,7 +183,9 @@
     var flakes = [];
     var confetti = [];
     var blizzard = 1;
-    var width = 0, height = 0, running = false;
+    var width = 0,
+        height = 0,
+        running = false;
 
     function makeFlake(anywhere) {
         return {
@@ -142,10 +195,12 @@
             speed: random(0.35, 0.95),
             drift: random(-0.3, 0.3),
             phase: random(0, Math.PI * 2),
-            alpha: random(0.4, 0.9)
+            alpha: random(0.4, 0.9),
         };
     }
-    function flakeTarget() { return snowOn || blizzard > 1 ? Math.round(Math.min(70, width / 18) * blizzard) : 0; }
+    function flakeTarget() {
+        return snowOn || blizzard > 1 ? Math.round(Math.min(70, width / 18) * blizzard) : 0;
+    }
     function resize() {
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
         width = window.innerWidth;
@@ -183,7 +238,10 @@
             c.y += c.vy;
             c.rot += c.spin;
             c.life -= 1;
-            if (c.life <= 0 || c.y > height + 20) { confetti.splice(j, 1); continue; }
+            if (c.life <= 0 || c.y > height + 20) {
+                confetti.splice(j, 1);
+                continue;
+            }
             ctx.save();
             ctx.globalAlpha = Math.min(1, c.life / 40);
             ctx.translate(c.x, c.y);
@@ -198,7 +256,10 @@
             ctx.restore();
         }
         if (flakes.length || confetti.length) requestAnimationFrame(frame);
-        else { running = false; ctx.clearRect(0, 0, width, height); }
+        else {
+            running = false;
+            ctx.clearRect(0, 0, width, height);
+        }
     }
     function startCanvas() {
         if (!ctx || running) return;
@@ -212,12 +273,16 @@
             var angle = random(0, Math.PI * 2);
             var speed = random(2, 9);
             confetti.push({
-                x: x, y: y,
+                x: x,
+                y: y,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed - 4,
-                rot: random(0, 6), spin: random(-0.3, 0.3),
-                size: random(6, 11), color: pick(colors),
-                star: Math.random() < 0.2, life: random(70, 120)
+                rot: random(0, 6),
+                spin: random(-0.3, 0.3),
+                size: random(6, 11),
+                color: pick(colors),
+                star: Math.random() < 0.2,
+                life: random(70, 120),
             });
         }
         startCanvas();
@@ -256,7 +321,10 @@
     }
     hangLights();
     var lightsTimer;
-    window.addEventListener('resize', function () { clearTimeout(lightsTimer); lightsTimer = setTimeout(hangLights, 200); });
+    window.addEventListener('resize', function () {
+        clearTimeout(lightsTimer);
+        lightsTimer = setTimeout(hangLights, 200);
+    });
 
     // ---- Stars in the night sky ----
     var stars = $('stars');
@@ -279,8 +347,12 @@
         el.style.left = x + 'px';
         el.style.top = y + 'px';
         document.body.appendChild(el);
-        el.addEventListener('animationend', function () { el.remove(); });
-        setTimeout(function () { el.remove(); }, 4000);
+        el.addEventListener('animationend', function () {
+            el.remove();
+        });
+        setTimeout(function () {
+            el.remove();
+        }, 4000);
         return el;
     }
     function dashSleigh() {
@@ -289,7 +361,9 @@
         void sleigh.offsetWidth;
         sleigh.classList.add('dash');
     }
-    sleigh.addEventListener('animationend', function () { sleigh.classList.remove('dash'); });
+    sleigh.addEventListener('animationend', function () {
+        sleigh.classList.remove('dash');
+    });
     sleigh.addEventListener('click', function () {
         var p = centerOf(sleigh);
         floatAt('ho-bubble', pick(['Ho ho ho!', 'Merry Christmas!', 'Ho ho ho!', 'On, Dasher!']), p.x, p.y - 30);
@@ -304,23 +378,50 @@
     $('moon').addEventListener('click', function () {
         dashSleigh();
         play('chime');
-        toast(pick(['🌙 Santa is taking a practice lap around the moon!', '🌙 The moon winks back at you.', '🌙 Rudolph says hi from up here!']));
+        toast(
+            pick([
+                '🌙 Santa is taking a practice lap around the moon!',
+                '🌙 The moon winks back at you.',
+                '🌙 Rudolph says hi from up here!',
+            ]),
+        );
     });
 
     // ---- Live status from the North Pole (all made up from today's date) ----
     (function () {
         var now = new Date();
-        var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+        var y = now.getFullYear(),
+            m = now.getMonth(),
+            d = now.getDate();
         var statusText, sub;
-        if (m === 11 && d === 24) { statusText = 'delivering presents!'; sub = 'Follow his trip around the world on the NORAD Santa Tracker.'; }
-        else if (m === 11 && d === 25) { statusText = 'taking a well-earned nap'; sub = 'Every present has been delivered. Merry Christmas!'; }
-        else if (m === 11 && d > 25) { statusText = 'relaxing with a mug of cocoa'; sub = 'The reindeer are on vacation until New Year’s.'; }
-        else if (m === 11) { statusText = 'checking his list twice'; sub = 'Santa is out visiting families. Come say hello!'; }
-        else if (m === 10) { statusText = 'making his list'; sub = 'Letters are pouring in. Have you sent yours yet?'; }
-        else if (m >= 8) { statusText = 'running the workshop at full speed'; sub = 'Hammers are tapping and paint is drying all over the North Pole.'; }
-        else if (m >= 6) { statusText = 'testing toys in the workshop'; sub = 'Somebody has to make sure the yo-yos actually yo.'; }
-        else if (m >= 2) { statusText = 'dreaming up new toys'; sub = 'The elves are sketching ideas for next Christmas.'; }
-        else { statusText = 'on vacation in the snow'; sub = 'Even Santa needs a break! The elves are tidying the workshop.'; }
+        if (m === 11 && d === 24) {
+            statusText = 'delivering presents!';
+            sub = 'Follow his trip around the world on the NORAD Santa Tracker.';
+        } else if (m === 11 && d === 25) {
+            statusText = 'taking a well-earned nap';
+            sub = 'Every present has been delivered. Merry Christmas!';
+        } else if (m === 11 && d > 25) {
+            statusText = 'relaxing with a mug of cocoa';
+            sub = 'The reindeer are on vacation until New Year’s.';
+        } else if (m === 11) {
+            statusText = 'checking his list twice';
+            sub = 'Santa is out visiting families. Come say hello!';
+        } else if (m === 10) {
+            statusText = 'making his list';
+            sub = 'Letters are pouring in. Have you sent yours yet?';
+        } else if (m >= 8) {
+            statusText = 'running the workshop at full speed';
+            sub = 'Hammers are tapping and paint is drying all over the North Pole.';
+        } else if (m >= 6) {
+            statusText = 'testing toys in the workshop';
+            sub = 'Somebody has to make sure the yo-yos actually yo.';
+        } else if (m >= 2) {
+            statusText = 'dreaming up new toys';
+            sub = 'The elves are sketching ideas for next Christmas.';
+        } else {
+            statusText = 'on vacation in the snow';
+            sub = 'Even Santa needs a break! The elves are tidying the workshop.';
+        }
         $('santaStatus').textContent = statusText;
         $('santaStatusSub').textContent = sub;
 
@@ -331,9 +432,9 @@
         if (m === 11 && (d === 24 || d === 25)) p = 1;
         var values = {
             toys: Math.pow(p, 0.8),
-            reindeer: p < 0.7 ? p * 0.5 : 0.35 + (p - 0.7) / 0.3 * 0.65,
+            reindeer: p < 0.7 ? p * 0.5 : 0.35 + ((p - 0.7) / 0.3) * 0.65,
             cookies: Math.min(1, p * 1.25),
-            sleigh: Math.pow(p, 3)
+            sleigh: Math.pow(p, 3),
         };
         document.querySelectorAll('.meter').forEach(function (meter) {
             var v = Math.round(Math.min(1, values[meter.dataset.meter]) * 100);
@@ -345,7 +446,10 @@
         document.querySelectorAll('.meter').forEach(function (meter) {
             var el = meter.querySelector('.meter-value');
             var target = Number(meter.dataset.value);
-            if (reduceMotion) { el.textContent = target + '%'; return; }
+            if (reduceMotion) {
+                el.textContent = target + '%';
+                return;
+            }
             var t0 = performance.now();
             (function step(t) {
                 var k = Math.min(1, (t - t0) / 1600);
@@ -362,12 +466,20 @@
         if (el.classList.contains('status-board')) countUpMeters();
     }
     if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) { revealed(entry.target); io.unobserve(entry.target); }
-            });
-        }, { rootMargin: '0px 0px -8% 0px' });
-        reveals.forEach(function (el) { io.observe(el); });
+        var io = new IntersectionObserver(
+            function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        revealed(entry.target);
+                        io.unobserve(entry.target);
+                    }
+                });
+            },
+            { rootMargin: '0px 0px -8% 0px' },
+        );
+        reveals.forEach(function (el) {
+            io.observe(el);
+        });
     } else {
         reveals.forEach(revealed);
     }
@@ -375,38 +487,122 @@
     // ---- Advent calendar ----
     var advent = [
         { icon: '🎶', kind: 'joke', title: 'What do you call an elf who sings?', answer: 'A wrapper!' },
-        { icon: '❄️', kind: 'activity', title: 'Make a paper snowflake', text: 'Fold a square of paper into a triangle three times, snip little shapes along the edges, and unfold. No two snowflakes are the same!' },
-        { icon: '🦌', kind: 'fact', title: 'Reindeer have super eyes', text: 'Reindeer can see ultraviolet light, which helps them spot food and friends in the bright Arctic snow.' },
+        {
+            icon: '❄️',
+            kind: 'activity',
+            title: 'Make a paper snowflake',
+            text: 'Fold a square of paper into a triangle three times, snip little shapes along the edges, and unfold. No two snowflakes are the same!',
+        },
+        {
+            icon: '🦌',
+            kind: 'fact',
+            title: 'Reindeer have super eyes',
+            text: 'Reindeer can see ultraviolet light, which helps them spot food and friends in the bright Arctic snow.',
+        },
         { icon: '🌱', kind: 'joke', title: 'What does Santa say when he’s gardening?', answer: 'Hoe, hoe, hoe!' },
-        { icon: '💛', kind: 'activity', title: 'Three good things', text: 'Tell a grown-up three things you’re thankful for today. Santa loves a grateful heart.' },
-        { icon: '👞', kind: 'fact', title: 'Happy St. Nicholas Day!', text: 'In many countries, children leave their shoes out tonight, December 6th, and wake up to find little treats inside.' },
+        {
+            icon: '💛',
+            kind: 'activity',
+            title: 'Three good things',
+            text: 'Tell a grown-up three things you’re thankful for today. Santa loves a grateful heart.',
+        },
+        {
+            icon: '👞',
+            kind: 'fact',
+            title: 'Happy St. Nicholas Day!',
+            text: 'In many countries, children leave their shoes out tonight, December 6th, and wake up to find little treats inside.',
+        },
         { icon: '🍪', kind: 'joke', title: 'Why did the gingerbread man go to the doctor?', answer: 'He was feeling crummy!' },
-        { icon: '💃', kind: 'activity', title: 'The reindeer hop', text: 'Do nine big hops, one for each reindeer: Dasher, Dancer, Prancer, Vixen, Comet, Cupid, Donner, Blitzen and Rudolph!' },
-        { icon: '🦌', kind: 'fact', title: 'Antlers for everyone', text: 'Reindeer are the only kind of deer where the girls grow antlers too.' },
+        {
+            icon: '💃',
+            kind: 'activity',
+            title: 'The reindeer hop',
+            text: 'Do nine big hops, one for each reindeer: Dasher, Dancer, Prancer, Vixen, Comet, Cupid, Donner, Blitzen and Rudolph!',
+        },
+        {
+            icon: '🦌',
+            kind: 'fact',
+            title: 'Antlers for everyone',
+            text: 'Reindeer are the only kind of deer where the girls grow antlers too.',
+        },
         { icon: '⛄', kind: 'joke', title: 'What do snowmen eat for breakfast?', answer: 'Frosted Flakes!' },
-        { icon: '✏️', kind: 'activity', title: 'Design a toy', text: 'Draw the most amazing toy you can imagine. Bring it with you when you visit Santa and show him!' },
-        { icon: '🪶', kind: 'fact', title: 'Feather trees', text: 'Some of the very first artificial Christmas trees were made in Germany from goose feathers dyed green.' },
+        {
+            icon: '✏️',
+            kind: 'activity',
+            title: 'Design a toy',
+            text: 'Draw the most amazing toy you can imagine. Bring it with you when you visit Santa and show him!',
+        },
+        {
+            icon: '🪶',
+            kind: 'fact',
+            title: 'Feather trees',
+            text: 'Some of the very first artificial Christmas trees were made in Germany from goose feathers dyed green.',
+        },
         { icon: '🐱', kind: 'joke', title: 'What do you call a cat on the beach at Christmas?', answer: 'Sandy Claws!' },
-        { icon: '📖', kind: 'activity', title: 'Story fort night', text: 'Build a blanket fort, grab a flashlight, and read a winter story inside it.' },
-        { icon: '🔴', kind: 'fact', title: 'Rudolph’s birthday', text: 'Rudolph the Red-Nosed Reindeer first appeared in a story booklet in 1939. His nose has been glowing ever since.' },
+        {
+            icon: '📖',
+            kind: 'activity',
+            title: 'Story fort night',
+            text: 'Build a blanket fort, grab a flashlight, and read a winter story inside it.',
+        },
+        {
+            icon: '🔴',
+            kind: 'fact',
+            title: 'Rudolph’s birthday',
+            text: 'Rudolph the Red-Nosed Reindeer first appeared in a story booklet in 1939. His nose has been glowing ever since.',
+        },
         { icon: '📸', kind: 'joke', title: 'How does Santa take pictures?', answer: 'With his North Pole-aroid!' },
-        { icon: '🧁', kind: 'activity', title: 'Quality control', text: 'Help a grown-up bake cookies. Somebody has to taste-test one to make sure it’s good enough for Santa.' },
-        { icon: '🔬', kind: 'fact', title: 'Six-sided snow', text: 'Snowflakes almost always have six sides because of the way water freezes into ice crystals.' },
+        {
+            icon: '🧁',
+            kind: 'activity',
+            title: 'Quality control',
+            text: 'Help a grown-up bake cookies. Somebody has to taste-test one to make sure it’s good enough for Santa.',
+        },
+        {
+            icon: '🔬',
+            kind: 'fact',
+            title: 'Six-sided snow',
+            text: 'Snowflakes almost always have six sides because of the way water freezes into ice crystals.',
+        },
         { icon: '🧛', kind: 'joke', title: 'What do you get if you cross a snowman and a vampire?', answer: 'Frostbite!' },
-        { icon: '🎤', kind: 'activity', title: 'Carol time', text: 'Sing your favorite Christmas song as loud as you can (ask a grown-up first!). Christmas cheer spreads by singing loud for all to hear.' },
-        { icon: '🌌', kind: 'fact', title: 'The longest night', text: 'Around December 21st is the winter solstice: the longest night of the year in the northern half of the world. Perfect for sleigh practice!' },
+        {
+            icon: '🎤',
+            kind: 'activity',
+            title: 'Carol time',
+            text: 'Sing your favorite Christmas song as loud as you can (ask a grown-up first!). Christmas cheer spreads by singing loud for all to hear.',
+        },
+        {
+            icon: '🌌',
+            kind: 'fact',
+            title: 'The longest night',
+            text: 'Around December 21st is the winter solstice: the longest night of the year in the northern half of the world. Perfect for sleigh practice!',
+        },
         { icon: '🥕', kind: 'joke', title: 'Why was the snowman looking through the carrots?', answer: 'He was picking his nose!' },
-        { icon: '🥕', kind: 'activity', title: 'Reindeer snacks', text: 'Find a carrot or two to leave out for the reindeer on Christmas Eve. They’ll need the energy!' },
-        { icon: '🛷', kind: 'special', title: 'Santa leaves tonight!', text: 'The sleigh is packed and the reindeer are ready. Hang your stocking, leave out the cookies, and get to bed early. Santa only comes when you’re asleep!', link: { href: 'https://www.noradsanta.org/', label: 'Follow Santa’s trip with NORAD' } }
+        {
+            icon: '🥕',
+            kind: 'activity',
+            title: 'Reindeer snacks',
+            text: 'Find a carrot or two to leave out for the reindeer on Christmas Eve. They’ll need the energy!',
+        },
+        {
+            icon: '🛷',
+            kind: 'special',
+            title: 'Santa leaves tonight!',
+            text: 'The sleigh is packed and the reindeer are ready. Hang your stocking, leave out the cookies, and get to bed early. Santa only comes when you’re asleep!',
+            link: { href: 'https://www.noradsanta.org/', label: 'Follow Santa’s trip with NORAD' },
+        },
     ];
     var kindLabel = { joke: 'Christmas joke', fact: 'North Pole fact', activity: 'Something fun to do', special: 'Christmas Eve' };
     var adventGrid = $('adventGrid');
     var dialog = $('adventDialog');
     var today = new Date();
-    var month = today.getMonth(), date = today.getDate();
+    var month = today.getMonth(),
+        date = today.getDate();
     var adventYear = month === 0 ? today.getFullYear() - 1 : today.getFullYear();
     var opened = {};
-    try { opened = JSON.parse(load('advent-' + adventYear) || '{}') || {}; } catch (e) {}
+    try {
+        opened = JSON.parse(load('advent-' + adventYear) || '{}') || {};
+    } catch (e) {}
 
     function isUnlocked(day) {
         if (month === 11) return day <= date;
@@ -450,7 +646,9 @@
         var p = centerOf($('adventDialogAnswer'));
         burst(p.x, p.y, 50);
     });
-    dialog.addEventListener('click', function (e) { if (e.target === dialog) dialog.close(); });
+    dialog.addEventListener('click', function (e) {
+        if (e.target === dialog) dialog.close();
+    });
 
     advent.forEach(function (item, i) {
         var day = i + 1;
@@ -460,7 +658,8 @@
         door.className = 'door';
         var unlocked = isUnlocked(day);
         door.setAttribute('aria-label', 'Door ' + day + (unlocked ? '' : ', locked until December ' + day));
-        door.innerHTML = '<span class="door-inside" aria-hidden="true"></span><span class="door-front" aria-hidden="true"><span class="door-num"></span><span class="door-lock">🔒</span></span>';
+        door.innerHTML =
+            '<span class="door-inside" aria-hidden="true"></span><span class="door-front" aria-hidden="true"><span class="door-num"></span><span class="door-lock">🔒</span></span>';
         door.querySelector('.door-inside').textContent = item.icon;
         door.querySelector('.door-num').textContent = day;
         if (!unlocked) door.classList.add('is-locked');
@@ -473,25 +672,46 @@
                 door.classList.add('shake');
                 play('boop');
                 var n = sleepsUntilDecember(day);
-                toast('🔒 No peeking! Door ' + day + ' opens on December ' + day + (n > 0 ? ', ' + n + (n === 1 ? ' sleep' : ' sleeps') + ' from now.' : '.'));
+                toast(
+                    '🔒 No peeking! Door ' +
+                        day +
+                        ' opens on December ' +
+                        day +
+                        (n > 0 ? ', ' + n + (n === 1 ? ' sleep' : ' sleeps') + ' from now.' : '.'),
+                );
                 return;
             }
-            if (door.classList.contains('is-open')) { showDoor(day); return; }
+            if (door.classList.contains('is-open')) {
+                showDoor(day);
+                return;
+            }
             door.classList.add('is-open');
             opened[day] = true;
             save('advent-' + adventYear, JSON.stringify(opened));
             play('chime');
             var p = centerOf(door);
             burst(p.x, p.y, 40);
-            setTimeout(function () { showDoor(day); }, reduceMotion ? 0 : 550);
+            setTimeout(
+                function () {
+                    showDoor(day);
+                },
+                reduceMotion ? 0 : 550,
+            );
         });
         li.appendChild(door);
         adventGrid.appendChild(li);
     });
     var intro = $('adventIntro');
-    if (month === 11 && date <= 24) intro.textContent = 'Today is door number ' + date + '. Go on, open it! Behind each door is a joke, a North Pole fact, or something fun to do.';
-    else if ((month === 11 && date > 24) || (month === 0 && date <= 6)) intro.textContent = 'Missed one? Every door stays open until January 6th, so you can catch up on all 24.';
-    else intro.textContent = 'The first door opens on December 1st, just ' + sleepsUntilDecember(1) + ' sleeps away. Behind each one is a joke, a North Pole fact, or something fun to do.';
+    if (month === 11 && date <= 24)
+        intro.textContent =
+            'Today is door number ' + date + '. Go on, open it! Behind each door is a joke, a North Pole fact, or something fun to do.';
+    else if ((month === 11 && date > 24) || (month === 0 && date <= 6))
+        intro.textContent = 'Missed one? Every door stays open until January 6th, so you can catch up on all 24.';
+    else
+        intro.textContent =
+            'The first door opens on December 1st, just ' +
+            sleepsUntilDecember(1) +
+            ' sleeps away. Behind each one is a joke, a North Pole fact, or something fun to do.';
 
     // ---- Am I on the Nice List? ----
     var niceForm = $('niceForm');
@@ -502,67 +722,108 @@
     var gaugeFill = $('gaugeFill');
     var verdict = $('niceVerdict');
     var lastNice = null;
-    var listNames = ['Ava', 'Liam', 'Sofia', 'Noah', 'Mia', 'Lucas', 'Zoe', 'Ethan', 'Lily', 'Owen', 'Ella', 'Leo', 'Harper', 'Mateo', 'Nora', 'Jack', 'Ruby', 'Henry'];
+    var listNames = [
+        'Ava',
+        'Liam',
+        'Sofia',
+        'Noah',
+        'Mia',
+        'Lucas',
+        'Zoe',
+        'Ethan',
+        'Lily',
+        'Owen',
+        'Ella',
+        'Leo',
+        'Harper',
+        'Mateo',
+        'Nora',
+        'Jack',
+        'Ruby',
+        'Henry',
+    ];
     var niceNotes = [
         'Santa says keep sharing those toys!',
         'The elves noticed how kind you’ve been.',
         'Mrs. Claus says your manners are top notch.',
         'Rudolph gave you a glowing review.',
         'Keep up the good work and keep cleaning your room!',
-        'Santa smiled when he read your name.'
+        'Santa smiled when he read your name.',
     ];
-    function titleCase(name) { return name.charAt(0).toUpperCase() + name.slice(1); }
+    function titleCase(name) {
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    }
     niceForm.addEventListener('submit', function (e) {
         e.preventDefault();
         var name = titleCase(niceInput.value.trim().replace(/\s+/g, ' '));
-        if (!name) { niceInput.focus(); toast('Santa needs a name to check his list!'); return; }
+        if (!name) {
+            niceInput.focus();
+            toast('Santa needs a name to check his list!');
+            return;
+        }
         var grinch = /grinch/i.test(name);
         var h = hash(name.toLowerCase());
         var score = grinch ? 4 : 90 + (h % 11);
         outcome.hidden = true;
         gaugeFill.style.width = '0';
         scrollNames.textContent = '';
-        listNames.slice(h % 6, (h % 6) + 10).concat([name]).forEach(function (n) {
-            var li = document.createElement('li');
-            li.textContent = n;
-            scrollNames.appendChild(li);
-        });
+        listNames
+            .slice(h % 6, (h % 6) + 10)
+            .concat([name])
+            .forEach(function (n) {
+                var li = document.createElement('li');
+                li.textContent = n;
+                scrollNames.appendChild(li);
+            });
         scrollPaper.hidden = false;
         play('jingle');
-        setTimeout(function () {
-            scrollPaper.hidden = true;
-            outcome.hidden = false;
-            verdict.textContent = '';
-            var b = document.createElement('b');
-            b.textContent = name;
-            verdict.appendChild(b);
-            verdict.appendChild(document.createTextNode(grinch ? ', hmm\u2026' : ', you\u2019re on the Nice List!'));
-            $('niceNote').textContent = grinch
-                ? 'Santa is still hoping your heart grows three sizes this year.'
-                : 'You scored ' + score + '% nice. ' + niceNotes[h % niceNotes.length];
-            gaugeFill.style.setProperty('--full', (10000 / Math.max(score, 1)).toFixed(0) + '%');
-            requestAnimationFrame(function () { gaugeFill.style.width = score + '%'; });
-            $('printCert').hidden = grinch;
-            lastNice = { name: name, score: score };
-            if (!grinch) {
-                play('fanfare');
-                var p = centerOf(outcome);
-                setTimeout(function () { burst(p.x, p.y, 110); }, 700);
-            } else {
-                play('boop');
-            }
-        }, reduceMotion ? 50 : 2200);
+        setTimeout(
+            function () {
+                scrollPaper.hidden = true;
+                outcome.hidden = false;
+                verdict.textContent = '';
+                var b = document.createElement('b');
+                b.textContent = name;
+                verdict.appendChild(b);
+                verdict.appendChild(document.createTextNode(grinch ? ', hmm\u2026' : ', you\u2019re on the Nice List!'));
+                $('niceNote').textContent = grinch
+                    ? 'Santa is still hoping your heart grows three sizes this year.'
+                    : 'You scored ' + score + '% nice. ' + niceNotes[h % niceNotes.length];
+                gaugeFill.style.setProperty('--full', (10000 / Math.max(score, 1)).toFixed(0) + '%');
+                requestAnimationFrame(function () {
+                    gaugeFill.style.width = score + '%';
+                });
+                $('printCert').hidden = grinch;
+                lastNice = { name: name, score: score };
+                if (!grinch) {
+                    play('fanfare');
+                    var p = centerOf(outcome);
+                    setTimeout(function () {
+                        burst(p.x, p.y, 110);
+                    }, 700);
+                } else {
+                    play('boop');
+                }
+            },
+            reduceMotion ? 50 : 2200,
+        );
     });
     $('printCert').addEventListener('click', function () {
         if (!lastNice) return;
         var area = $('printArea');
         var when = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-        area.innerHTML = '<div class="certificate"><p class="cert-top">Official North Pole Certificate</p>' +
+        area.innerHTML =
+            '<div class="certificate"><p class="cert-top">Official North Pole Certificate</p>' +
             '<h1>Nice List</h1><p>This certifies that</p><p class="cert-name"></p>' +
             '<p class="cert-body"></p><p class="cert-seal" aria-hidden="true">🎅</p>' +
             '<div class="cert-sign"><span>Santa Claus<small>Santa Claus</small></span><span class="cert-date"></span></div></div>';
         area.querySelector('.cert-name').textContent = lastNice.name;
-        area.querySelector('.cert-body').textContent = 'has been checked twice and found to be ' + lastNice.score + '% nice, and is hereby an official member of Santa’s Nice List for Christmas ' + adventYear + '.';
+        area.querySelector('.cert-body').textContent =
+            'has been checked twice and found to be ' +
+            lastNice.score +
+            '% nice, and is hereby an official member of Santa’s Nice List for Christmas ' +
+            adventYear +
+            '.';
         var dateEl = area.querySelector('.cert-date');
         dateEl.textContent = when;
         var small = document.createElement('small');
@@ -571,18 +832,81 @@
         document.body.classList.add('printing');
         window.print();
     });
-    window.addEventListener('afterprint', function () { document.body.classList.remove('printing'); });
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('printing');
+    });
 
     // ---- What's your elf name? ----
-    var elfFirst = { a: 'Jingle', b: 'Sparkle', c: 'Twinkle', d: 'Cocoa', e: 'Snowy', f: 'Frosty', g: 'Ginger', h: 'Holly', i: 'Icicle', j: 'Jolly', k: 'Tinsel', l: 'Lucky', m: 'Merry', n: 'Nutmeg', o: 'Ornament', p: 'Peppermint', q: 'Quilly', r: 'Ribbon', s: 'Sugarplum', t: 'Toasty', u: 'Upsy', v: 'Velvet', w: 'Wiggles', x: 'Xylo', y: 'Yuletide', z: 'Zippy' };
-    var elfLast = ['McSnowflake', 'Candycane', 'Gumdrop', 'Tinseltoes', 'Sprinkleboots', 'Cookiecrumb', 'Mittens', 'Jinglebottom', 'Fruitcake', 'Hollyberry', 'Cocoabean', 'Starbright'];
-    var elfJobs = ['Chief Cookie Tester', 'Ribbon Curling Specialist', 'Reindeer Snack Coordinator', 'Toy Quality Inspector', 'Sleigh Bell Tuner', 'Head of Wrapping Paper', 'Snowball Safety Officer', 'Candy Cane Straightener', 'Stocking Stuffer-in-Chief', 'Workshop DJ', 'Keeper of the Nice List Pens', 'Hot Cocoa Barista'];
+    var elfFirst = {
+        a: 'Jingle',
+        b: 'Sparkle',
+        c: 'Twinkle',
+        d: 'Cocoa',
+        e: 'Snowy',
+        f: 'Frosty',
+        g: 'Ginger',
+        h: 'Holly',
+        i: 'Icicle',
+        j: 'Jolly',
+        k: 'Tinsel',
+        l: 'Lucky',
+        m: 'Merry',
+        n: 'Nutmeg',
+        o: 'Ornament',
+        p: 'Peppermint',
+        q: 'Quilly',
+        r: 'Ribbon',
+        s: 'Sugarplum',
+        t: 'Toasty',
+        u: 'Upsy',
+        v: 'Velvet',
+        w: 'Wiggles',
+        x: 'Xylo',
+        y: 'Yuletide',
+        z: 'Zippy',
+    };
+    var elfLast = [
+        'McSnowflake',
+        'Candycane',
+        'Gumdrop',
+        'Tinseltoes',
+        'Sprinkleboots',
+        'Cookiecrumb',
+        'Mittens',
+        'Jinglebottom',
+        'Fruitcake',
+        'Hollyberry',
+        'Cocoabean',
+        'Starbright',
+    ];
+    var elfJobs = [
+        'Chief Cookie Tester',
+        'Ribbon Curling Specialist',
+        'Reindeer Snack Coordinator',
+        'Toy Quality Inspector',
+        'Sleigh Bell Tuner',
+        'Head of Wrapping Paper',
+        'Snowball Safety Officer',
+        'Candy Cane Straightener',
+        'Stocking Stuffer-in-Chief',
+        'Workshop DJ',
+        'Keeper of the Nice List Pens',
+        'Hot Cocoa Barista',
+    ];
     $('elfForm').addEventListener('submit', function (e) {
         e.preventDefault();
         var first = $('elfFirst').value.trim();
         var m = $('elfMonth').value;
-        if (!first) { $('elfFirst').focus(); toast('Every elf needs a first name to start with!'); return; }
-        if (m === '') { $('elfMonth').focus(); toast('Pick your birthday month and the elves will do the rest.'); return; }
+        if (!first) {
+            $('elfFirst').focus();
+            toast('Every elf needs a first name to start with!');
+            return;
+        }
+        if (m === '') {
+            $('elfMonth').focus();
+            toast('Pick your birthday month and the elves will do the rest.');
+            return;
+        }
         var letter = first.charAt(0).toLowerCase();
         var name = (elfFirst[letter] || 'Jolly') + ' ' + elfLast[Number(m)];
         $('elfName').textContent = name;
@@ -606,7 +930,7 @@
         ['Cupid', 'Spreads Christmas cheer everywhere the sleigh lands.'],
         ['Donner', 'The strongest of the team. Pulls the heaviest toy sacks.'],
         ['Blitzen', 'Fast as lightning, especially when carrots are involved.'],
-        ['Rudolph', 'Team captain! That glowing red nose lights the way on foggy nights.']
+        ['Rudolph', 'Team captain! That glowing red nose lights the way on foggy nights.'],
     ];
     var reindeerGrid = $('reindeerGrid');
     reindeer.forEach(function (r) {
@@ -615,7 +939,8 @@
         card.type = 'button';
         card.className = 'deer-card' + (r[0] === 'Rudolph' ? ' rudolph' : '');
         card.setAttribute('aria-pressed', 'false');
-        card.innerHTML = '<span class="deer-face deer-front"><span class="deer-emoji" aria-hidden="true">🦌</span><span class="deer-name"></span></span><span class="deer-face deer-back"></span>';
+        card.innerHTML =
+            '<span class="deer-face deer-front"><span class="deer-emoji" aria-hidden="true">🦌</span><span class="deer-name"></span></span><span class="deer-face deer-back"></span>';
         card.querySelector('.deer-name').textContent = r[0];
         card.querySelector('.deer-back').textContent = r[1];
         card.addEventListener('click', function () {
@@ -639,8 +964,8 @@
         burst(p.x, p.y, 140);
         if (!reduceMotion) {
             var env = floatAt('flying-letter', '✉️', p.x - 20, p.y - 20);
-            env.style.setProperty('--tx', (window.innerWidth - p.x) + 'px');
-            env.style.setProperty('--ty', (-p.y - 40) + 'px');
+            env.style.setProperty('--tx', window.innerWidth - p.x + 'px');
+            env.style.setProperty('--ty', -p.y - 40 + 'px');
         }
     });
 
@@ -650,7 +975,7 @@
     var blizzardTimer;
     document.addEventListener('keydown', function (e) {
         var key = (e.key || '').toLowerCase();
-        progress = key === code[progress] ? progress + 1 : (key === code[0] ? 1 : 0);
+        progress = key === code[progress] ? progress + 1 : key === code[0] ? 1 : 0;
         if (progress < code.length) return;
         progress = 0;
         root.classList.add('blizzard');
@@ -690,7 +1015,10 @@
             var l = e.target.closest('.ltr');
             if (!l || l.classList.contains('boing')) return;
             l.classList.add('boing');
-            l.addEventListener('animationend', function done() { l.classList.remove('boing'); l.removeEventListener('animationend', done); });
+            l.addEventListener('animationend', function done() {
+                l.classList.remove('boing');
+                l.removeEventListener('animationend', done);
+            });
             play('boop');
         });
     }
@@ -701,7 +1029,9 @@
         snowman.classList.remove('excited');
         void snowman.offsetWidth;
         snowman.classList.add('excited');
-        setTimeout(function () { snowman.classList.remove('excited'); }, 1600);
+        setTimeout(function () {
+            snowman.classList.remove('excited');
+        }, 1600);
         var p = centerOf(snowman);
         floatAt('ho-bubble', pick(['Hi there!', 'Brrr!', 'I love hugs!', 'Let it snow!']), p.x, p.y - 50);
         play('chime');
@@ -710,7 +1040,8 @@
     // ---- A sparkle trail follows the mouse across the hero ----
     var hero = document.querySelector('.hero');
     if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
-        var lastSpark = 0, sparkCount = 0;
+        var lastSpark = 0,
+            sparkCount = 0;
         hero.addEventListener('pointermove', function (e) {
             var now = performance.now();
             if (now - lastSpark < 45 || sparkCount > 30) return;
@@ -720,7 +1051,9 @@
             el.style.setProperty('--c', pick(['#ffe08a', '#ffffff', '#ff8fa0', '#9be7c4', '#a8d8ff']));
             el.style.setProperty('--size', random(10, 20).toFixed(0) + 'px');
             el.style.setProperty('--dx', random(-20, 20).toFixed(0) + 'px');
-            el.addEventListener('animationend', function () { sparkCount--; });
+            el.addEventListener('animationend', function () {
+                sparkCount--;
+            });
         });
     }
 
@@ -731,7 +1064,12 @@
         letterBox.addEventListener('input', function () {
             if (++keystrokes % 5) return;
             var r = letterBox.getBoundingClientRect();
-            var el = floatAt('type-spark', pick(['❤️', '⭐', '✨', '🎄', '💌']), r.left + random(r.width * 0.15, r.width * 0.9), r.top + random(10, Math.min(r.height, 120)));
+            var el = floatAt(
+                'type-spark',
+                pick(['❤️', '⭐', '✨', '🎄', '💌']),
+                r.left + random(r.width * 0.15, r.width * 0.9),
+                r.top + random(10, Math.min(r.height, 120)),
+            );
             el.style.setProperty('--dx', random(-30, 30).toFixed(0) + 'px');
         });
     }
@@ -740,12 +1078,18 @@
     var peekers = Array.prototype.slice.call(document.querySelectorAll('.peeker'));
     var seekCount = $('seekCount');
     var found = {};
-    try { found = JSON.parse(load('seek-found') || '{}') || {}; } catch (e) {}
-    function countFound() { return peekers.filter(function (p) { return found[p.dataset.name]; }).length; }
+    try {
+        found = JSON.parse(load('seek-found') || '{}') || {};
+    } catch (e) {}
+    function countFound() {
+        return peekers.filter(function (p) {
+            return found[p.dataset.name];
+        }).length;
+    }
     peekers.forEach(function (peeker, i) {
         if (found[peeker.dataset.name]) peeker.classList.add('found');
         // Each friend keeps their own rhythm so they rarely peek at the same time.
-        peeker.style.setProperty('--every', (14 + i * 3) + 's');
+        peeker.style.setProperty('--every', 14 + i * 3 + 's');
         peeker.style.setProperty('--delay', (-random(2, 12)).toFixed(1) + 's');
         peeker.addEventListener('click', function () {
             if (found[peeker.dataset.name]) return;

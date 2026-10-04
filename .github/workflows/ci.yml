@@ -1,0 +1,215 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, development]
+  merge_group:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: Format and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - name: Formatting (Oxfmt)
+        run: npx vp fmt --check
+      - name: JavaScript (Oxlint)
+        run: npx vp lint --deny-warnings
+      - name: CSS (Stylelint)
+        run: npm run lint:css
+      - name: HTML (html-validate)
+        run: npm run lint:html
+
+  workflows:
+    name: Workflow security
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: actionlint and zizmor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pipx run actionlint-py==1.7.12.25 -color
+          pipx run zizmor==1.30.1 --format=github .github/workflows
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - run: npm run build
+      - name: Check the built site
+        run: npm run verify:dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+          # dist/.well-known/security.txt is a hidden path and would otherwise be left out
+          include-hidden-files: true
+
+  e2e:
+    name: Tests (${{ matrix.engine }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - engine: chromium
+            projects: --project=chromium --project=mobile-chrome
+          - engine: firefox
+            projects: --project=firefox
+          - engine: webkit
+            projects: --project=webkit --project=mobile-safari
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Install ${{ matrix.engine }}
+        run: npx playwright install --with-deps "$ENGINE"
+        env:
+          ENGINE: ${{ matrix.engine }}
+      - name: Playwright end-to-end and accessibility tests
+        run: |
+          # shellcheck disable=SC2086 # PROJECTS is a list of flags
+          npx playwright test $PROJECTS
+        env:
+          PROJECTS: ${{ matrix.projects }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.engine }}
+          path: playwright-report
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Lighthouse CI (3 runs, budgets in lighthouserc.json)
+        run: npx --yes @lhci/cli@0.15.1 autorun
+
+  links:
+    name: Links
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Check internal and external links
+        run: npx --yes linkinator@8.1.0 dist --config linkinator.config.json
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # The review needs the repository's Dependency graph (Settings > Advanced Security).
+      - name: Check that Dependency graph is enabled
+        id: graph
+        run: |
+          if gh api "repos/$GH_REPO/dependency-graph/sbom" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Dependency review skipped: turn on Dependency graph under Settings > Advanced Security (see CONTRIBUTING.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/dependency-review-action@v4
+        if: steps.graph.outputs.enabled == 'true'
+        with:
+          fail-on-severity: moderate
+
+  # The one check branch rules require, so adding or renaming jobs never needs a settings change.
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [quality, workflows, build, e2e, lighthouse, links, dependency-review]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Fail if any job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

@@ -17,7 +17,9 @@
     themeToggle.addEventListener('click', function () {
         var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         applyTheme(next);
-        try { localStorage.setItem('site-theme', next); } catch (e) {}
+        try {
+            localStorage.setItem('site-theme', next);
+        } catch (e) {}
     });
 
     // ---- Mobile menu ----
@@ -27,9 +29,15 @@
         navLinks.classList.toggle('open', open);
         navToggle.setAttribute('aria-expanded', String(open));
     }
-    navToggle.addEventListener('click', function () { setMenu(!navLinks.classList.contains('open')); });
-    navLinks.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    navToggle.addEventListener('click', function () {
+        setMenu(!navLinks.classList.contains('open'));
+    });
+    navLinks.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setMenu(false);
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') setMenu(false);
+    });
 
     // ---- Header border + back-to-top on scroll ----
     var header = document.getElementById('siteHeader');
@@ -47,16 +55,23 @@
     // ---- Highlight the nav link for the section in view ----
     if ('IntersectionObserver' in window) {
         var links = {};
-        navLinks.querySelectorAll('a[href^="#"]').forEach(function (a) { links[a.getAttribute('href').slice(1)] = a; });
-        var spy = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                var link = links[entry.target.id];
-                if (link && entry.isIntersecting) {
-                    Object.keys(links).forEach(function (k) { links[k].removeAttribute('aria-current'); });
-                    link.setAttribute('aria-current', 'true');
-                }
-            });
-        }, { rootMargin: '-45% 0px -50% 0px' });
+        navLinks.querySelectorAll('a[href^="#"]').forEach(function (a) {
+            links[a.getAttribute('href').slice(1)] = a;
+        });
+        var spy = new IntersectionObserver(
+            function (entries) {
+                entries.forEach(function (entry) {
+                    var link = links[entry.target.id];
+                    if (link && entry.isIntersecting) {
+                        Object.keys(links).forEach(function (k) {
+                            links[k].removeAttribute('aria-current');
+                        });
+                        link.setAttribute('aria-current', 'true');
+                    }
+                });
+            },
+            { rootMargin: '-45% 0px -50% 0px' },
+        );
         Object.keys(links).forEach(function (id) {
             var section = document.getElementById(id);
             if (section) spy.observe(section);
@@ -67,14 +82,18 @@
     var countdown = document.getElementById('countdown');
     var countdownTitle = document.getElementById('countdownTitle');
     var units = {};
-    countdown.querySelectorAll('[data-unit]').forEach(function (el) { units[el.dataset.unit] = el; });
+    countdown.querySelectorAll('[data-unit]').forEach(function (el) {
+        units[el.dataset.unit] = el;
+    });
     function setTitle(text, isChristmas) {
         if (countdownTitle.textContent === text) return;
         countdownTitle.textContent = text;
         countdown.classList.toggle('is-christmas', isChristmas);
     }
     var sleeps = document.getElementById('countdownSleeps');
-    function pad(n) { return String(n).padStart(2, '0'); }
+    function pad(n) {
+        return String(n).padStart(2, '0');
+    }
     function setUnit(name, value) {
         var el = units[name];
         if (el.textContent === String(value)) return;
@@ -85,7 +104,9 @@
             el.classList.add('tick');
         }
     }
-    function setSleeps(text) { if (sleeps.textContent !== text) sleeps.textContent = text; }
+    function setSleeps(text) {
+        if (sleeps.textContent !== text) sleeps.textContent = text;
+    }
     function tick() {
         var now = new Date();
         var year = now.getFullYear();
@@ -129,12 +150,19 @@
     }
     if (iframe) {
         if ('IntersectionObserver' in window) {
-            var calendarObserver = new IntersectionObserver(function (entries) {
-                if (entries.some(function (entry) { return entry.isIntersecting; })) {
-                    calendarObserver.disconnect();
-                    loadCalendar();
-                }
-            }, { rootMargin: '600px 0px' });
+            var calendarObserver = new IntersectionObserver(
+                function (entries) {
+                    if (
+                        entries.some(function (entry) {
+                            return entry.isIntersecting;
+                        })
+                    ) {
+                        calendarObserver.disconnect();
+                        loadCalendar();
+                    }
+                },
+                { rootMargin: '600px 0px' },
+            );
             calendarObserver.observe(iframe);
         } else {
             loadCalendar();
@@ -150,7 +178,9 @@
     var submitLabel = submitButton.querySelector('.btn-label');
     var status = document.getElementById('formStatus');
     var signoff = document.getElementById('signoffName');
-    var fields = ['name', 'email', 'message'].map(function (id) { return document.getElementById(id); });
+    var fields = ['name', 'email', 'message'].map(function (id) {
+        return document.getElementById(id);
+    });
     var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function validateField(field) {
@@ -166,7 +196,9 @@
 
     fields.forEach(function (field) {
         // Validate once someone leaves a field, then live as they fix it.
-        field.addEventListener('blur', function () { if (field.value) validateField(field); });
+        field.addEventListener('blur', function () {
+            if (field.value) validateField(field);
+        });
         field.addEventListener('input', function () {
             if (field.getAttribute('aria-invalid') === 'true') validateField(field);
         });
@@ -191,15 +223,17 @@
         });
     });
 
-    function showStatus(message, isError) {
+    function showStatus(text, isError) {
         status.hidden = false;
-        status.textContent = message;
+        status.textContent = text;
         status.classList.toggle('is-error', !!isError);
     }
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
-        var invalid = fields.filter(function (f) { return !validateField(f); });
+        var invalid = fields.filter(function (f) {
+            return !validateField(f);
+        });
         if (invalid.length) {
             invalid[0].focus();
             return;
@@ -221,13 +255,22 @@
             .then(function () {
                 form.reset();
                 signoff.textContent = 'me';
-                wishButtons.forEach(function (b) { b.classList.remove('added'); });
-                fields.forEach(function (f) { f.removeAttribute('aria-invalid'); });
+                wishButtons.forEach(function (b) {
+                    b.classList.remove('added');
+                });
+                fields.forEach(function (f) {
+                    f.removeAttribute('aria-invalid');
+                });
                 form.dispatchEvent(new CustomEvent('letter:sent', { bubbles: true }));
-                showStatus('Ho ho ho! Your letter slid down the digital chimney and landed on Santa’s desk. Keep an eye on your stocking (and your inbox)!');
+                showStatus(
+                    'Ho ho ho! Your letter slid down the digital chimney and landed on Santa’s desk. Keep an eye on your stocking (and your inbox)!',
+                );
             })
             .catch(function () {
-                showStatus('Ho-ho-oh no! Your letter got caught in a snowdrift and didn’t reach the North Pole. Check your connection and try again.', true);
+                showStatus(
+                    'Ho-ho-oh no! Your letter got caught in a snowdrift and didn’t reach the North Pole. Check your connection and try again.',
+                    true,
+                );
             })
             .finally(function () {
                 submitButton.disabled = false;

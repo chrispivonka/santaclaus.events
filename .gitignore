@@ -141,3 +141,10 @@ vite.config.ts.timestamp-*
 # Build output
 dist/
 .lighthouseci/
+
+# Test output
+playwright-report/
+test-results/
+
+# Vite+ hook dispatcher (recreated by npm install)
+.vite-hooks/_/

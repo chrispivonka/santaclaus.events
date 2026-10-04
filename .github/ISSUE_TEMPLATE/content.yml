@@ -1,0 +1,11 @@
+name: Content change
+description: Update text, photos, events or other content on the site
+labels: [content]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: What should change?
+      description: Paste the new wording or attach photos, and say where they go.
+    validations:
+      required: true

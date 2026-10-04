@@ -1,0 +1,66 @@
+name: Release
+
+# 1. Run this workflow by hand ("Run workflow" on the Actions tab) to open or refresh the
+#    release pull request from development to main, listing everything that will ship.
+# 2. Merging that pull request deploys production (Vercel) and this workflow tags a
+#    GitHub Release named for the date, with notes grouped by label.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.event_name }}
+
+jobs:
+  release-pr:
+    name: Open the release pull request
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create or update the release pull request
+        run: |
+          changes=$(gh api "repos/$GH_REPO/compare/main...development" --paginate \
+            --jq '.commits[] | select(.parents | length == 1) | "- " + (.commit.message | split("\n")[0])')
+          if [ -z "$changes" ]; then
+            echo "::notice::development has nothing that isn't on main yet."
+            exit 0
+          fi
+          title="Release $(date -u +%Y-%m-%d)"
+          body=$(printf '## What ships\n\n%s\n\nMerging this deploys production and tags a GitHub Release. Use a merge commit (not squash) so main and development stay in sync.\n' "$changes")
+          existing=$(gh pr list --base main --head development --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body "$body"
+            echo "Updated release PR #$existing"
+          else
+            gh label create release --color 0e8a16 --description "Release pull request" --force
+            gh pr create --base main --head development --title "$title" --body "$body" --label release
+          fi
+
+  github-release:
+    name: Tag the release
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create a dated GitHub Release with generated notes
+        run: |
+          base="v$(date -u +%Y.%m.%d)"
+          tag="$base"
+          n=2
+          while gh release view "$tag" >/dev/null 2>&1; do tag="$base.$n"; n=$((n + 1)); done
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes
