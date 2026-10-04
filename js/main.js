@@ -115,17 +115,31 @@
     countdown.setAttribute('aria-label', 'Countdown to Christmas');
 
     // ---- Show the events calendar in the visitor's own time zone ----
-    try {
-        var iframe = document.getElementById('calendarEmbed');
-        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (iframe && tz) {
-            var url = new URL(iframe.getAttribute('src'));
-            if (url.searchParams.get('ctz') !== tz) {
-                url.searchParams.set('ctz', tz);
-                iframe.src = url.toString();
-            }
+    // Google's embed is heavy, so it only loads once the visitor scrolls close to it.
+    var iframe = document.getElementById('calendarEmbed');
+    function loadCalendar() {
+        var src = iframe.getAttribute('data-src');
+        try {
+            var url = new URL(src);
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz) url.searchParams.set('ctz', tz);
+            src = url.toString();
+        } catch (e) {}
+        iframe.src = src;
+    }
+    if (iframe) {
+        if ('IntersectionObserver' in window) {
+            var calendarObserver = new IntersectionObserver(function (entries) {
+                if (entries.some(function (entry) { return entry.isIntersecting; })) {
+                    calendarObserver.disconnect();
+                    loadCalendar();
+                }
+            }, { rootMargin: '600px 0px' });
+            calendarObserver.observe(iframe);
+        } else {
+            loadCalendar();
         }
-    } catch (e) {}
+    }
 
     // ---- Footer year ----
     document.getElementById('year').textContent = new Date().getFullYear();

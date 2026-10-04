@@ -13,26 +13,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Validate HTML
-        run: npx --yes html-validate@11 index.html 404.html
-      - name: Validate JSON config
-        run: |
-          node -e "for (const f of ['vercel.json','site.webmanifest']) JSON.parse(require('fs').readFileSync(f,'utf8'))"
-      - name: Check local links and images exist
-        run: |
-          node -e "
-            const fs = require('fs');
-            let bad = 0;
-            for (const page of ['index.html', '404.html']) {
-              const html = fs.readFileSync(page, 'utf8');
-              for (const [, ref] of html.matchAll(/(?:src|href|srcset)=\"([^\"#:]+?)\"/g)) {
-                const path = ref.replace(/^\//, '');
-                if (path && !fs.existsSync(path)) { console.error(page + ': missing ' + ref); bad++; }
-              }
-            }
-            const css = fs.readFileSync('css/styles.css', 'utf8');
-            for (const [, ref] of css.matchAll(/url\(\"?\.\.\/([^\")]+)\"?\)/g)) {
-              if (!fs.existsSync(ref)) { console.error('styles.css: missing ' + ref); bad++; }
-            }
-            process.exit(bad ? 1 : 0);
-          "
+        run: npx html-validate index.html 404.html
+      - name: Build
+        run: npm run build
+      - name: Check the built site
+        run: npm run check
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.15.1 autorun

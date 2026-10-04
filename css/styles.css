@@ -2,6 +2,14 @@
    Plain modern CSS: no framework. Colors live in tokens below, with a
    light and dark set switched by [data-theme] on <html>. */
 
+/* Self-hosted fonts, trimmed to the characters and weights the site uses (see scripts/fonts.js) */
+@font-face { font-family: "Fraunces"; src: url("../assets/fonts/fraunces.woff2") format("woff2"); font-weight: 600 800; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("../assets/fonts/inter.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "Caveat"; src: url("../assets/fonts/caveat.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+
+/* Smooth cross-fade when moving between pages, in browsers that support it */
+@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
+
 :root {
     --red: #c8102e;
     --red-deep: #9e0b23;
@@ -592,7 +600,7 @@ h3 { font-family: var(--font-display); line-height: 1.2; margin: 0 0 .75rem; fon
         url("../assets/img/letter-bg.jpg") center / cover no-repeat;
     background:
         linear-gradient(rgba(10, 14, 24, .72), rgba(10, 14, 24, .82)),
-        image-set(url("../assets/img/letter-bg.webp") type("image/webp"), url("../assets/img/letter-bg.jpg") type("image/jpeg")) center / cover no-repeat;
+        image-set(url("../assets/img/letter-bg.avif") type("image/avif"), url("../assets/img/letter-bg.webp") type("image/webp"), url("../assets/img/letter-bg.jpg") type("image/jpeg")) center / cover no-repeat;
 }
 .section-head-light .eyebrow { color: var(--gold); }
 
