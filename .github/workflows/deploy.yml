@@ -108,7 +108,7 @@ jobs:
           fi
 
   production:
-    name: Production deployment (${{ inputs.tag }})
+    name: Production deployment
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -161,7 +161,7 @@ jobs:
           echo "url=$PRODUCTION_URL" >> "$GITHUB_OUTPUT"
 
   verify:
-    name: Verify (${{ needs.production.result == 'success' && 'production' || 'preview' }})
+    name: Verify the deployment
     needs: [preview, production]
     if: always() && (needs.preview.result == 'success' || needs.production.result == 'success') && (needs.preview.outputs.url != '' || needs.production.outputs.url != '')
     runs-on: ubuntu-latest
