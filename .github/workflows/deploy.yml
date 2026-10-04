@@ -173,8 +173,15 @@ jobs:
           code=$(curl -sS -o alias.json -w '%{http_code}' -H "$auth" -H 'Content-Type: application/json' \
               -X POST "$api/v2/deployments/$id/aliases?teamId=$VERCEL_ORG_ID" -d "{\"alias\":\"$host\"}")
           out=$(cat alias.json)
+          msg=$(echo "$out" | jq -r '.error.message // .')
+          if [ "$code" -ge 400 ] && echo "$msg" | grep -qi 'SSL certificate'; then
+            # Vercel issues the certificate only once the domain's DNS validates, which can take
+            # a while after the CNAME is added. The deployment is fine; the next push aliases it.
+            echo "::warning::Deployed $deployment but could not alias it to $host yet: $msg. Check that its DNS record is valid in Vercel (Settings -> Domains); the next push to development will alias it."
+            exit 0
+          fi
           if [ "$code" -ge 400 ]; then
-            echo "::error::Vercel refused to alias $deployment to $host (HTTP $code): $(echo "$out" | jq -r '.error.message // .')"
+            echo "::error::Vercel refused to alias $deployment to $host (HTTP $code): $msg"
             echo "::error::Add $host to the Vercel project (Settings → Domains), or set the PREPROD_URL repository variable to a domain the project already has."
             exit 1
           fi
