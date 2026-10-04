@@ -3,11 +3,13 @@ import { test as base, expect } from '@playwright/test';
 // Every test fails if the page logs an error or throws, and outside services
 // (Google Calendar, the letter endpoint) are stubbed so tests are fast and repeatable.
 export const test = base.extend({
-    page: async ({ page }, use) => {
+    // Patterns of console errors a test expects, set with test.use({ allowedErrors: [...] }).
+    allowedErrors: [[], { option: true }],
+    page: async ({ page, allowedErrors }, use) => {
         const errors = [];
         page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
         page.on('console', (msg) => {
-            if (msg.type() === 'error') errors.push(`console: ${msg.text()}`);
+            if (msg.type() === 'error' && !allowedErrors.some((pattern) => pattern.test(msg.text()))) errors.push(`console: ${msg.text()}`);
         });
         await page.route(/^https:\/\/calendar\.google\.com\//, (route) =>
             route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Calendar</title>' }),

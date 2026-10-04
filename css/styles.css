@@ -1347,13 +1347,14 @@ h3 {
 }
 .fun-grid {
     display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
+    /* minmax(0, …) lets the cards shrink below the intrinsic width of their form controls on narrow phones */
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: 1.5rem;
     align-items: start;
 }
 @media (max-width: 860px) {
     .fun-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 .fun-card {
@@ -1397,6 +1398,7 @@ h3 {
 }
 .mini-row input {
     flex: 1 1 12rem;
+    min-width: 0;
 }
 .mini-form input,
 .mini-form select {

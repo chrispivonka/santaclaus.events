@@ -48,3 +48,37 @@ jobs:
       - name: Smoke, accessibility and header tests against ${{ env.BASE_URL }}
         if: steps.gate.outputs.run == 'true'
         run: npx playwright test --project=chromium --project=mobile-chrome
+
+  # Outside-in scans of the live site, production only: a passive OWASP ZAP baseline scan and
+  # Mozilla's HTTP Observatory grade. ZAP opens (or updates) an issue when it finds something.
+  scan:
+    name: Security scan (production)
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    env:
+      BASE_URL: ${{ github.event.deployment_status.environment_url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: Mozilla HTTP Observatory (fails below grade A)
+        run: |
+          host="${BASE_URL#https://}"; host="${host%%/*}"
+          npx --yes @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
+          grep -Eq '"grade": "A\+?"' observatory.txt || { echo "::error::HTTP Observatory grade is below A"; exit 1; }
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: ${{ env.BASE_URL }}
+          rules_file_name: .github/zap-rules.tsv
+          cmd_options: -a
+          allow_issue_writing: true
+          fail_action: true

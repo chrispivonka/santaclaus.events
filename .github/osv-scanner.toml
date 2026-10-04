@@ -1,0 +1,5 @@
+# OSV-Scanner config. To ignore a finding that is confirmed not to apply, add:
+#
+# [[IgnoredVulns]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# reason = "why it does not affect this site"

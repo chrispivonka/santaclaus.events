@@ -21,6 +21,8 @@ npm run dev        # local site with instant reload
 | `npm run images`    | Make AVIF/WebP versions of photos in `assets/img/`                                            |
 | `npm run fonts`     | Rebuild the trimmed web fonts                                                                 |
 
+The Content-Security-Policy is sent as a real header from `vercel.json`, with hashes of the inlined script and styles. The build rewrites that header whenever the hashes change, so if `npm run build` leaves `vercel.json` modified, commit it; CI fails otherwise.
+
 The pre-commit hook formats and lints the files you're committing. Skip it once with `git commit --no-verify`, or turn it off with `npx vp hooks disable`.
 
 ## Branches
@@ -31,16 +33,18 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 
 ## What CI checks on every pull request
 
-| Job               | Checks                                                                                                                                                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Format and lint   | Oxfmt formatting, Oxlint (JS), Stylelint (CSS), html-validate                                                                                                                    |
-| Workflow security | actionlint and zizmor on `.github/workflows`                                                                                                                                     |
-| Build             | Vite+ build, then `scripts/check.js` (every referenced file exists, CSP present, CSS inlined)                                                                                    |
-| Tests             | Playwright on Chromium, Firefox and WebKit (desktop and phone): page, fonts, countdown, theme, calendar, letter form, menu, 404; axe-core accessibility in light and dark themes |
-| Lighthouse        | 3 runs; performance ≥ 90, best practices ≥ 95, accessibility and SEO 100, no console errors, byte budgets per file type                                                          |
-| Links             | linkinator on internal and outside links                                                                                                                                         |
-| Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                               |
-| CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                            |
+| Job               | Checks                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Format and lint   | Oxfmt formatting, Oxlint (JS), Stylelint (CSS), html-validate with its accessibility preset                                                                                                                                                                                                                                                                        |
+| Workflow security | actionlint and zizmor on `.github/workflows`                                                                                                                                                                                                                                                                                                                       |
+| Build             | Vite+ build, then `scripts/check.js` (every referenced file exists, CSS inlined, the CSP in the page and the one in `vercel.json` carry the same hashes)                                                                                                                                                                                                           |
+| Tests             | Playwright on Chromium, Firefox and WebKit, desktop and phone. Every feature flow (advent calendar at several dates, countdown, games, letter form and its failure modes), keyboard-only use, layout at 320px and 200% text size, SEO metadata, security (strict CSP with no violations while using everything, no outside requests, honeypot, local storage keys) |
+| Accessibility     | axe-core against WCAG 2.2 AA plus best practices in both themes, on every interactive state (menu, dialog, toasts, results, form errors), reduced motion and forced colors; landmarks, live regions, 24px targets                                                                                                                                                  |
+| Lighthouse        | 3 runs; performance ≥ 90, best practices ≥ 95, accessibility and SEO 100, no console errors, byte budgets per file type                                                                                                                                                                                                                                            |
+| Links             | linkinator on internal and outside links                                                                                                                                                                                                                                                                                                                           |
+| Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                                                                                                                                                                                                                 |
+| Security          | `npm audit`, OSV-Scanner on the lockfile, gitleaks for committed secrets                                                                                                                                                                                                                                                                                           |
+| CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                                                                                                                                                                                                              |
 
 Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped dependency updates every Monday (after a 3-day cooldown on new releases).
 
@@ -48,7 +52,7 @@ Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the 
 
 1. On the **Actions** tab, open **Release** and click **Run workflow**. It opens (or refreshes) a pull request from `development` to `main` listing everything that will ship.
 2. Check the list, then merge it with **Create a merge commit** (not squash, so the branches stay in sync).
-3. Vercel deploys production. The Release workflow tags a GitHub Release named for the date (for example `v2026.12.01`) with notes grouped by label. The post-deploy check then runs the smoke tests and header checks against the live site.
+3. Vercel deploys production. The Release workflow tags a GitHub Release named for the date (for example `v2026.12.01`) with notes grouped by label. The post-deploy check then runs the smoke tests and header checks against the live site, and on production also an OWASP ZAP baseline scan and the MDN HTTP Observatory (grade A required); findings open an issue.
 
 **Rolling back:** in Vercel, open the previous production deployment and choose **Instant Rollback**. Then revert the bad change on `development` and release again.
 

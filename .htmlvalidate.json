@@ -1,5 +1,5 @@
 {
-  "extends": ["html-validate:recommended"],
+  "extends": ["html-validate:recommended", "html-validate:a11y"],
   "rules": {
     "void-style": "off",
     "no-inline-style": "off",
