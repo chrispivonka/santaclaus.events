@@ -37,12 +37,20 @@ jobs:
       - name: Report broken links
         if: steps.crawl.outputs.status != '0'
         run: |
-          body=$(printf 'The weekly link check found broken links on %s:\n\n```\n%s\n```\n\nRun: %s/%s/actions/runs/%s\n' "$SITE_URL" "$(cat broken.csv)" "$GITHUB_SERVER_URL" "$GH_REPO" "$GITHUB_RUN_ID")
+          {
+            echo "The weekly link check found broken links on $SITE_URL:"
+            echo
+            echo '```'
+            cat broken.csv
+            echo '```'
+            echo
+            echo "Run: $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID"
+          } > body.md
           existing=$(gh issue list --label broken-links --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "$body"
+            gh issue comment "$existing" --body-file body.md
           else
             gh label create broken-links --color d93f0b --description "Found by the weekly link check" --force
-            gh issue create --title "Broken links on the live site" --label broken-links --body "$body"
+            gh issue create --title "Broken links on the live site" --label broken-links --body-file body.md
           fi
           exit 1

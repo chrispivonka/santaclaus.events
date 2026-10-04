@@ -180,8 +180,22 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
     steps:
+      # The review needs the repository's Dependency graph (Settings > Advanced Security).
+      - name: Check that Dependency graph is enabled
+        id: graph
+        run: |
+          if gh api "repos/$GH_REPO/dependency-graph/sbom" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Dependency review skipped: turn on Dependency graph under Settings > Advanced Security (see CONTRIBUTING.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/dependency-review-action@v4
+        if: steps.graph.outputs.enabled == 'true'
         with:
           fail-on-severity: moderate
 
