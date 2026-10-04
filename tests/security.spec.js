@@ -137,7 +137,7 @@ test.describe('outside requests', () => {
         expect(outside).toEqual([]);
     });
 
-    test('scrolling to the events only adds the Google Calendar embed', async ({ page, baseURL }) => {
+    test('scrolling to the events only adds the Google Calendar embed', async ({ page, baseURL, browserName }) => {
         const outside = new Set();
         page.on('request', (r) => {
             const url = new URL(r.url());
@@ -147,7 +147,9 @@ test.describe('outside requests', () => {
         await page.locator('#events').scrollIntoViewIfNeeded();
         await expect(page.locator('#calendarEmbed')).toHaveAttribute('src', /^https:\/\/calendar\.google\.com\//);
         await page.waitForLoadState('networkidle');
-        expect([...outside]).toEqual(['calendar.google.com']);
+        expect([...outside].filter((host) => host !== 'calendar.google.com')).toEqual([]);
+        // WebKit may defer the lazy iframe past network idle; Chromium fetches it right away.
+        if (browserName === 'chromium') expect([...outside]).toEqual(['calendar.google.com']);
     });
 
     test('only expected keys are written to local storage', async ({ page }) => {

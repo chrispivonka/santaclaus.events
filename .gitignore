@@ -148,3 +148,6 @@ test-results/
 
 # Vite+ hook dispatcher (recreated by npm install)
 .vite-hooks/_/
+
+# Vercel CLI project link and pulled settings (written by `vercel pull` in the Deploy workflow)
+.vercel/

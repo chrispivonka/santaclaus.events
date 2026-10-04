@@ -29,7 +29,7 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 
 - **`development`** is where work lands. Open pull requests against it; they're squash-merged.
 - **`main`** is production. It only changes through a release pull request from `development`.
-- Every pull request gets a Vercel preview link and has to pass the **CI passed** check.
+- Every pull request gets a Vercel preview deployment (the Deploy workflow posts the link as a comment) and has to pass the **CI passed** check.
 
 ## What CI checks on every pull request
 
@@ -44,17 +44,24 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 | Links             | linkinator on internal and outside links                                                                                                                                                                                                                                                                                                                           |
 | Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                                                                                                                                                                                                                 |
 | Security          | OSV-Scanner on the lockfile (reviewed exceptions in `.github/osv-scanner.toml`), `npm audit` as a warning, gitleaks for committed secrets                                                                                                                                                                                                                          |
+| Deploy            | Preview deployment to Vercel from GitHub Actions, then the Chromium smoke, accessibility and header tests against it (needs the bypass secret, below)                                                                                                                                                                                                              |
 | CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                                                                                                                                                                                                              |
 
 Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped dependency updates every Monday (after a 3-day cooldown on new releases).
 
 ## Releasing
 
-1. On the **Actions** tab, open **Release** and click **Run workflow**. It opens (or refreshes) a pull request from `development` to `main` listing everything that will ship.
-2. Check the list, then merge it with **Create a merge commit** (not squash, so the branches stay in sync).
-3. Vercel deploys production. The Release workflow tags a GitHub Release named for the date (for example `v2026.12.01`) with notes grouped by label. The post-deploy check then runs the smoke tests and header checks against the live site, and on production also an OWASP ZAP baseline scan and the MDN HTTP Observatory (grade A required); findings open an issue.
+Deploys come from GitHub Actions only. Vercel's Git integration is off, so nothing reaches production except through this flow:
 
-**Rolling back:** in Vercel, open the previous production deployment and choose **Instant Rollback**. Then revert the bad change on `development` and release again.
+1. On the **Actions** tab, open **Release** and click **Run workflow**. It opens (or refreshes) a pull request from `development` to `main` listing everything that will ship. That pull request gets a preview deployment like any other; check it.
+2. Check the list, then merge it with **Create a merge commit** (not squash, so the branches stay in sync).
+3. CI runs on `main`. When it is green, the Release workflow tags a GitHub Release named for the date (for example `v2026.12.01`) with notes grouped by label, and dispatches the **Deploy** workflow with that tag.
+4. Deploy checks the tag is on `main`, builds it with `vercel build`, deploys the prebuilt output with `vercel deploy --prebuilt --prod`, then runs the smoke, accessibility and header tests against https://santaclaus.events, followed by an OWASP ZAP baseline scan and the MDN HTTP Observatory (grade A required; findings open an issue).
+5. If the smoke tests fail against production, the workflow runs `vercel rollback` to put the previous deployment back and fails loudly. Fix on `development` and release again.
+
+**Deploying by hand:** Actions → **Deploy** → **Run workflow** → enter an existing release tag. Anything that is not a `vYYYY.MM.DD` tag on `main` is refused. To redeploy an older release after a bad one, run it with that older tag.
+
+**Rolling back by hand:** in Vercel, open the previous production deployment and choose **Instant Rollback**, or run the Deploy workflow with the previous tag.
 
 ## One-time repository settings
 
@@ -65,5 +72,7 @@ These live in GitHub and Vercel settings, not in the code:
 3. **Actions:** Settings → Actions → General → Workflow permissions → tick **Allow GitHub Actions to create and approve pull requests** (the Release workflow opens the release pull request).
 4. **Security:** Settings → Advanced Security → turn on **Dependency graph** (the dependency-review check on pull requests is skipped with a warning until it's on), **Private vulnerability reporting**, **Dependabot alerts**, **Dependabot security updates**, **Secret scanning** and **Push protection**.
 5. **Pull requests:** Settings → General → keep **Automatically delete head branches** on. When stacking pull requests, base them on `development` instead of on another pull request's branch. Otherwise GitHub closes the stacked one when the first merges.
-6. **Vercel:** Project → Settings → Git → Production branch `main`. Node.js version follows `package.json` (24).
-7. **Preview checks (optional):** Vercel → Project → Settings → Deployment Protection → **Protection Bypass for Automation** → create a secret, then add it in GitHub as the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`. Without it, post-deploy checks run on production only.
+6. **Vercel project, with the Git integration off:** the project `santaclaus.events` already exists in Vercel. Project → Settings → Git → **Disconnect** the GitHub repository, so Vercel stops building on its own and GitHub Actions is the only deployer (while it is connected, every push deploys twice). Add the domain `santaclaus.events` (and `www`) under Settings → Domains.
+7. **Vercel secrets in GitHub:** Settings → Secrets and variables → Actions → add `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, scoped to the team, because `vercel pull` reads the team), `VERCEL_PROJECT_ID` (Project → Settings → General → Project ID) and `VERCEL_ORG_ID` (Team → Settings → General → Team ID; both also appear in `.vercel/project.json` after `npx vercel@62 link`). Optionally the repository variable `PRODUCTION_URL` if production is not `https://santaclaus.events`.
+8. **Production environment (recommended):** Settings → Environments → `production` → tick **Required reviewers** and add yourself if you want a manual approval before each production deploy; otherwise releases deploy on their own once CI is green on `main`.
+9. **Preview checks (optional):** Vercel → Project → Settings → Deployment Protection → **Protection Bypass for Automation** → create a secret, then add it in GitHub as the repository secret `VERCEL_AUTOMATION_BYPASS_SECRET`. Without it, deployment checks run on production only.
