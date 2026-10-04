@@ -191,9 +191,9 @@
         });
     });
 
-    function showStatus(message, isError) {
+    function showStatus(text, isError) {
         status.hidden = false;
-        status.textContent = message;
+        status.textContent = text;
         status.classList.toggle('is-error', !!isError);
     }
 

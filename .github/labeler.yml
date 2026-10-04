@@ -1,0 +1,18 @@
+content:
+  - changed-files:
+      - any-glob-to-any-file: ['index.html', '404.html', 'public/**', 'assets/img/**']
+design:
+  - changed-files:
+      - any-glob-to-any-file: ['css/**', 'assets/fonts/**']
+scripts:
+  - changed-files:
+      - any-glob-to-any-file: ['js/**']
+build:
+  - changed-files:
+      - any-glob-to-any-file: ['vite.config.js', 'vercel.json', 'scripts/**', 'package.json', 'package-lock.json']
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'tests/**', 'playwright.config.js', 'lighthouserc.json', 'linkinator.config.json']
+docs:
+  - changed-files:
+      - any-glob-to-any-file: ['*.md', 'docs/**']

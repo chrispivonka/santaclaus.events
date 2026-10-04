@@ -3,20 +3,35 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
+    "check": "vp check",
+    "lint:css": "stylelint \"css/**/*.css\"",
+    "lint:html": "html-validate index.html 404.html",
+    "lint": "vp lint && npm run lint:css && npm run lint:html",
+    "fmt": "vp fmt",
+    "verify:dist": "node scripts/check.js",
+    "test": "playwright test",
+    "test:a11y": "playwright test --grep @a11y",
     "images": "node scripts/images.js",
     "fonts": "node scripts/fonts.js",
-    "check": "node scripts/check.js"
+    "prepare": "vp config --hooks --no-agent"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource/caveat": "^5.3.0",
+    "@playwright/test": "^1.63.0",
     "html-validate": "^11.16.1",
     "sharp": "^0.35.5",
+    "stylelint": "^17.16.0",
+    "stylelint-config-recommended": "^18.0.0",
     "subset-font": "^2.9.0",
-    "vite": "^8.3.2"
+    "vite-plus": "1.0.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

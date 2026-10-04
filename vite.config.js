@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite-plus';
 
 // The page's Content Security Policy. It ships as a <meta> tag so the build can add the
 // hashes of the inlined stylesheet and theme script; vercel.json adds frame-ancestors,
@@ -54,6 +54,30 @@ const inlineCssAndCsp = {
 
 export default defineConfig({
     plugins: [inlineThemeScript, inlineCssAndCsp],
+
+    // `vp lint` (Oxlint): bugs are errors, suspicious patterns are warnings that still fail CI.
+    lint: {
+        ignorePatterns: ['dist/**', 'playwright-report/**', 'test-results/**'],
+        env: { browser: true, es2024: true },
+        categories: { correctness: 'error', suspicious: 'warn' },
+        // `catch (e) {}` around localStorage and audio is deliberate: those failures are ignorable.
+        rules: { 'no-unused-vars': ['error', { caughtErrors: 'none' }] },
+    },
+
+    // `vp fmt` (Oxfmt, Prettier-compatible) for JS, CSS, HTML and JSON, matched to the existing style.
+    fmt: {
+        ignorePatterns: ['dist/**', 'package-lock.json', 'playwright-report/**', 'test-results/**'],
+        tabWidth: 4,
+        singleQuote: true,
+        printWidth: 140,
+        overrides: [{ files: ['*.json', '*.yml', '*.yaml', '*.md'], options: { tabWidth: 2 } }],
+    },
+
+    // Pre-commit hook (.vite-hooks/pre-commit): format and lint just the staged files.
+    staged: {
+        '*.{js,css,html,json}': 'vp check --fix',
+    },
+
     build: {
         rollupOptions: {
             input: { main: 'index.html', notFound: '404.html' },
