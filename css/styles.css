@@ -238,11 +238,14 @@ p {
     transition: border-color 0.2s ease;
 }
 .site-header.scrolled {
+    /* Opaque once content scrolls under it: the muted nav text stays readable over light sections */
+    background: var(--bg);
     border-bottom-color: var(--border);
 }
 .nav {
     position: relative;
     display: flex;
+    flex-wrap: wrap; /* at 200% text the tools drop under the brand rather than off screen */
     align-items: center;
     gap: 0.5rem;
     min-height: 4.25rem;

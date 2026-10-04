@@ -1,0 +1,272 @@
+name: Deploy
+
+# GitHub Actions builds the site and deploys it to Vercel with the Vercel CLI. Vercel's own
+# Git integration stays off, so nothing deploys unless this workflow does it:
+#
+#   pull request      -> preview deployment, URL posted on the pull request, smoke-tested
+#   release tag       -> production deployment, smoke-tested, security-scanned; the smoke
+#                        tests failing rolls production back to the previous deployment
+#
+# Production has no branch trigger on purpose. The Release workflow dispatches this one with
+# the tag it just created, after CI went green on main, so production can never be "whatever
+# main is right now". The tag must be an ancestor of main; anything else is refused.
+#
+# Secrets: VERCEL_TOKEN (team-scoped: the CLI reads the team during `vercel pull`),
+# VERCEL_ORG_ID and VERCEL_PROJECT_ID (from `.vercel/project.json` after `vercel link`), and
+# optionally VERCEL_AUTOMATION_BYPASS_SECRET so the tests can reach protected previews.
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy to production (for example v2026.12.01)'
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: deploy-${{ github.event.pull_request.number || inputs.tag }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  VERCEL_CLI: vercel@62.2.0
+
+jobs:
+  preview:
+    name: Preview deployment
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check the Vercel secrets are present (Dependabot pull requests have none)
+        id: gate
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::No preview: VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID are not available to this run."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: steps.gate.outputs.run == 'true'
+        run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - name: Build with the preview settings
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          npx --yes "$VERCEL_CLI" pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build --token="$VERCEL_TOKEN"
+      - name: Deploy the prebuilt output
+        id: deploy
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --token="$VERCEL_TOKEN" \
+            --meta githubCommitSha="$GITHUB_SHA" --meta githubPullRequest="$PR_NUMBER")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview: $url"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+      - name: Post (or refresh) the preview link on the pull request
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.deploy.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          marker='<!-- vercel-preview -->'
+          body=$(printf '%s\n**Preview deployment:** %s\n\nBuilt from %s. Smoke, accessibility and header tests run against it in the "Verify" job of this workflow.\n' "$marker" "$URL" "$SHA")
+          existing=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.user.type == \"Bot\" and (.body | startswith(\"$marker\"))) | .id" | head -n1)
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$GH_REPO/issues/comments/$existing" -f body="$body" >/dev/null
+          else
+            gh api --method POST "repos/$GH_REPO/issues/$PR_NUMBER/comments" -f body="$body" >/dev/null
+          fi
+
+  production:
+    name: Production deployment (${{ inputs.tag }})
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refuse anything that is not a release tag on main
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in v20[0-9][0-9].[0-9][0-9].[0-9][0-9]|v20[0-9][0-9].[0-9][0-9].[0-9][0-9].[0-9]*) ;; *)
+            echo "::error::'$TAG' is not a release tag (vYYYY.MM.DD)"; exit 1 ;;
+          esac
+          git merge-base --is-ancestor "refs/tags/$TAG" origin/main \
+            || { echo "::error::$TAG is not on main; only released commits deploy to production"; exit 1; }
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - name: Build with the production settings
+        run: |
+          npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
+      - name: Deploy the prebuilt output to production
+        id: deploy
+        env:
+          TAG: ${{ inputs.tag }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL || 'https://santaclaus.events' }}
+        run: |
+          deployment=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN" \
+            --meta githubCommitSha="$GITHUB_SHA" --meta releaseTag="$TAG")
+          echo "Deployment: $deployment"
+          echo "url=$PRODUCTION_URL" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify (${{ needs.production.result == 'success' && 'production' || 'preview' }})
+    needs: [preview, production]
+    if: always() && (needs.preview.result == 'success' || needs.production.result == 'success') && (needs.preview.outputs.url != '' || needs.production.outputs.url != '')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      BASE_URL: ${{ needs.production.outputs.url || needs.preview.outputs.url }}
+      IS_PRODUCTION: ${{ needs.production.result == 'success' }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - name: Skip protected previews without a bypass secret
+        id: gate
+        run: |
+          if [ "$IS_PRODUCTION" != "true" ] && [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            echo "::notice::Preview checks skipped: add the VERCEL_AUTOMATION_BYPASS_SECRET repository secret to enable them (see CONTRIBUTING.md)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: steps.gate.outputs.run == 'true'
+        run: npm ci
+        env:
+          VP_GIT_HOOKS: '0'
+      - if: steps.gate.outputs.run == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Wait for the deployment to answer
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET" "$BASE_URL/")
+            [ "$code" = "200" ] && exit 0
+            echo "attempt $i: HTTP $code"; sleep 5
+          done
+          echo "::error::$BASE_URL did not answer 200 in time"; exit 1
+      - name: Smoke, accessibility and header tests against ${{ env.BASE_URL }}
+        if: steps.gate.outputs.run == 'true'
+        run: npx playwright test --project=chromium --project=mobile-chrome
+
+  # Outside-in scans of the live site, production only: a passive OWASP ZAP baseline scan and
+  # Mozilla's HTTP Observatory grade. ZAP opens (or updates) an issue when it finds something.
+  scan:
+    name: Security scan (production)
+    needs: [production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    env:
+      BASE_URL: ${{ needs.production.outputs.url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: Mozilla HTTP Observatory (fails below grade A)
+        run: |
+          host="${BASE_URL#https://}"; host="${host%%/*}"
+          npx --yes @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
+          grep -Eq '"grade": "A\+?"' observatory.txt || { echo "::error::HTTP Observatory grade is below A"; exit 1; }
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: ${{ env.BASE_URL }}
+          rules_file_name: .github/zap-rules.tsv
+          cmd_options: -a
+          allow_issue_writing: true
+          fail_action: true
+
+  # The smoke tests failing against production means visitors are seeing a broken site right
+  # now, so put the previous production deployment back first and ask questions after.
+  rollback:
+    name: Roll production back
+    needs: [production, verify]
+    if: always() && needs.production.result == 'success' && needs.verify.result == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Roll back to the previous production deployment
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          npx --yes "$VERCEL_CLI" rollback --yes --token="$VERCEL_TOKEN"
+          echo "::error::Production checks failed after deploying $TAG; rolled back to the previous deployment. Fix on development and release again."
+          exit 1
