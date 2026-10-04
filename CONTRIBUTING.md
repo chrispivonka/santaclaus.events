@@ -9,17 +9,17 @@ npm install        # also installs the pre-commit hook
 npm run dev        # local site with instant reload
 ```
 
-| Command | What it does |
-|---|---|
-| `npm run build` | Production build into `dist/` |
-| `npm run preview` | Serve `dist/` at http://localhost:4173 |
-| `npm run check` | Format check + JavaScript lint (Vite+: Oxfmt and Oxlint) |
-| `npm run fmt` | Format everything |
-| `npm run lint` | JavaScript, CSS and HTML linting |
-| `npm test` | Playwright tests on the built site (run `npm run build` first; `npx playwright install` once) |
-| `npm run test:a11y` | Only the accessibility tests |
-| `npm run images` | Make AVIF/WebP versions of photos in `assets/img/` |
-| `npm run fonts` | Rebuild the trimmed web fonts |
+| Command             | What it does                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| `npm run build`     | Production build into `dist/`                                                                 |
+| `npm run preview`   | Serve `dist/` at http://localhost:4173                                                        |
+| `npm run check`     | Format check + JavaScript lint (Vite+: Oxfmt and Oxlint)                                      |
+| `npm run fmt`       | Format everything                                                                             |
+| `npm run lint`      | JavaScript, CSS and HTML linting                                                              |
+| `npm test`          | Playwright tests on the built site (run `npm run build` first; `npx playwright install` once) |
+| `npm run test:a11y` | Only the accessibility tests                                                                  |
+| `npm run images`    | Make AVIF/WebP versions of photos in `assets/img/`                                            |
+| `npm run fonts`     | Rebuild the trimmed web fonts                                                                 |
 
 The pre-commit hook formats and lints the files you're committing. Skip it once with `git commit --no-verify`, or turn it off with `npx vp hooks disable`.
 
@@ -31,16 +31,16 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 
 ## What CI checks on every pull request
 
-| Job | Checks |
-|---|---|
-| Format and lint | Oxfmt formatting, Oxlint (JS), Stylelint (CSS), html-validate |
-| Workflow security | actionlint and zizmor on `.github/workflows` |
-| Build | Vite+ build, then `scripts/check.js` (every referenced file exists, CSP present, CSS inlined) |
-| Tests | Playwright on Chromium, Firefox and WebKit (desktop and phone): page, fonts, countdown, theme, calendar, letter form, menu, 404; axe-core accessibility in light and dark themes |
-| Lighthouse | 3 runs; performance ≥ 90, best practices ≥ 95, accessibility and SEO 100, no console errors, byte budgets per file type |
-| Links | linkinator on internal and outside links |
-| Dependency review | Blocks new dependencies with known vulnerabilities |
-| CodeQL | Security analysis of the JavaScript and the workflows |
+| Job               | Checks                                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format and lint   | Oxfmt formatting, Oxlint (JS), Stylelint (CSS), html-validate                                                                                                                    |
+| Workflow security | actionlint and zizmor on `.github/workflows`                                                                                                                                     |
+| Build             | Vite+ build, then `scripts/check.js` (every referenced file exists, CSP present, CSS inlined)                                                                                    |
+| Tests             | Playwright on Chromium, Firefox and WebKit (desktop and phone): page, fonts, countdown, theme, calendar, letter form, menu, 404; axe-core accessibility in light and dark themes |
+| Lighthouse        | 3 runs; performance ≥ 90, best practices ≥ 95, accessibility and SEO 100, no console errors, byte budgets per file type                                                          |
+| Links             | linkinator on internal and outside links                                                                                                                                         |
+| Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                               |
+| CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                            |
 
 Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped dependency updates every Monday (after a 3-day cooldown on new releases).
 

@@ -9,7 +9,9 @@ export const test = base.extend({
         page.on('console', (msg) => {
             if (msg.type() === 'error') errors.push(`console: ${msg.text()}`);
         });
-        await page.route(/calendar\.google\.com/, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Calendar</title>' }));
+        await page.route(/calendar\.google\.com/, (route) =>
+            route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Calendar</title>' }),
+        );
         await page.route(/script\.google(usercontent)?\.com/, (route) => route.fulfill({ status: 200, body: 'ok' }));
         await use(page);
         expect(errors, 'the page logged errors').toEqual([]);

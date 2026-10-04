@@ -4,10 +4,17 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 let bad = 0;
-const fail = (msg) => { console.error(msg); bad++; };
+const fail = (msg) => {
+    console.error(msg);
+    bad++;
+};
 
 for (const f of ['vercel.json', 'public/site.webmanifest']) {
-    try { JSON.parse(readFileSync(f, 'utf8')); } catch (e) { fail(`${f}: ${e.message}`); }
+    try {
+        JSON.parse(readFileSync(f, 'utf8'));
+    } catch (e) {
+        fail(`${f}: ${e.message}`);
+    }
 }
 
 const exists = (ref) => existsSync(join('dist', decodeURIComponent(ref.split(/[?#]/)[0])));
@@ -31,7 +38,6 @@ for (const page of ['index.html', '404.html']) {
         }
     }
 }
-
 
 const manifest = JSON.parse(readFileSync('public/site.webmanifest', 'utf8'));
 for (const icon of manifest.icons) if (!exists(icon.src)) fail(`site.webmanifest: missing ${icon.src}`);

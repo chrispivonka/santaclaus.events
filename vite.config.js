@@ -27,10 +27,11 @@ const inlineThemeScript = {
     apply: 'build',
     transformIndexHtml: {
         order: 'pre',
-        handler: (html) => html.replace(
-            '<script src="/js/theme-init.js"></script>',
-            () => `<script>${readFileSync('js/theme-init.js', 'utf8').trim()}</script>`,
-        ),
+        handler: (html) =>
+            html.replace(
+                '<script src="/js/theme-init.js"></script>',
+                () => `<script>${readFileSync('js/theme-init.js', 'utf8').trim()}</script>`,
+            ),
     },
 };
 
@@ -46,8 +47,13 @@ const inlineCssAndCsp = {
             const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => sha256(m[1]));
             const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => sha256(m[1]));
             const policy = { ...csp, 'script-src': [...csp['script-src'], ...scripts], 'style-src': [...csp['style-src'], ...styles] };
-            const content = Object.entries(policy).map(([k, v]) => `${k} ${v.join(' ')}`).join('; ');
-            return html.replace(/(<meta charset="utf-8"\s*\/?>)/, `$1\n    <meta http-equiv="Content-Security-Policy" content="${content}">`);
+            const content = Object.entries(policy)
+                .map(([k, v]) => `${k} ${v.join(' ')}`)
+                .join('; ');
+            return html.replace(
+                /(<meta charset="utf-8"\s*\/?>)/,
+                `$1\n    <meta http-equiv="Content-Security-Policy" content="${content}">`,
+            );
         },
     },
 };
