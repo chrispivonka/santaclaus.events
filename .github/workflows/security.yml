@@ -39,6 +39,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      # gitleaks lists a pull request's commits; private repositories need this granted.
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
         with:
