@@ -2,13 +2,12 @@
   "name": "Protect development (integration)",
   "target": "branch",
   "enforcement": "active",
-  "conditions": {
-    "ref_name": { "include": ["refs/heads/development"], "exclude": [] }
-  },
+  "conditions": { "ref_name": { "include": ["refs/heads/development"], "exclude": [] } },
   "bypass_actors": [{ "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "pull_request" }],
   "rules": [
     { "type": "deletion" },
     { "type": "non_fast_forward" },
+    { "type": "required_linear_history" },
     {
       "type": "pull_request",
       "parameters": {
