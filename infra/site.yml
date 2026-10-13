@@ -1,0 +1,331 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  santaclaus.events hosting for one environment: a private S3 bucket behind CloudFront, an ACM
+  certificate validated through Route 53, the security headers, and the IAM role the GitHub
+  Deploy workflow assumes through OIDC to publish to this environment (and nothing else).
+
+# Deploy once per environment, in us-east-1 (CloudFront only takes certificates from there):
+#
+#   aws cloudformation deploy --region us-east-1 --capabilities CAPABILITY_IAM \
+#     --template-file infra/site.yml --stack-name santaclaus-preprod \
+#     --parameter-overrides EnvironmentName=preprod DomainName=preview.santaclaus.events HostedZoneId=Z0123456789
+#
+#   aws cloudformation deploy --region us-east-1 --capabilities CAPABILITY_IAM \
+#     --template-file infra/site.yml --stack-name santaclaus-production \
+#     --parameter-overrides EnvironmentName=production DomainName=santaclaus.events HostedZoneId=Z0123456789 WwwRedirect=true
+#
+# The stack does not touch the site's DNS records; pointing the domain at the distribution is a
+# separate, deliberate step (see CONTRIBUTING.md). It only adds the certificate's validation records.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues: [preprod, production]
+    Description: The GitHub environment the Deploy workflow uses for this site.
+  DomainName:
+    Type: String
+    Description: The site's host name, for example santaclaus.events or preview.santaclaus.events.
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: The Route 53 hosted zone for santaclaus.events (ACM validates the certificate through it).
+  WwwRedirect:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+    Description: Also serve www.<DomainName> and redirect it to <DomainName> (production only).
+  GitHubRepository:
+    Type: String
+    Default: chrispivonka/santaclaus.events
+    Description: owner/name of the repository whose Deploy workflow may publish here.
+
+Rules:
+  CertificateRegion:
+    Assertions:
+      - Assert: !Equals [!Ref 'AWS::Region', us-east-1]
+        AssertDescription: Deploy this stack in us-east-1; CloudFront only accepts ACM certificates from there.
+
+Conditions:
+  HasWww: !Equals [!Ref WwwRedirect, 'true']
+  IsPreprod: !Equals [!Ref EnvironmentName, preprod]
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # Overwritten and deleted files stay recoverable for 30 days.
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-versions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CloudFrontReadsThroughOriginAccessControl
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${Bucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+          - Sid: HttpsOnly
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource: [!GetAtt Bucket.Arn, !Sub '${Bucket.Arn}/*']
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub 'santaclaus-${EnvironmentName}'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames: !If [HasWww, [!Sub 'www.${DomainName}'], !Ref 'AWS::NoValue']
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+        - !If
+          - HasWww
+          - DomainName: !Sub 'www.${DomainName}'
+            HostedZoneId: !Ref HostedZoneId
+          - !Ref 'AWS::NoValue'
+
+  # Headers for the pages and every other unfingerprinted file. The Deploy workflow replaces the
+  # Content-Security-Policy below with infra/content-security-policy.txt (which the build keeps in
+  # step with the hashes of the inlined stylesheet and script) on every deploy, so after updating
+  # this stack, run the Deploy workflow again before relying on the site.
+  PageHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub 'santaclaus-${EnvironmentName}-pages'
+        Comment: Security headers for santaclaus.events pages; the CSP is kept current by the Deploy workflow
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: "default-src 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+            Override: true
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 63072000
+            IncludeSubdomains: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+        CustomHeadersConfig:
+          Items:
+            - Header: Permissions-Policy
+              Value: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+              Override: true
+            - Header: Cross-Origin-Opener-Policy
+              Value: same-origin
+              Override: true
+            - Header: Cross-Origin-Resource-Policy
+              Value: same-site
+              Override: true
+            # Preprod stays out of search engines.
+            - !If
+              - IsPreprod
+              - Header: X-Robots-Tag
+                Value: noindex
+                Override: true
+              - !Ref 'AWS::NoValue'
+
+  # Headers for the fingerprinted files in /static, which never change once published.
+  StaticHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub 'santaclaus-${EnvironmentName}-static'
+        Comment: Headers for fingerprinted santaclaus.events files
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 63072000
+            IncludeSubdomains: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+        CustomHeadersConfig:
+          Items:
+            - Header: Cross-Origin-Resource-Policy
+              Value: same-origin
+              Override: true
+
+  # www.santaclaus.events -> santaclaus.events, before anything is looked up in the cache.
+  WwwRedirectFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub 'santaclaus-${EnvironmentName}-www-redirect'
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Redirect www to the bare domain
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        function handler(event) {
+            var request = event.request;
+            var host = request.headers.host ? request.headers.host.value : '';
+            if (host.indexOf('www.') === 0) {
+                return {
+                    statusCode: 301,
+                    statusDescription: 'Moved Permanently',
+                    headers: { location: { value: 'https://' + host.slice(4) + request.uri } },
+                };
+            }
+            return request;
+        }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub 'santaclaus.events ${EnvironmentName}'
+        Enabled: true
+        Aliases: !If [HasWww, [!Ref DomainName, !Sub 'www.${DomainName}'], [!Ref DomainName]]
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        # North America and Europe edges only: the cheapest class, and where the visitors are.
+        PriceClass: PriceClass_100
+        DefaultRootObject: index.html
+        Origins:
+          - Id: site
+            DomainName: !GetAtt Bucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          Compress: true
+          # Managed "CachingOptimized": honors the Cache-Control the Deploy workflow sets per file.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref PageHeaders
+          FunctionAssociations: !If
+            - HasWww
+            - [{ EventType: viewer-request, FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN }]
+            - !Ref 'AWS::NoValue'
+        CacheBehaviors:
+          - PathPattern: /static/*
+            TargetOriginId: site
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref StaticHeaders
+            FunctionAssociations: !If
+              - HasWww
+              - [{ EventType: viewer-request, FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN }]
+              - !Ref 'AWS::NoValue'
+        # The bucket is private, so S3 answers 403 for a file that does not exist. Both become
+        # the real not-found page with a 404 status.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 60
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 60
+
+  # Assumed by the Deploy workflow's jobs in this GitHub environment only, through GitHub's OIDC
+  # provider (create it once per AWS account; see CONTRIBUTING.md). No long-lived keys anywhere.
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !Sub 'GitHub Actions deploys santaclaus.events ${EnvironmentName}'
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubRepository}:environment:${EnvironmentName}'
+      Policies:
+        - PolicyName: publish-site
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt Bucket.Arn
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]
+                Resource: !Sub '${Bucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  [cloudfront:GetDistribution, cloudfront:GetDistributionConfig, cloudfront:CreateInvalidation, cloudfront:GetInvalidation]
+                Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+              - Effect: Allow
+                Action: [cloudfront:GetResponseHeadersPolicy, cloudfront:UpdateResponseHeadersPolicy]
+                Resource: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:response-headers-policy/${PageHeaders}'
+
+Outputs:
+  GitHubEnvironment:
+    Description: Add the three values below as variables of this GitHub environment.
+    Value: !Ref EnvironmentName
+  AwsRoleArn:
+    Description: GitHub environment variable AWS_ROLE_ARN
+    Value: !GetAtt DeployRole.Arn
+  S3Bucket:
+    Description: GitHub environment variable S3_BUCKET
+    Value: !Ref Bucket
+  CloudFrontDistributionId:
+    Description: GitHub environment variable CLOUDFRONT_DISTRIBUTION_ID
+    Value: !Ref Distribution
+  CloudFrontDomainName:
+    Description: Point the site's DNS here (Route 53 alias A and AAAA records) when you are ready to switch
+    Value: !GetAtt Distribution.DomainName
+  PageHeadersPolicyId:
+    Description: The response headers policy whose CSP the Deploy workflow keeps current
+    Value: !Ref PageHeaders

@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-// Only meaningful against a real deployment, where vercel.json's headers apply.
+// Only meaningful against a real deployment, where CloudFront's response headers policy applies.
 test.describe('security and cache headers', () => {
-    test.skip(({ baseURL }) => baseURL.startsWith('http://localhost'), 'headers come from Vercel');
+    test.skip(({ baseURL }) => baseURL.startsWith('http://localhost'), 'headers come from CloudFront');
     test.skip(({ browserName, isMobile }) => browserName !== 'chromium' || isMobile, 'headers are the same for every browser');
 
     test('the page sends the full set of security headers', async ({ request }) => {
