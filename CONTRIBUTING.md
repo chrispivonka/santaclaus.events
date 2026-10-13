@@ -44,9 +44,8 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 | Links             | linkinator on internal and outside links                                                                                                                                                                                                                                                                                                                           |
 | Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                                                                                                                                                                                                                 |
 | Security          | OSV-Scanner on the lockfile (reviewed exceptions in `.github/osv-scanner.toml`), `npm audit` as a warning, gitleaks for committed secrets                                                                                                                                                                                                                          |
-| CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                                                                                                                                                                                                              |
 
-Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped dependency updates every Monday (after a 3-day cooldown on new releases).
+Separately: a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped dependency updates every Monday (after a 3-day cooldown on new releases).
 
 ## Releasing
 
@@ -66,8 +65,8 @@ Deploys come from GitHub Actions only, so nothing reaches production except thro
 
 These live in GitHub and AWS settings, not in the code:
 
-1. **Branch rules:** Settings → Rules → Rulesets → New ruleset → **Import a ruleset**, and import `.github/rulesets/main.json`, then `.github/rulesets/development.json`. They require pull requests and the **CI passed** check, block force-pushes and deletion, and block merging with high-severity CodeQL alerts. Admins can still merge their own pull requests without an approval.
-2. **Default branch:** Settings → General → Default branch → `development` (recommended), so new pull requests, Dependabot security fixes and Scorecard follow the flow above.
+1. **Branch rules:** Settings → Rules → Rulesets → New ruleset → **Import a ruleset**, and import `.github/rulesets/main.json`, then `.github/rulesets/development.json`. They require pull requests and the **CI passed** check, and block force-pushes and deletion. Admins can still merge their own pull requests without an approval.
+2. **Default branch:** Settings → General → Default branch → `development` (recommended), so new pull requests, Dependabot security fixes follow the flow above.
 3. **Actions:** Settings → Actions → General → Workflow permissions → tick **Allow GitHub Actions to create and approve pull requests** (the Release workflow opens the release pull request).
 4. **Security:** Settings → Advanced Security → turn on **Dependency graph** (the dependency-review check on pull requests is skipped with a warning until it's on), **Private vulnerability reporting**, **Dependabot alerts**, **Dependabot security updates**, **Secret scanning** and **Push protection**.
 5. **Pull requests:** Settings → General → keep **Automatically delete head branches** on. When stacking pull requests, base them on `development` instead of on another pull request's branch. Otherwise GitHub closes the stacked one when the first merges.

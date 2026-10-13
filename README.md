@@ -41,4 +41,4 @@ The Content-Security-Policy lives in `vite.config.js` and only allows the outsid
 
 ## Checks
 
-Every pull request runs formatting, linting, a build, Playwright tests in three browser engines, accessibility checks, Lighthouse with byte budgets, link checks, dependency review and CodeQL. Details are in [CONTRIBUTING.md](CONTRIBUTING.md#what-ci-checks-on-every-pull-request).
+Every pull request runs formatting, linting, a build, Playwright tests in three browser engines, accessibility checks, Lighthouse with byte budgets, link checks, dependency review, workflow security checks and secret scanning. Details are in [CONTRIBUTING.md](CONTRIBUTING.md#what-ci-checks-on-every-pull-request).

@@ -1,6 +1,6 @@
 name: Security
 
-# Supply-chain and secret checks that complement CodeQL (code) and Dependabot (updates).
+# Supply-chain and secret checks that complement Dependabot (updates).
 on:
   pull_request:
   push:
