@@ -42,6 +42,37 @@ test.describe('home page', () => {
         await expect(calendar).toHaveAttribute('src', /ctz=America%2FDenver/);
     });
 
+    test('hero links lead to events, the letter, private events and photo shoots', async ({ page }) => {
+        const targets = {
+            'See where Santa will be': '#events',
+            'Write Santa a letter': '#letter',
+            'Schedule a private event': '#private-events',
+            'Schedule a photo shoot': '#photo-shoots',
+        };
+        for (const [name, href] of Object.entries(targets)) {
+            await expect(page.locator('.hero').getByRole('link', { name })).toHaveAttribute('href', href);
+        }
+        await page.locator('.hero').getByRole('link', { name: 'Schedule a photo shoot' }).click();
+        await expect(page).toHaveURL(/#photo-shoots$/);
+        await expect(page.getByRole('heading', { name: 'Schedule a photo shoot' })).toBeInViewport();
+    });
+
+    test('the contact section lists ways to book Santa and a photo shoot', async ({ page }) => {
+        const privateEvents = page.locator('#private-events');
+        await expect(privateEvents.locator('a[href^="tel:"]')).toHaveCount(1);
+        await expect(privateEvents.locator('a[href^="mailto:"]')).toHaveCount(1);
+        const photos = page.locator('#photo-shoots');
+        await expect(photos.locator('a[href^="tel:"]')).toHaveCount(2);
+        await expect(photos.locator('a[href^="mailto:"]')).toHaveCount(1);
+        await expect(page.locator('#contact')).not.toContainText(/home/i);
+    });
+
+    test('mentions Cody, WY and thanks the Cody Rotary Club', async ({ page }) => {
+        await expect(page.locator('.lede')).toContainText('Cody, Wyoming');
+        await expect(page.locator('.site-footer')).toContainText('Cody, WY');
+        await expect(page.locator('#about')).toContainText('Cody Rotary Club');
+    });
+
     test('letter form shows errors for empty fields, then sends', async ({ page }) => {
         const form = page.locator('#letterForm');
         await form.scrollIntoViewIfNeeded();

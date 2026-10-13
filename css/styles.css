@@ -774,6 +774,9 @@ p {
     gap: 0.75rem;
     margin-top: 1.75rem;
 }
+.hero-actions-book {
+    margin-top: 0.75rem;
+}
 .hero-media {
     position: relative;
     justify-self: center;
@@ -1685,6 +1688,67 @@ h3 {
     .about-photo {
         max-width: 22rem;
         margin-inline: auto;
+    }
+}
+
+.shout-out {
+    display: inline-block;
+    margin: -0.5rem 0 1.75rem;
+    padding: 0.6rem 1rem;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+/* Booking and contact */
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    max-width: 56rem;
+    margin-inline: auto;
+}
+.contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 6px solid var(--red);
+    border-radius: 22px;
+    padding: clamp(1.4rem, 3vw, 2rem);
+    box-shadow: var(--shadow);
+}
+.contact-card + .contact-card {
+    border-top-color: var(--green);
+}
+.contact-card h3 {
+    margin: 0.9rem 0 0.5rem;
+}
+.contact-card > p {
+    color: var(--muted);
+}
+.contact-list {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+.contact-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.contact-list a {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
     }
 }
 
