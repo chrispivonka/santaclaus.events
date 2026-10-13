@@ -182,6 +182,10 @@ Resources:
                 Value: noindex
                 Override: true
               - !Ref 'AWS::NoValue'
+        # S3 answers with "Server: AmazonS3"; nothing gains from advertising it.
+        RemoveHeadersConfig:
+          Items:
+            - Header: Server
 
   # Headers for the fingerprinted files in /static, which never change once published.
   StaticHeaders:
@@ -199,9 +203,15 @@ Resources:
             Override: true
         CustomHeadersConfig:
           Items:
+            - Header: Permissions-Policy
+              Value: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+              Override: true
             - Header: Cross-Origin-Resource-Policy
               Value: same-origin
               Override: true
+        RemoveHeadersConfig:
+          Items:
+            - Header: Server
 
   # www.santaclaus.events -> santaclaus.events, before anything is looked up in the cache.
   WwwRedirectFunction:
