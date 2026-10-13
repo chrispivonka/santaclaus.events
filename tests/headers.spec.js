@@ -23,7 +23,8 @@ test.describe('security and cache headers', () => {
         expect(headers['cross-origin-opener-policy']).toBe('same-origin');
         expect(headers['permissions-policy']).toContain('camera=()');
         expect(headers['x-powered-by']).toBeUndefined();
-        expect(headers['server']).not.toMatch(/\d/);
+        // CloudFront passes on S3's "Server: AmazonS3"; what matters is that no version number leaks.
+        expect(headers['server'] ?? '').not.toMatch(/\d+\.\d+|\/\d/);
     });
 
     test('the header policy and the meta policy agree, so the inlined styles are not blocked', async ({ page, request }) => {
