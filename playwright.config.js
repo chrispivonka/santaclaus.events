@@ -4,8 +4,6 @@ import { defineConfig, devices } from '@playwright/test';
 // or against a deployed site when BASE_URL is set (the post-deploy check does this).
 const remote = process.env.BASE_URL;
 const ci = !!process.env.CI;
-// Lets the post-deploy check through Vercel's preview protection.
-const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 export default defineConfig({
     testDir: 'tests',
@@ -17,7 +15,6 @@ export default defineConfig({
         baseURL: remote || 'http://localhost:4173',
         trace: 'retain-on-failure',
         timezoneId: 'America/Denver',
-        extraHTTPHeaders: bypass ? { 'x-vercel-protection-bypass': bypass, 'x-vercel-set-bypass-cookie': 'true' } : undefined,
     },
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

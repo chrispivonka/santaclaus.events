@@ -3,3 +3,5 @@
 10049	IGNORE	(Non-Storable Content)
 # 10027 "Information Disclosure - Suspicious Comments": the HTML carries code comments on purpose.
 10027	IGNORE	(Suspicious Comments)
+# 10050 "Retrieved from Cache": CloudFront serving cached files is the point of the CDN.
+10050	IGNORE	(Retrieved from Cache)

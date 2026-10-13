@@ -9,7 +9,7 @@ const fail = (msg) => {
     bad++;
 };
 
-for (const f of ['vercel.json', 'public/site.webmanifest']) {
+for (const f of ['public/site.webmanifest']) {
     try {
         JSON.parse(readFileSync(f, 'utf8'));
     } catch (e) {
@@ -39,16 +39,16 @@ for (const page of ['index.html', '404.html']) {
     }
 }
 
-// The CSP header in vercel.json must carry the same hashes as the <meta> policy the build produced,
-// otherwise the browser enforces the stricter header and blocks the inlined stylesheet.
-const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
-const headerCsp = vercel.headers.find((r) => r.source === '/(.*)').headers.find((h) => h.key === 'Content-Security-Policy').value;
+// The CSP header the Deploy workflow puts on CloudFront must carry the same hashes as the <meta>
+// policy the build produced, otherwise the browser enforces the stricter header and blocks the inlined stylesheet.
+const cspFile = 'infra/content-security-policy.txt';
+const headerCsp = readFileSync(cspFile, 'utf8').trim();
 const metaCsp = readFileSync('dist/index.html', 'utf8').match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '';
 for (const hash of metaCsp.match(/'sha256-[^']+'/g) ?? []) {
-    if (!headerCsp.includes(hash)) fail(`vercel.json: CSP header is missing ${hash}; run npm run build and commit vercel.json`);
+    if (!headerCsp.includes(hash)) fail(`${cspFile}: CSP header is missing ${hash}; run npm run build and commit ${cspFile}`);
 }
 for (const directive of ['frame-ancestors', 'upgrade-insecure-requests']) {
-    if (!headerCsp.includes(directive)) fail(`vercel.json: CSP header is missing ${directive}`);
+    if (!headerCsp.includes(directive)) fail(`${cspFile}: CSP header is missing ${directive}`);
 }
 
 const manifest = JSON.parse(readFileSync('public/site.webmanifest', 'utf8'));

@@ -3,8 +3,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig } from 'vite-plus';
 
 // The page's Content Security Policy. The build adds the hashes of the inlined stylesheet
-// and theme script, then ships it two ways: as the real header in vercel.json (what browsers
-// enforce first and what security scanners see) and as a <meta> tag for defense in depth.
+// and theme script, then ships it two ways: as the real header (infra/content-security-policy.txt,
+// which the Deploy workflow puts on CloudFront; it's what browsers enforce first and what security
+// scanners see) and as a <meta> tag for defense in depth.
 const csp = {
     'default-src': ["'self'"],
     'script-src': ["'self'"],
@@ -17,7 +18,7 @@ const csp = {
     'base-uri': ["'self'"],
     'object-src': ["'none'"],
 };
-// Only valid as a header, so these go in vercel.json but not the <meta> tag.
+// Only valid as a header, so these go in the header policy but not the <meta> tag.
 const headerOnly = { 'frame-ancestors': ["'none'"], 'upgrade-insecure-requests': [] };
 
 const sha256 = (text) => `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
@@ -43,8 +44,8 @@ const inlineThemeScript = {
 
 // The stylesheet is small enough (about 10 KB compressed) that inlining it beats a
 // separate render-blocking request. Then every inline <script>/<style> gets hashed into the CSP.
-// After the build, the union of hashes across pages is written to the header in vercel.json;
-// commit that change (CI fails if vercel.json is out of date with the build).
+// After the build, the union of hashes across pages is written to infra/content-security-policy.txt;
+// commit that change (CI fails if the file is out of date with the build).
 const inlineCssAndCsp = {
     name: 'inline-css-and-csp',
     apply: 'build',
@@ -64,8 +65,6 @@ const inlineCssAndCsp = {
         },
     },
     closeBundle() {
-        const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
-        const header = vercel.headers.find((rule) => rule.source === '/(.*)').headers.find((h) => h.key === 'Content-Security-Policy');
         const policy = {
             ...csp,
             'script-src': [...csp['script-src'], ...seen.script],
@@ -73,14 +72,14 @@ const inlineCssAndCsp = {
             ...headerOnly,
         };
         const value = policyText(policy);
-        if (header.value !== value) {
-            header.value = value;
-            writeFileSync('vercel.json', `${JSON.stringify(vercel, null, 2)}\n`);
-            console.log('vercel.json: Content-Security-Policy header updated to match this build. Commit it.');
+        if (readFileSync(cspHeaderFile, 'utf8').trim() !== value) {
+            writeFileSync(cspHeaderFile, `${value}\n`);
+            console.log(`${cspHeaderFile}: Content-Security-Policy header updated to match this build. Commit it.`);
         }
     },
 };
 const seen = { script: new Set(), style: new Set() };
+const cspHeaderFile = 'infra/content-security-policy.txt';
 
 export default defineConfig({
     plugins: [inlineThemeScript, inlineCssAndCsp],
@@ -112,7 +111,7 @@ export default defineConfig({
         rollupOptions: {
             input: { main: 'index.html', notFound: '404.html' },
         },
-        // Fingerprinted files go in /static so vercel.json can cache them forever.
+        // Fingerprinted files go in /static so they can be cached forever (see scripts/deploy-aws.js).
         // Unhashed files from public/ (icons, og-image, manifest) keep their normal URLs.
         assetsDir: 'static',
         // Photos and fonts are already compressed; only inline tiny images like the favicon.

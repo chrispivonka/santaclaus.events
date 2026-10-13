@@ -30,12 +30,12 @@ Sounds are off by default and are synthesized in the browser (no audio files). E
 
 ## Deploying
 
-The site is hosted on [Vercel](https://vercel.com) (free Hobby plan) with the GitHub integration:
+The site is hosted on AWS: a private S3 bucket behind CloudFront for each environment, defined in [`infra/site.yml`](infra/site.yml). GitHub Actions does every deploy, signing in to AWS with a short-lived OIDC role (no stored AWS keys):
 
-- Every push to `main` deploys to production at santaclaus.events. `main` only changes through release pull requests (see [Releasing](CONTRIBUTING.md#releasing)).
-- Every pull request gets its own preview link, posted on the PR.
+- Every push to `development` deploys preprod at https://preview.santaclaus.events.
+- Production (santaclaus.events) deploys only from a release tag on `main` (see [Releasing](CONTRIBUTING.md#releasing)).
 
-Vercel runs `npm run build` and serves `dist/`. `vercel.json` caches fingerprinted files in `/static/` for a year and sets the security headers.
+The Deploy workflow runs `npm run build` and publishes `dist/` with `scripts/deploy-aws.js`, which caches fingerprinted files in `/static/` for a year and keeps the Content-Security-Policy header on CloudFront in step with `infra/content-security-policy.txt`. The other security headers are in the CloudFront response headers policy in `infra/site.yml`.
 
 The Content-Security-Policy lives in `vite.config.js` and only allows the outside services the page uses (the Google Calendar embed and the Apps Script letter endpoint). If you add another one, such as analytics or a new embed, add its domain there.
 
