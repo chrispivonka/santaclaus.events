@@ -26,7 +26,8 @@ jobs:
         with:
           results_file: results.sarif
           results_format: sarif
-          publish_results: true
+          # The public Scorecard API (and its badge) only accepts public repositories; set true if this goes public.
+          publish_results: false
       - uses: actions/upload-artifact@v4
         with:
           name: scorecard-results
