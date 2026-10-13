@@ -1,0 +1,21 @@
+# Groups the generated GitHub Release notes by the labels the labeler adds.
+changelog:
+  exclude:
+    labels: [release]
+  categories:
+    - title: Content
+      labels: [content]
+    - title: Design
+      labels: [design]
+    - title: Features and fixes
+      labels: [scripts]
+    - title: Build and hosting
+      labels: [build]
+    - title: Dependencies
+      labels: [dependencies]
+    - title: CI and tests
+      labels: [ci]
+    - title: Docs
+      labels: [docs]
+    - title: Other changes
+      labels: ['*']

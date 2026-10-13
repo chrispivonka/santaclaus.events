@@ -1,0 +1,13 @@
+# OSV-Scanner config. To ignore a finding that is confirmed not to apply, add:
+#
+# [[IgnoredVulns]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# reason = "why it does not affect this site"
+
+# braces (via micromatch, fast-glob, globby, Stylelint): stack exhaustion on deeply nested, attacker-supplied
+# glob patterns. Stylelint only ever globs our own "css/**/*.css" in CI; nothing from it ships to the site.
+# No fixed release exists yet. Revisit when the date passes or a fix lands.
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-01-31
+reason = "dev-only, reached through Stylelint's globbing of our own paths, never at runtime; no fix available"

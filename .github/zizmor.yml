@@ -1,0 +1,8 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Actions published by GitHub and the OpenSSF are pinned to release tags and kept current by Dependabot.
+        'actions/*': ref-pin
+        'github/*': ref-pin
+        'ossf/*': ref-pin

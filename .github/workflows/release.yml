@@ -1,0 +1,89 @@
+name: Release
+
+# 1. Run this workflow by hand ("Run workflow" on the Actions tab) to open or refresh the
+#    release pull request from development to main, listing everything that will ship.
+# 2. Merging that pull request runs CI on main. Once CI is green there, this workflow tags a
+#    GitHub Release named for the date, with notes grouped by label, and dispatches the Deploy
+#    workflow with that exact tag. A red CI run on main is never tagged or deployed.
+# workflow_run is safe here: the job only reacts to CI finishing on main after a push, never
+# checks out or runs code from the triggering run, and only calls the GitHub API.
+on: # zizmor: ignore[dangerous-triggers]
+  workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.event_name }}
+
+jobs:
+  release-pr:
+    name: Open the release pull request
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create or update the release pull request
+        run: |
+          changes=$(gh api "repos/$GH_REPO/compare/main...development" --paginate \
+            --jq '.commits[] | select(.parents | length == 1) | "- " + (.commit.message | split("\n")[0])')
+          if [ -z "$changes" ]; then
+            echo "::notice::development has nothing that isn't on main yet."
+            exit 0
+          fi
+          title="Release $(date -u +%Y-%m-%d)"
+          body=$(printf '## What ships\n\n%s\n\nMerging this deploys production and tags a GitHub Release. Use a merge commit (not squash) so main and development stay in sync.\n' "$changes")
+          existing=$(gh pr list --base main --head development --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$title" --body "$body"
+            echo "Updated release PR #$existing"
+          else
+            gh label create release --color 0e8a16 --description "Release pull request" --force
+            gh pr create --base main --head development --title "$title" --body "$body" --label release
+          fi
+
+  github-release:
+    name: Tag the release and deploy it
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Create a dated GitHub Release with generated notes
+        id: release
+        run: |
+          if gh api "repos/$GH_REPO/releases" --paginate --jq '.[].target_commitish' | grep -qx "$SHA"; then
+            echo "::notice::$SHA is already released; nothing to do."
+            exit 0
+          fi
+          base="v$(date -u +%Y.%m.%d)"
+          tag="$base"
+          n=2
+          while gh release view "$tag" >/dev/null 2>&1; do tag="$base.$n"; n=$((n + 1)); done
+          gh release create "$tag" --target "$SHA" --title "$tag" --generate-notes
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Deploy that tag to production
+        if: steps.release.outputs.tag != ''
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        # The release was created with GITHUB_TOKEN, whose tag pushes do not trigger other
+        # workflows, so the deploy is dispatched explicitly with the tag it must use.
+        run: gh workflow run deploy.yml --ref "refs/tags/$TAG" -f tag="$TAG"

@@ -1,0 +1,21 @@
+name: Something's broken
+description: Part of the site isn't working or looks wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where?
+      description: The page or section, and the device and browser (for example "advent calendar, iPhone Safari").
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Paste a screenshot if you have one.
