@@ -113,13 +113,23 @@ const policyId = aws(
     '--output',
     'text',
 ).trim();
+// The API reads back headers the policy doesn't set as empty objects (XSSProtection: {}), but
+// rejects them on update, so they are dropped before sending the config back.
+const withoutEmptyObjects = (value) => {
+    if (Array.isArray(value)) return value.map(withoutEmptyObjects);
+    if (value === null || typeof value !== 'object') return value;
+    const entries = Object.entries(value)
+        .map(([k, v]) => [k, withoutEmptyObjects(v)])
+        .filter(([, v]) => !(v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0));
+    return Object.fromEntries(entries);
+};
 function setCsp(value) {
     const current = awsJson('cloudfront', 'get-response-headers-policy', '--id', policyId);
     const config = current.ResponseHeadersPolicy.ResponseHeadersPolicyConfig;
     if (config.SecurityHeadersConfig.ContentSecurityPolicy.ContentSecurityPolicy === value) return false;
     config.SecurityHeadersConfig.ContentSecurityPolicy = { ContentSecurityPolicy: value, Override: true };
     const file = join(scratch, 'headers-policy.json');
-    writeFileSync(file, JSON.stringify(config));
+    writeFileSync(file, JSON.stringify(withoutEmptyObjects(config)));
     aws(
         'cloudfront',
         'update-response-headers-policy',
