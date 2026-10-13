@@ -14,6 +14,8 @@ Description: >-
 #     --template-file infra/site.yml --stack-name santaclaus-production \
 #     --parameter-overrides EnvironmentName=production DomainName=santaclaus.events HostedZoneId=Z0123456789 WwwRedirect=true
 #
+# Add AttachDomain=false while an older CloudFront distribution still holds the domain names.
+#
 # The stack does not touch the site's DNS records; pointing the domain at the distribution is a
 # separate, deliberate step (see CONTRIBUTING.md). It only adds the certificate's validation records.
 
@@ -33,6 +35,14 @@ Parameters:
     AllowedValues: ['true', 'false']
     Default: 'false'
     Description: Also serve www.<DomainName> and redirect it to <DomainName> (production only).
+  AttachDomain:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+    Description: >-
+      Claim the domain names on the distribution. Set 'false' while another CloudFront distribution
+      still holds them (CloudFront refuses duplicates); the site is then reachable only on its
+      cloudfront.net name until the names are moved over (see CONTRIBUTING.md).
   GitHubRepository:
     Type: String
     Default: chrispivonka/santaclaus.events
@@ -46,6 +56,7 @@ Rules:
 
 Conditions:
   HasWww: !Equals [!Ref WwwRedirect, 'true']
+  ClaimsDomain: !Equals [!Ref AttachDomain, 'true']
   IsPreprod: !Equals [!Ref EnvironmentName, preprod]
 
 Resources:
@@ -221,7 +232,10 @@ Resources:
       DistributionConfig:
         Comment: !Sub 'santaclaus.events ${EnvironmentName}'
         Enabled: true
-        Aliases: !If [HasWww, [!Ref DomainName, !Sub 'www.${DomainName}'], [!Ref DomainName]]
+        Aliases: !If
+          - ClaimsDomain
+          - !If [HasWww, [!Ref DomainName, !Sub 'www.${DomainName}'], [!Ref DomainName]]
+          - !Ref AWS::NoValue
         ViewerCertificate:
           AcmCertificateArn: !Ref Certificate
           SslSupportMethod: sni-only
