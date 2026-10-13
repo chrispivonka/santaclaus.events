@@ -95,6 +95,7 @@ Everything lives in **us-east-1** (CloudFront only takes certificates from there
    ```
 
    `AttachDomain=false` leaves the domain names off the new distribution, because CloudFront refuses a name another distribution still holds (an older site's, here). Step 6 moves them over. Without an older distribution, leave it out.
+
 4. **GitHub environment variables:** Settings → Environments → `preprod`, then `production` → **Environment variables** → add `AWS_ROLE_ARN`, `S3_BUCKET` and `CLOUDFRONT_DISTRIBUTION_ID` from that stack's outputs. No secrets are needed. The repository variables `PREPROD_URL` and `PRODUCTION_URL` say where the post-deploy checks look; until the DNS switch below, set `PRODUCTION_URL` to `https://` plus the production stack's `CloudFrontDomainName`.
 5. **First deploys:** re-run the latest Deploy run on `development` for preprod, and run Deploy by hand with the latest release tag for production. Check each on its CloudFront domain name.
 6. **Switch DNS** in the Route 53 zone: edit `preview`, the bare domain and `www` into **Alias** A records (and add matching alias AAAA records) pointing at the CloudFront distribution of their stack. Editing a record in place switches it with no gap. Then remove the `PRODUCTION_URL` variable (or set it to `https://santaclaus.events`).
