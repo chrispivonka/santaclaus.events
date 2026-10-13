@@ -10,6 +10,11 @@ on:
 
 permissions: {}
 
+# A newer push to the same pull request makes the older run pointless.
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   dependencies:
     name: Known vulnerabilities in dependencies
@@ -18,16 +23,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      - run: npm ci --ignore-scripts
+        env:
+          VP_GIT_HOOKS: '0'
+      - name: Registry signatures and provenance of installed packages
+        run: npm audit signatures
       - name: npm audit (advisory; OSV-Scanner below is the gate and carries the reviewed exceptions)
         run: npm audit --audit-level=high || echo "::warning::npm audit found issues. OSV-Scanner decides; reviewed exceptions live in .github/osv-scanner.toml"
       - name: OSV-Scanner on package-lock.json
-        uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
         with:
           scan-args: |
             --lockfile=package-lock.json
@@ -42,7 +52,7 @@ jobs:
       # gitleaks lists a pull request's commits; private repositories need this granted.
       pull-requests: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
