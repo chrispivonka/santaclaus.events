@@ -59,7 +59,7 @@ test.describe('home page', () => {
 
     test('the contact section lists ways to book Santa and a photo shoot', async ({ page }) => {
         const privateEvents = page.locator('#private-events');
-        await expect(privateEvents.locator('a[href^="tel:"]')).toHaveCount(1);
+        await expect(privateEvents.locator('a[href^="tel:"]')).toHaveCount(2);
         await expect(privateEvents.locator('a[href^="mailto:"]')).toHaveCount(1);
         const photos = page.locator('#photo-shoots');
         await expect(photos.locator('a[href^="tel:"]')).toHaveCount(2);
