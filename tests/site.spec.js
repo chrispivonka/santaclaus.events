@@ -70,12 +70,17 @@ test('mobile menu opens and closes', async ({ page, isMobile }) => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('404 page', async ({ page, baseURL }) => {
-    // Locally `vp preview` falls back to index.html, so request the page directly;
-    // on a real deployment, check that unknown URLs get the 404 page and status.
-    const remote = !baseURL.startsWith('http://localhost');
-    const response = await page.goto(remote ? '/this-page-does-not-exist' : '/404.html');
-    if (remote) expect(response.status()).toBe(404);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page got lost in the snow');
-    await expect(page.getByRole('link', { name: /home|back/i }).first()).toBeVisible();
+test.describe(() => {
+    // Chromium logs the 404 status of the page itself as a console error.
+    test.use({ allowedErrors: [/status of 404/] });
+
+    test('404 page', async ({ page, baseURL }) => {
+        // Locally `vp preview` falls back to index.html, so request the page directly;
+        // on a real deployment, check that unknown URLs get the 404 page and status.
+        const remote = !baseURL.startsWith('http://localhost');
+        const response = await page.goto(remote ? '/this-page-does-not-exist' : '/404.html');
+        if (remote) expect(response.status()).toBe(404);
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page got lost in the snow');
+        await expect(page.getByRole('link', { name: /home|back/i }).first()).toBeVisible();
+    });
 });

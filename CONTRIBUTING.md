@@ -89,13 +89,17 @@ Everything lives in **us-east-1** (CloudFront only takes certificates from there
 
    aws cloudformation deploy --region us-east-1 --capabilities CAPABILITY_IAM \
      --template-file infra/site.yml --stack-name santaclaus-production \
-     --parameter-overrides EnvironmentName=production DomainName=santaclaus.events HostedZoneId=<zone id> WwwRedirect=true
+     --parameter-overrides EnvironmentName=production DomainName=santaclaus.events HostedZoneId=<zone id> WwwRedirect=true AttachDomain=false
 
    aws cloudformation describe-stacks --region us-east-1 --stack-name santaclaus-preprod --query 'Stacks[0].Outputs'
    ```
 
+   `AttachDomain=false` leaves the domain names off the new distribution, because CloudFront refuses a name another distribution still holds (an older site's, here). Step 6 moves them over. Without an older distribution, leave it out.
+
 4. **GitHub environment variables:** Settings → Environments → `preprod`, then `production` → **Environment variables** → add `AWS_ROLE_ARN`, `S3_BUCKET` and `CLOUDFRONT_DISTRIBUTION_ID` from that stack's outputs. No secrets are needed. The repository variables `PREPROD_URL` and `PRODUCTION_URL` say where the post-deploy checks look; until the DNS switch below, set `PRODUCTION_URL` to `https://` plus the production stack's `CloudFrontDomainName`.
 5. **First deploys:** re-run the latest Deploy run on `development` for preprod, and run Deploy by hand with the latest release tag for production. Check each on its CloudFront domain name.
 6. **Switch DNS** in the Route 53 zone: edit `preview`, the bare domain and `www` into **Alias** A records (and add matching alias AAAA records) pointing at the CloudFront distribution of their stack. Editing a record in place switches it with no gap. Then remove the `PRODUCTION_URL` variable (or set it to `https://santaclaus.events`).
+
+   If production was created with `AttachDomain=false`, move the names over first, with no downtime: add TXT records `_santaclaus.events` and `_www.santaclaus.events` whose value is the production `CloudFrontDomainName`, then run `aws cloudfront associate-alias --target-distribution-id <production distribution id> --alias santaclaus.events` (and again with `--alias www.santaclaus.events`). That takes each name off the old distribution and onto the new one in one step. Switch the DNS records as above, then re-run the production stack deploy with `AttachDomain=true` (a re-run keeps earlier parameter values unless told otherwise) so the stack records the names. The TXT records can go afterwards.
 
 **After updating a stack,** run the Deploy workflow for that environment again: the stack resets the Content-Security-Policy header to a placeholder whenever it updates that policy, and the deploy puts the real one back.
