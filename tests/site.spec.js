@@ -46,21 +46,24 @@ test.describe('home page', () => {
         const targets = {
             'See where Santa will be': '#events',
             'Write Santa a letter': '#letter',
-            'Schedule a private event': '#booking',
-            'Schedule a photo shoot': '#booking',
+            'Schedule a private event': '#private-events',
+            'Schedule a photo shoot': '#photo-shoots',
         };
         for (const [name, href] of Object.entries(targets)) {
             await expect(page.locator('.hero').getByRole('link', { name })).toHaveAttribute('href', href);
         }
         await page.locator('.hero').getByRole('link', { name: 'Schedule a photo shoot' }).click();
-        await expect(page).toHaveURL(/#booking$/);
-        await expect(page.getByRole('heading', { name: 'Schedule a private event or photo shoot' })).toBeInViewport();
+        await expect(page).toHaveURL(/#photo-shoots$/);
+        await expect(page.getByRole('heading', { name: 'Schedule a photo shoot' })).toBeInViewport();
     });
 
-    test('the booking card lists both mobiles and the email, with no "Home" label', async ({ page }) => {
-        const booking = page.locator('#booking');
-        await expect(booking.locator('a[href^="tel:"]')).toHaveCount(2);
-        await expect(booking.locator('a[href^="mailto:"]')).toHaveCount(1);
+    test('the photo shoot card lists Written In Light, and private events wait on their own contact', async ({ page }) => {
+        const privateEvents = page.locator('#private-events');
+        await expect(privateEvents.getByText('TBD')).toHaveCount(2);
+        await expect(privateEvents.getByRole('link', { name: 'Message Santa on Facebook' })).toBeVisible();
+        const photos = page.locator('#photo-shoots');
+        await expect(photos.locator('a[href^="tel:"]')).toHaveCount(2);
+        await expect(photos.locator('a[href^="mailto:"]')).toHaveCount(1);
         await expect(page.locator('#contact')).not.toContainText(/home/i);
     });
 
