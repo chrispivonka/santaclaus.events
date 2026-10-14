@@ -182,8 +182,9 @@ test.describe('home page', () => {
     });
 
     test.describe('when the network is down', () => {
-        // The browser logs the failed request; that is the one error this test expects.
-        test.use({ allowedErrors: [/Failed to load resource/] });
+        // The browser logs the failed requests (Firefox and Safari report the calendar check as a failed
+        // CORS request); those are the only errors this test expects.
+        test.use({ allowedErrors: [/Failed to load resource|CORS request did not succeed|due to access control checks/] });
 
         test('a failed booking request keeps what was typed and explains', async ({ page }) => {
             await page.route(/^https:\/\/script\.google\.com\//, (route) => route.abort('failed'));
