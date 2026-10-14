@@ -74,6 +74,13 @@ for (const theme of ['dark', 'light']) {
             await page.locator('#submitButton').click();
             await expect(page.locator('#name')).toHaveAttribute('aria-invalid', 'true');
             await checkA11y(page, 'letter form errors');
+
+            await page.locator('#bookingOpen').click();
+            await expect(page.locator('#bookingDialog')).toBeVisible();
+            await checkA11y(page, 'booking request open');
+            await page.locator('#bookingSubmit').click();
+            await expect(page.locator('#bk-name')).toHaveAttribute('aria-invalid', 'true');
+            await checkA11y(page, 'booking request errors');
         });
     });
 }

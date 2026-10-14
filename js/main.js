@@ -277,4 +277,88 @@
                 submitLabel.textContent = 'Send my letter';
             });
     });
+
+    // ---- Private booking request (a pop-up form, sent like the letter) ----
+    var booking = document.getElementById('bookingDialog');
+    var bookingForm = document.getElementById('bookingForm');
+    var bookingOpen = document.getElementById('bookingOpen');
+    var bookingBody = document.getElementById('bookingBody');
+    var bookingStatus = document.getElementById('bookingStatus');
+    var bookingSubmit = document.getElementById('bookingSubmit');
+    var bookingLabel = bookingSubmit.querySelector('.btn-label');
+    var bookingFields = ['bk-name', 'bk-phone', 'bk-email', 'bk-date', 'bk-type', 'bk-place', 'bk-elf', 'bk-photo'].map(function (id) {
+        return document.getElementById(id);
+    });
+    var bookingDate = document.getElementById('bk-date');
+
+    function localDate(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function showBookingForm() {
+        bookingBody.hidden = false;
+        bookingStatus.hidden = true;
+        bookingStatus.classList.remove('is-error');
+    }
+
+    bookingOpen.addEventListener('click', function () {
+        bookingDate.min = localDate(new Date());
+        showBookingForm();
+        if (typeof booking.showModal === 'function') booking.showModal();
+        else booking.setAttribute('open', '');
+        bookingFields[0].focus();
+    });
+    document.getElementById('bookingClose').addEventListener('click', function () {
+        booking.close();
+    });
+
+    bookingFields.forEach(function (field) {
+        var event = field.tagName === 'SELECT' ? 'change' : 'input';
+        field.addEventListener('blur', function () {
+            if (field.value) validateField(field);
+        });
+        field.addEventListener(event, function () {
+            if (field.getAttribute('aria-invalid') === 'true') validateField(field);
+        });
+    });
+
+    bookingForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var invalid = bookingFields.filter(function (f) {
+            return !validateField(f);
+        });
+        if (invalid.length) {
+            invalid[0].focus();
+            return;
+        }
+
+        var data = new URLSearchParams(new FormData(bookingForm));
+        data.append('formType', 'private-booking');
+
+        bookingSubmit.disabled = true;
+        bookingLabel.textContent = 'Sending your request...';
+        bookingStatus.hidden = true;
+
+        // Same as the letter: Apps Script answers without CORS headers, so the response is opaque.
+        fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data })
+            .then(function () {
+                bookingForm.reset();
+                bookingFields.forEach(function (f) {
+                    f.removeAttribute('aria-invalid');
+                });
+                bookingBody.hidden = true;
+                bookingStatus.classList.remove('is-error');
+                bookingStatus.textContent = 'Ho ho ho! Your request is on its way to Santa. We’ll call you soon to confirm the details.';
+                bookingStatus.hidden = false;
+            })
+            .catch(function () {
+                bookingStatus.textContent = 'Ho-ho-oh no! Your request didn’t go through. Check your connection and try again.';
+                bookingStatus.classList.add('is-error');
+                bookingStatus.hidden = false;
+            })
+            .finally(function () {
+                bookingSubmit.disabled = false;
+                bookingLabel.textContent = 'Send my request';
+            });
+    });
 })();

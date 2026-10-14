@@ -642,6 +642,9 @@
                                     >
                                 </li>
                             </ul>
+                            <button class="btn btn-primary contact-cta" id="bookingOpen" type="button" aria-haspopup="dialog">
+                                Request a private booking
+                            </button>
                         </article>
                         <article class="contact-card reveal" id="photo-shoots" aria-labelledby="photoTitle">
                             <span class="fun-icon" aria-hidden="true">📸</span>
@@ -714,6 +717,154 @@
         </button>
 
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <!-- Private booking request; sent like the letter, to a Google Apps Script (see apps-script/README.md) -->
+        <dialog class="advent-dialog booking-dialog" id="bookingDialog" aria-labelledby="bookingTitle">
+            <!-- TODO(private-booking): replace PRIVATE_BOOKING_SCRIPT_ID with the deployed script's ID -->
+            <form
+                class="booking-form"
+                id="bookingForm"
+                action="https://script.google.com/macros/s/PRIVATE_BOOKING_SCRIPT_ID/exec"
+                method="POST"
+                novalidate
+            >
+                <div class="booking-head">
+                    <p class="advent-dialog-day">Private appearance</p>
+                    <h3 id="bookingTitle">Private booking request</h3>
+                    <p class="booking-intro">
+                        Tell us about your event and we'll call you to confirm the details and talk about pricing.
+                        <span class="booking-required">Fields marked * are required.</span>
+                    </p>
+                    <button class="icon-btn booking-close" id="bookingClose" type="button" aria-label="Close the booking request">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                            <path
+                                fill="currentColor"
+                                d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4z"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div class="booking-body" id="bookingBody">
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-name">Your name *</label>
+                            <input
+                                id="bk-name"
+                                name="name"
+                                type="text"
+                                autocomplete="name"
+                                required
+                                data-error="Please tell us your name."
+                            />
+                            <p class="field-error" id="bk-name-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="bk-phone">Phone *</label>
+                            <input
+                                id="bk-phone"
+                                name="phone"
+                                type="tel"
+                                autocomplete="tel"
+                                required
+                                data-error="Please add a phone number so we can call you."
+                            />
+                            <p class="field-error" id="bk-phone-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="bk-email">Email *</label>
+                        <input
+                            id="bk-email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            required
+                            data-error="Please add a valid email address."
+                        />
+                        <p class="field-error" id="bk-email-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-date">Event date *</label>
+                            <input id="bk-date" name="date" type="date" required data-error="Please pick the date of your event." />
+                            <p class="field-error" id="bk-date-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="bk-time">Start time</label>
+                            <input id="bk-time" name="time" type="time" />
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-type">Type of event *</label>
+                            <select id="bk-type" name="eventType" required data-error="Please choose the type of event.">
+                                <option value="">Pick one</option>
+                                <option>Home visit</option>
+                                <option>Holiday party</option>
+                                <option>School or classroom</option>
+                                <option>Business or workplace</option>
+                                <option>Church or community event</option>
+                                <option>Something else</option>
+                            </select>
+                            <p class="field-error" id="bk-type-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="bk-place">Town or venue *</label>
+                            <input
+                                id="bk-place"
+                                name="place"
+                                type="text"
+                                autocomplete="address-level2"
+                                required
+                                data-error="Please tell us where the event is."
+                            />
+                            <p class="field-error" id="bk-place-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-kids">How many kids?</label>
+                            <input id="bk-kids" name="kids" type="number" min="0" max="500" inputmode="numeric" />
+                        </div>
+                        <div class="field">
+                            <label for="bk-elf">Add an elf? *</label>
+                            <select id="bk-elf" name="elf" required data-error="Please let us know about the elf.">
+                                <option value="">Pick one</option>
+                                <option>Yes, please</option>
+                                <option>No, thank you</option>
+                                <option>Not sure yet</option>
+                            </select>
+                            <p class="field-error" id="bk-elf-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="bk-photo">May we take a photo with Santa for our advertising? *</label>
+                        <select id="bk-photo" name="photo" required data-error="Please choose a photo option.">
+                            <option value="">Pick one</option>
+                            <option>Yes</option>
+                            <option>Yes, but only from behind (no faces)</option>
+                            <option>No photos, please</option>
+                        </select>
+                        <p class="field-error" id="bk-photo-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field">
+                        <label for="bk-notes">Anything else we should know?</label>
+                        <textarea id="bk-notes" name="notes" rows="3"></textarea>
+                    </div>
+                    <!-- Honeypot field for bots; real visitors never see it -->
+                    <div class="honeypot" aria-hidden="true">
+                        <label for="bk-website">Leave this empty</label>
+                        <input id="bk-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+                    </div>
+                    <div class="booking-actions">
+                        <button class="btn btn-primary" id="bookingSubmit" type="submit">
+                            <span class="btn-label">Send my request</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-status" id="bookingStatus" role="status" aria-live="polite" hidden></div>
+            </form>
+        </dialog>
 
         <dialog class="advent-dialog" id="adventDialog" aria-labelledby="adventDialogTitle">
             <form method="dialog" class="advent-dialog-inner">
