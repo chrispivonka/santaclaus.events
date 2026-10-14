@@ -75,12 +75,19 @@ for (const theme of ['dark', 'light']) {
             await expect(page.locator('#name')).toHaveAttribute('aria-invalid', 'true');
             await checkA11y(page, 'letter form errors');
 
-            await page.locator('#bookingOpen').click();
+            await page.getByRole('button', { name: 'Request a private booking' }).click();
             await expect(page.locator('#bookingDialog')).toBeVisible();
-            await checkA11y(page, 'booking request open');
+            await checkA11y(page, 'private booking request open');
             await page.locator('#bookingSubmit').click();
             await expect(page.locator('#bk-name')).toHaveAttribute('aria-invalid', 'true');
-            await checkA11y(page, 'booking request errors');
+            await checkA11y(page, 'private booking request errors');
+            await page.locator('#bookingClose').click();
+
+            await page.getByRole('button', { name: 'Request a photo shoot' }).click();
+            await expect(page.locator('#bookingDialog')).toBeVisible();
+            await page.locator('#bookingSubmit').click();
+            await expect(page.locator('#bk-name')).toHaveAttribute('aria-invalid', 'true');
+            await checkA11y(page, 'photo shoot request errors');
         });
     });
 }

@@ -1709,6 +1709,9 @@ h3 {
     margin-inline: auto;
 }
 .contact-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     background: var(--surface);
     border: 1px solid var(--border);
     border-top: 6px solid var(--red);
@@ -1724,32 +1727,7 @@ h3 {
 }
 .contact-card > p {
     color: var(--muted);
-}
-.contact-list {
-    list-style: none;
-    margin: 1.25rem 0 0;
-    padding: 0;
-    display: grid;
-    gap: 0.75rem;
-}
-.contact-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-.contact-tbd {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--muted);
-}
-.contact-list a {
-    color: var(--accent);
-    font-weight: 600;
-    font-size: 1.1rem;
-    overflow-wrap: anywhere;
+    margin-bottom: 1.5rem;
 }
 @media (max-width: 760px) {
     .contact-grid {
@@ -2535,7 +2513,13 @@ html:not(.js) .section-head h2::after {
 
 /* Private booking request pop-up */
 .contact-cta {
-    margin-top: 1.5rem;
+    margin-top: auto;
+}
+.booking-group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
 }
 .booking-dialog {
     --ink: #2a2f3a;

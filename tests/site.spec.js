@@ -57,14 +57,13 @@ test.describe('home page', () => {
         await expect(page.getByRole('heading', { name: 'Schedule a photo shoot' })).toBeInViewport();
     });
 
-    test('the photo shoot card lists Written In Light, and private events wait on their own contact', async ({ page }) => {
-        const privateEvents = page.locator('#private-events');
-        await expect(privateEvents.getByText('TBD')).toHaveCount(2);
-        await expect(privateEvents.getByRole('link', { name: 'Message Santa on Facebook' })).toBeVisible();
-        const photos = page.locator('#photo-shoots');
-        await expect(photos.locator('a[href^="tel:"]')).toHaveCount(2);
-        await expect(photos.locator('a[href^="mailto:"]')).toHaveCount(1);
-        await expect(page.locator('#contact')).not.toContainText(/home/i);
+    test('the booking cards route requests through the form, with no phone numbers or emails on the page', async ({ page }) => {
+        const contact = page.locator('#contact');
+        await expect(contact.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(0);
+        await expect(page.locator('#private-events').getByRole('button', { name: 'Request a private booking' })).toBeVisible();
+        await expect(page.locator('#photo-shoots').getByRole('button', { name: 'Request a photo shoot' })).toBeVisible();
+        await expect(page.locator('#photo-shoots')).toContainText('Written In Light');
+        await expect(contact).not.toContainText(/\bHome\b/);
     });
 
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
@@ -102,8 +101,9 @@ test.describe('home page', () => {
 
         await page.locator('#bk-email').fill('jamie@example.com');
         await dialog.getByRole('button', { name: 'Send my request' }).click();
-        await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way to Santa');
+        await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way');
         await expect(page.locator('#bookingBody')).toBeHidden();
+        expect(sent.has('people')).toBe(false);
         expect(Object.fromEntries(sent)).toMatchObject({
             formType: 'private-booking',
             name: 'Jamie Frost',
@@ -125,6 +125,44 @@ test.describe('home page', () => {
         await page.getByRole('button', { name: 'Request a private booking' }).click();
         await expect(page.locator('#bookingBody')).toBeVisible();
         await expect(page.locator('#bk-name')).toHaveValue('');
+    });
+
+    test('the photo shoot request asks only what the photographers need and is sent as a photo shoot', async ({ page }) => {
+        let sent;
+        await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            sent = new URLSearchParams(route.request().postData());
+            return route.fulfill({ status: 200, body: 'ok' });
+        });
+        const dialog = page.locator('#bookingDialog');
+
+        // Half-filling the private form first, then switching, starts the photo request fresh.
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await page.locator('#bk-name').fill('Someone Else');
+        await dialog.getByRole('button', { name: 'Close the booking request' }).click();
+
+        await page.getByRole('button', { name: 'Request a photo shoot' }).click();
+        await expect(dialog.getByRole('heading', { name: 'Photo shoot request' })).toBeVisible();
+        await expect(dialog).toContainText('Written In Light');
+        await expect(page.locator('#bk-name')).toHaveValue('');
+        await expect(page.getByLabel('Preferred date')).toBeVisible();
+        for (const id of ['bk-type', 'bk-place', 'bk-kids', 'bk-elf', 'bk-photo']) await expect(page.locator(`#${id}`)).toBeHidden();
+
+        await page.locator('#bk-name').fill('Jamie Frost');
+        await page.locator('#bk-phone').fill('307-555-0199');
+        await page.locator('#bk-email').fill('jamie@example.com');
+        await page.locator('#bk-date').fill('2026-12-06');
+        await page.locator('#bk-people').fill('5');
+        await dialog.getByRole('button', { name: 'Send my request' }).click();
+        await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way');
+        expect(Object.fromEntries(sent)).toMatchObject({
+            formType: 'photo-shoot',
+            name: 'Jamie Frost',
+            phone: '307-555-0199',
+            email: 'jamie@example.com',
+            date: '2026-12-06',
+            people: '5',
+        });
+        for (const key of ['eventType', 'place', 'kids', 'elf', 'photo']) expect(sent.has(key)).toBe(false);
     });
 
     test.describe('when the network is down', () => {

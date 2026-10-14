@@ -278,14 +278,27 @@
             });
     });
 
-    // ---- Private booking request (a pop-up form, sent like the letter) ----
+    // ---- Booking requests (a pop-up form for private events and photo shoots, sent like the letter) ----
     var booking = document.getElementById('bookingDialog');
     var bookingForm = document.getElementById('bookingForm');
-    var bookingOpen = document.getElementById('bookingOpen');
     var bookingBody = document.getElementById('bookingBody');
     var bookingStatus = document.getElementById('bookingStatus');
     var bookingSubmit = document.getElementById('bookingSubmit');
     var bookingLabel = bookingSubmit.querySelector('.btn-label');
+    var bookingPrivate = document.getElementById('bookingPrivate');
+    var bookingPhoto = document.getElementById('bookingPhoto');
+    var bookingKinds = {
+        'private-booking': {
+            kind: 'Private appearance',
+            title: 'Private booking request',
+            intro: 'Tell us about your event and we’ll call you to confirm the details and talk about pricing.',
+        },
+        'photo-shoot': {
+            kind: 'Written In Light ~ Photo and Film',
+            title: 'Photo shoot request',
+            intro: 'Tell us when you’d like your Christmas portraits with Santa and we’ll get back to you to set a date and time.',
+        },
+    };
     var bookingFields = ['bk-name', 'bk-phone', 'bk-email', 'bk-date', 'bk-type', 'bk-place', 'bk-elf', 'bk-photo'].map(function (id) {
         return document.getElementById(id);
     });
@@ -301,12 +314,41 @@
         bookingStatus.classList.remove('is-error');
     }
 
-    bookingOpen.addEventListener('click', function () {
-        bookingDate.min = localDate(new Date());
-        showBookingForm();
-        if (typeof booking.showModal === 'function') booking.showModal();
-        else booking.setAttribute('open', '');
-        bookingFields[0].focus();
+    // The photo shoot request leaves out the private-event questions; disabled fields are neither checked nor sent.
+    function setBookingKind(type) {
+        var copy = bookingKinds[type];
+        var isPhoto = type === 'photo-shoot';
+        document.getElementById('bookingType').value = type;
+        document.getElementById('bookingKind').textContent = copy.kind;
+        document.getElementById('bookingTitle').textContent = copy.title;
+        document.getElementById('bookingIntro').textContent = copy.intro;
+        bookingPrivate.hidden = bookingPrivate.disabled = isPhoto;
+        bookingPhoto.hidden = bookingPhoto.disabled = !isPhoto;
+        bookingForm.querySelectorAll('[data-private]').forEach(function (el) {
+            el.hidden = isPhoto;
+        });
+        bookingForm.querySelectorAll('[data-photo]').forEach(function (el) {
+            el.hidden = !isPhoto;
+        });
+    }
+
+    document.querySelectorAll('[data-booking]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (document.getElementById('bookingType').value !== button.dataset.booking) {
+                bookingForm.reset();
+                bookingFields.forEach(function (f) {
+                    f.removeAttribute('aria-invalid');
+                    f.removeAttribute('aria-describedby');
+                    document.getElementById(f.id + '-error').textContent = '';
+                });
+            }
+            setBookingKind(button.dataset.booking);
+            bookingDate.min = localDate(new Date());
+            showBookingForm();
+            if (typeof booking.showModal === 'function') booking.showModal();
+            else booking.setAttribute('open', '');
+            bookingFields[0].focus();
+        });
     });
     document.getElementById('bookingClose').addEventListener('click', function () {
         booking.close();
@@ -325,7 +367,7 @@
     bookingForm.addEventListener('submit', function (e) {
         e.preventDefault();
         var invalid = bookingFields.filter(function (f) {
-            return !validateField(f);
+            return !f.matches(':disabled') && !validateField(f);
         });
         if (invalid.length) {
             invalid[0].focus();
@@ -333,7 +375,6 @@
         }
 
         var data = new URLSearchParams(new FormData(bookingForm));
-        data.append('formType', 'private-booking');
 
         bookingSubmit.disabled = true;
         bookingLabel.textContent = 'Sending your request...';
@@ -342,13 +383,15 @@
         // Same as the letter: Apps Script answers without CORS headers, so the response is opaque.
         fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data })
             .then(function () {
+                var type = document.getElementById('bookingType').value;
                 bookingForm.reset();
+                document.getElementById('bookingType').value = type;
                 bookingFields.forEach(function (f) {
                     f.removeAttribute('aria-invalid');
                 });
                 bookingBody.hidden = true;
                 bookingStatus.classList.remove('is-error');
-                bookingStatus.textContent = 'Ho ho ho! Your request is on its way to Santa. We’ll call you soon to confirm the details.';
+                bookingStatus.textContent = 'Ho ho ho! Your request is on its way. We’ll be in touch soon to confirm the details.';
                 bookingStatus.hidden = false;
             })
             .catch(function () {
