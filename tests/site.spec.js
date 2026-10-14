@@ -69,6 +69,7 @@ test.describe('home page', () => {
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
             sent = new URLSearchParams(route.request().postData());
             return route.fulfill({ status: 200, body: 'ok' });
         });
@@ -88,7 +89,10 @@ test.describe('home page', () => {
         await page.locator('#bk-phone').fill('307-555-0199');
         await page.locator('#bk-email').fill('not-an-email');
         await page.locator('#bk-date').fill('2026-12-20');
-        await page.locator('#bk-time').fill('18:30');
+        await expect(page.locator('#bk-time option[value="16:30"]')).toBeDisabled();
+        await expect(page.locator('#bk-time option[value="17:30"]')).toHaveText('5:30 PM (booked)');
+        await expect(page.locator('#bk-time option[value="18:00"]')).toBeEnabled();
+        await page.locator('#bk-time').selectOption('18:30');
         await page.locator('#bk-type').selectOption('Home visit');
         await page.locator('#bk-place').fill('Cody');
         await page.locator('#bk-kids').fill('3');
@@ -130,6 +134,7 @@ test.describe('home page', () => {
     test('the photo shoot request asks only what the photographers need and is sent as a photo shoot', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
             sent = new URLSearchParams(route.request().postData());
             return route.fulfill({ status: 200, body: 'ok' });
         });
@@ -151,6 +156,7 @@ test.describe('home page', () => {
         await page.locator('#bk-phone').fill('307-555-0199');
         await page.locator('#bk-email').fill('jamie@example.com');
         await page.locator('#bk-date').fill('2026-12-06');
+        await page.locator('#bk-time').selectOption('10:00');
         await page.locator('#bk-people').fill('5');
         await dialog.getByRole('button', { name: 'Send my request' }).click();
         await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way');
@@ -160,9 +166,19 @@ test.describe('home page', () => {
             phone: '307-555-0199',
             email: 'jamie@example.com',
             date: '2026-12-06',
+            time: '10:00',
             people: '5',
         });
         for (const key of ['eventType', 'place', 'kids', 'elf', 'photo']) expect(sent.has(key)).toBe(false);
+    });
+
+    test('a fully booked day can’t be requested', async ({ page }) => {
+        await page.route(/^https:\/\/script\.google\.com\//, (route) => route.fulfill({ json: { busy: [[0, 24 * 60]], duration: 60 } }));
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await page.locator('#bk-date').fill('2026-12-24');
+        await expect(page.locator('#bk-date-error')).toHaveText('Santa is fully booked that day. Please pick another date.');
+        await expect(page.locator('#bk-date')).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#bk-time option:not([value=""])')).toHaveCount(0);
     });
 
     test.describe('when the network is down', () => {
@@ -176,6 +192,8 @@ test.describe('home page', () => {
             await page.locator('#bk-phone').fill('307-555-0199');
             await page.locator('#bk-email').fill('jamie@example.com');
             await page.locator('#bk-date').fill('2026-12-20');
+            await expect(page.locator('#bookingAvailability')).toContainText('couldn’t check Santa’s calendar');
+            await page.locator('#bk-time').selectOption('17:00');
             await page.locator('#bk-type').selectOption('Holiday party');
             await page.locator('#bk-place').fill('Powell');
             await page.locator('#bk-elf').selectOption('Not sure yet');

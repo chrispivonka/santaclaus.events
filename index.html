@@ -764,10 +764,15 @@
                             <p class="field-error" id="bk-date-error" aria-live="polite"></p>
                         </div>
                         <div class="field">
-                            <label for="bk-time"><span data-private>Start time</span><span data-photo hidden>Preferred time</span></label>
-                            <input id="bk-time" name="time" type="time" />
+                            <label for="bk-time"><span data-private>Start time</span><span data-photo hidden>Preferred time</span> *</label>
+                            <!-- main.js fills this with the times still open on Santa's calendar for the chosen date -->
+                            <select id="bk-time" name="time" required data-error="Please pick a time.">
+                                <option value="">Pick a date first</option>
+                            </select>
+                            <p class="field-error" id="bk-time-error" aria-live="polite"></p>
                         </div>
                     </div>
+                    <p class="booking-availability" id="bookingAvailability" aria-live="polite"></p>
                     <fieldset class="booking-group" id="bookingPrivate">
                         <legend class="visually-hidden">About your event</legend>
                         <div class="field-row">

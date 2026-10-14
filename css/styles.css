@@ -2587,3 +2587,11 @@ html:not(.js) .section-head h2::after {
 .booking-dialog .booking-close {
     border-color: rgba(42, 47, 58, 0.2);
 }
+.booking-availability {
+    margin: -0.25rem 0 0.75rem;
+    font-size: 0.9rem;
+    color: #5b6475;
+}
+.booking-availability:empty {
+    display: none;
+}
