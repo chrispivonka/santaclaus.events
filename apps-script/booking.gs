@@ -7,8 +7,6 @@
  *   PHOTO_RECIPIENTS    photo shoots (for example Written In Light)
  *   CALENDAR_ID         Santa's Google Calendar, checked for times that are already booked
  *   PRIVATE_MINUTES, PHOTO_MINUTES (optional) how long each kind of booking lasts (default 60 and 30)
- *   PRIVATE_TEXT_TO, PHOTO_TEXT_TO (optional) phone numbers that also get a text about each request,
- *     sent through Twilio with TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM
  * Setup steps are in apps-script/README.md. Keep email addresses in the script properties,
  * never in this file, so they stay out of the public repository and off the site.
  */
@@ -17,7 +15,6 @@ var KINDS = {
     'private-booking': {
         label: 'Private booking request',
         recipients: 'PRIVATE_RECIPIENTS',
-        textTo: 'PRIVATE_TEXT_TO',
         minutes: 'PRIVATE_MINUTES',
         defaultMinutes: 60,
         fields: [
@@ -37,7 +34,6 @@ var KINDS = {
     'photo-shoot': {
         label: 'Photo shoot request',
         recipients: 'PHOTO_RECIPIENTS',
-        textTo: 'PHOTO_TEXT_TO',
         minutes: 'PHOTO_MINUTES',
         defaultMinutes: 30,
         fields: [
@@ -110,28 +106,6 @@ function doPost(e) {
         name: 'Santa Claus Events',
     });
 
-    // Optional: a short text to each number in PRIVATE_TEXT_TO or PHOTO_TEXT_TO. The email has the details.
-    // A failed text never stops the email or the log.
-    try {
-        sendTexts(
-            props,
-            props.getProperty(kind.textTo),
-            (conflict ? '[Time already booked] ' : '') +
-                'New ' +
-                kind.label.toLowerCase() +
-                ' from ' +
-                clean(p.name).slice(0, 60) +
-                ' for ' +
-                (clean(p.date) || 'a date to confirm') +
-                (clean(p.time) ? ' at ' + clean(p.time) : '') +
-                '. Phone: ' +
-                (clean(p.phone).slice(0, 30) || 'not given') +
-                '. Details are in your email.',
-        );
-    } catch (err) {
-        console.error('Text alert failed: ' + err);
-    }
-
     // Optional: keep a log of every request in a Google Sheet, one tab per kind (see README.md).
     var sheetId = props.getProperty('SHEET_ID');
     if (sheetId) {
@@ -156,25 +130,6 @@ function doPost(e) {
     }
 
     return ContentService.createTextOutput('ok');
-}
-
-// Texts each comma-separated number through Twilio's Messages API, if Twilio is set up.
-function sendTexts(props, numbers, message) {
-    var sid = props.getProperty('TWILIO_ACCOUNT_SID');
-    var token = props.getProperty('TWILIO_AUTH_TOKEN');
-    var from = props.getProperty('TWILIO_FROM');
-    if (!numbers || !sid || !token || !from) return;
-    numbers.split(',').forEach(function (to) {
-        to = to.trim();
-        if (!to) return;
-        var response = UrlFetchApp.fetch('https://api.twilio.com/2010-04-01/Accounts/' + sid + '/Messages.json', {
-            method: 'post',
-            headers: { Authorization: 'Basic ' + Utilities.base64Encode(sid + ':' + token) },
-            payload: { To: to, From: from, Body: message },
-            muteHttpExceptions: true,
-        });
-        if (response.getResponseCode() >= 300) console.error('Twilio said ' + response.getContentText());
-    });
 }
 
 function durationOf(kind) {
