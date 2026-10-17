@@ -6,7 +6,7 @@ design:
       - any-glob-to-any-file: ['css/**', 'assets/fonts/**']
 scripts:
   - changed-files:
-      - any-glob-to-any-file: ['js/**']
+      - any-glob-to-any-file: ['js/**', 'apps-script/**']
 build:
   - changed-files:
       - any-glob-to-any-file: ['vite.config.js', 'infra/**', 'scripts/**', 'package.json', 'package-lock.json']

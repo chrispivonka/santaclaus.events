@@ -1,0 +1,32 @@
+name: Dependabot auto-merge
+
+# Grouped Dependabot updates (npm minor and patch releases, and GitHub Actions) merge into
+# development on their own once every check the branch rules require is green; no approval is
+# needed. Major npm updates, and any group that contains one, are left for a person to review.
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge for grouped updates
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'chrispivonka/santaclaus.events'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - name: Read the update's details
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Merge once the required checks pass
+        if: steps.meta.outputs.dependency-group != '' && steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

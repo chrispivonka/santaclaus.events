@@ -1,6 +1,7 @@
 {
   "name": "santaclaus-events",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vp dev",

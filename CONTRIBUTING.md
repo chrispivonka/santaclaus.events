@@ -1,5 +1,7 @@
 # Working on santaclaus.events
 
+By taking part you agree to the [code of conduct](CODE_OF_CONDUCT.md). Found a security problem? Report it privately as described in [SECURITY.md](SECURITY.md).
+
 ## Setup
 
 You need Node.js 24 (it includes npm 11). With [nvm](https://github.com/nvm-sh/nvm), run `nvm use` in the repo.
@@ -50,6 +52,10 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 Every job starts with StepSecurity Harden-Runner, which records each job's network calls and process activity (visible from the run's summary) so a compromised tool phoning home stands out. Production deploys also publish a signed build provenance attestation for every file in `dist/` (public repositories only), and the branch rules only accept signed commits, which merges through GitHub always are.
 
 Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped npm and GitHub Actions updates every Monday (after a 3-day cooldown on new releases), moving each pinned action SHA and its version comment together.
+
+## Dependency updates
+
+Dependabot opens grouped pull requests against `development` every Monday: one for npm minor and patch releases and one for GitHub Actions, each a few days after the release (the cooldown in `.github/dependabot.yml`). The **Dependabot auto-merge** workflow turns on auto-merge for those grouped pull requests, so they squash-merge on their own as soon as every required check is green, with no approval needed. A major npm update, or a group that contains one, waits for a person to review it. Updates then ship with the next release like any other change.
 
 ## Releasing
 

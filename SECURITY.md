@@ -1,6 +1,6 @@
 # Security
 
-Please report security problems privately through [GitHub's private vulnerability reporting](https://github.com/chrispivonka/santaclaus.events/security/advisories/new), not in a public issue. You'll get a reply within a week. Good-faith research that stays within this site, and doesn't touch other people's data or flood the forms, is welcome.
+Please report security problems privately through [GitHub's private vulnerability reporting](https://github.com/chrispivonka/santaclaus.events/security/advisories/new), not in a public issue. Include what you found, how to reproduce it, and what it affects. You'll get a reply within a week, and a fix or a plan within 30 days; you're welcome to be credited in the advisory once it's fixed. Good-faith research that stays within this site, and doesn't touch other people's data or flood the forms, is welcome.
 
 Only the live site at https://santaclaus.events (and its preview at https://preview.santaclaus.events) is supported; fixes ship as a new release from `development`.
 

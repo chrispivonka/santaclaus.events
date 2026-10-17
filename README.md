@@ -1,5 +1,15 @@
 # santaclaus.events
 
+[![CI](https://github.com/chrispivonka/santaclaus.events/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/chrispivonka/santaclaus.events/actions/workflows/ci.yml)
+[![Security](https://github.com/chrispivonka/santaclaus.events/actions/workflows/security.yml/badge.svg?branch=development)](https://github.com/chrispivonka/santaclaus.events/actions/workflows/security.yml)
+[![CodeQL](https://github.com/chrispivonka/santaclaus.events/actions/workflows/codeql.yml/badge.svg?branch=development)](https://github.com/chrispivonka/santaclaus.events/actions/workflows/codeql.yml)
+[![Deploy](https://github.com/chrispivonka/santaclaus.events/actions/workflows/deploy.yml/badge.svg)](https://github.com/chrispivonka/santaclaus.events/actions/workflows/deploy.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/chrispivonka/santaclaus.events/badge)](https://scorecard.dev/viewer/?uri=github.com/chrispivonka/santaclaus.events)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Fsantaclaus.events&label=santaclaus.events)](https://santaclaus.events)
+[![Latest release](https://img.shields.io/github/v/release/chrispivonka/santaclaus.events?sort=date)](https://github.com/chrispivonka/santaclaus.events/releases)
+[![License: all rights reserved](https://img.shields.io/badge/license-all_rights_reserved-lightgrey.svg)](LICENSE)
+[![WCAG 2.2 AA](https://img.shields.io/badge/accessibility-WCAG_2.2_AA-success)](CONTRIBUTING.md#what-ci-checks-on-every-pull-request)
+
 Source for the website [santaclaus.events](https://santaclaus.events).
 
 It's a single static page, plain HTML, CSS and JavaScript with no framework. [Vite+](https://viteplus.dev) (Vite 8 with Rolldown, plus Oxlint and Oxfmt) builds it into `dist/`, minifying everything, fingerprinting file names so browsers can cache them for a year, inlining the stylesheet and generating the Content-Security-Policy.
@@ -45,3 +55,13 @@ The Content-Security-Policy lives in `vite.config.js` and only allows the outsid
 ## Checks
 
 Every pull request runs formatting, linting, a build, Playwright tests in three browser engines, accessibility checks, Lighthouse with byte budgets, link checks, dependency, license, lockfile and secret scanning, workflow and infrastructure linting, and CodeQL. Nothing merges without them and the maintainer's merge. Details are in [CONTRIBUTING.md](CONTRIBUTING.md#what-ci-checks-on-every-pull-request).
+
+## Contributing, security and conduct
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): setup, the branch and release flow, and every check a change must pass. Every change goes through a pull request that only the maintainer can merge.
+- [SECURITY.md](SECURITY.md): report security problems privately, never in a public issue.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): this is a family-friendly project; please keep it that way.
+
+## License
+
+All rights reserved: see [LICENSE](LICENSE). The code, photos, written content and the Santa Claus Events name are published here so they can be read and improved through pull requests, not reused elsewhere without permission.
