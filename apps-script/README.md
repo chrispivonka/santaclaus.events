@@ -45,7 +45,7 @@ Edit `PRIVATE_RECIPIENTS` or `PHOTO_RECIPIENTS` in Script Properties. No redeplo
 
 ## Changing the scripts
 
-Change the files here and release as usual. When a release changes `common.gs`, `appsscript.json` or a form's script, the Deploy workflow's **Apps Script** job pushes that project with [clasp](https://github.com/google/clasp) and gives its existing deployment a new version, so the URL (and the site) stay the same. Each project gets exactly `common.gs`, its own script and `appsscript.json`; anything else in the project is removed. The job runs only for production releases, because the preview site posts to the same two web apps. A production rollback doesn't roll the scripts back; release a fix instead.
+Change the files here and release as usual. When `common.gs`, `appsscript.json` or a form's script differs from the release that's live in that project (each deployment's description names its release), the Deploy workflow's **Apps Script** job pushes the project with [clasp](https://github.com/google/clasp) and gives its existing deployment a new version, so the URL (and the site) stay the same. Each project gets exactly `common.gs`, its own script and `appsscript.json`; anything else in the project is removed. The job runs only for production releases, because the preview site posts to the same two web apps. A production rollback doesn't roll the scripts back; release a fix instead.
 
 ### Connect GitHub to the scripts (once per project)
 
