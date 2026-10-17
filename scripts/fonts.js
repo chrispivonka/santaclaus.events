@@ -1,7 +1,7 @@
 // Builds the self-hosted web fonts in assets/fonts from the @fontsource packages.
 // Each font is cut down to the Latin characters the site uses and only the weights it uses,
 // which makes them a fraction of the size Google Fonts serves. Fraunces' optical size axis is
-// pinned at 72 (tuned for headings), which more than halves its size. Run with `npm run fonts`.
+// pinned at 72 (tuned for headings), which more than halves its size. Run with `bun run fonts`.
 import { readFile, writeFile } from 'node:fs/promises';
 import subsetFont from 'subset-font';
 

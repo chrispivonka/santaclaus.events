@@ -43,6 +43,12 @@
                 "url": "https://santaclaus.events/",
                 "logo": "https://santaclaus.events/assets/img/apple-touch-icon.png",
                 "image": "https://santaclaus.events/assets/img/og-image.jpg",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Cody",
+                    "addressRegion": "WY",
+                    "addressCountry": "US"
+                },
                 "sameAs": ["https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/"]
             }
         </script>
@@ -155,6 +161,7 @@
                     <li><a href="#advent">Advent</a></li>
                     <li><a href="#fun">Games</a></li>
                     <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Book Santa</a></li>
                     <li><a href="#letter" class="nav-cta">Write to Santa</a></li>
                 </ul>
             </nav>
@@ -177,12 +184,16 @@
                     <div class="hero-copy">
                         <h1>Hello from <span class="accent">Santa&nbsp;Claus!</span></h1>
                         <p class="lede">
-                            The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting this season, open a door on
-                            the advent calendar, or send a letter straight to the North Pole.
+                            The sleigh is packed and the cocoa is warm. Find out where Santa will be visiting around Cody, Wyoming this
+                            season, open a door on the advent calendar, or send a letter straight to the North Pole.
                         </p>
                         <div class="hero-actions">
                             <a class="btn btn-primary" href="#events">See where Santa will be</a>
                             <a class="btn btn-ghost" href="#letter">Write Santa a letter</a>
+                        </div>
+                        <div class="hero-actions hero-actions-book">
+                            <a class="btn btn-ghost" href="#private-events">Schedule a private event</a>
+                            <a class="btn btn-ghost" href="#photo-shoots">Schedule a photo shoot</a>
                         </div>
                     </div>
                     <div class="hero-media">
@@ -487,6 +498,10 @@
                             Every year Santa and Mrs. Claus take a break from the workshop to visit with families, hear Christmas wishes,
                             and spread a little holiday cheer. Come say hello, bring your list, and don't forget to smile for a photo!
                         </p>
+                        <p class="shout-out">
+                            <span aria-hidden="true">🎉</span> A big North Pole thank-you to the <b>Cody Rotary Club</b> for helping bring
+                            Santa to town!
+                        </p>
                         <a
                             class="btn btn-ghost"
                             href="https://www.facebook.com/people/Cody-Santa-Claus/61584500726616/"
@@ -529,12 +544,15 @@
                         <p class="letter-greeting">Dear Santa,</p>
                         <div class="field-row">
                             <div class="field">
-                                <label for="name">Your name</label>
+                                <label for="name">Your first name</label>
                                 <input
                                     id="name"
                                     name="name"
+                                    data-kind="name"
+                                    data-invalid="Santa can only read letters, spaces, hyphens and apostrophes in a name."
                                     type="text"
-                                    autocomplete="name"
+                                    autocomplete="given-name"
+                                    maxlength="40"
                                     required
                                     data-error="You need to tell Santa your name!"
                                 />
@@ -547,6 +565,7 @@
                                     name="email"
                                     type="email"
                                     autocomplete="email"
+                                    maxlength="254"
                                     required
                                     data-error="Santa needs a valid email so the elves can write back!"
                                 />
@@ -558,7 +577,9 @@
                             <textarea
                                 id="message"
                                 name="message"
+                                data-kind="text"
                                 rows="6"
+                                maxlength="5000"
                                 required
                                 placeholder="This year I have been very good..."
                                 data-error="The North Pole can't read silence. Please write your letter to Santa!"
@@ -589,8 +610,47 @@
                             </button>
                             <p class="letter-signoff">Love, <span id="signoffName">me</span></p>
                         </div>
+                        <p class="form-privacy">
+                            Kids, ask a grown-up before you send your letter. Grown-ups: we use your email only to send Santa's reply. We
+                            never share it or add it to a mailing list, and we delete the letter once it's answered.
+                        </p>
                         <div class="form-status" id="formStatus" role="status" aria-live="polite" hidden></div>
                     </form>
+                </div>
+            </section>
+
+            <!-- Booking and contact -->
+            <section class="section section-alt" id="contact">
+                <div class="container">
+                    <div class="section-head reveal">
+                        <p class="eyebrow">Cody, Wyoming</p>
+                        <h2>Book a visit with Santa</h2>
+                        <p>Bring Santa to your party, school, or business, or book a Christmas photo shoot with Santa himself.</p>
+                    </div>
+                    <div class="contact-grid">
+                        <article class="contact-card reveal" id="private-events" aria-labelledby="privateTitle">
+                            <span class="fun-icon" aria-hidden="true">🎅</span>
+                            <h3 id="privateTitle">Schedule a private event</h3>
+                            <p>
+                                Santa can visit your home, holiday party, school, or business. Send a request and we'll call you to confirm
+                                the details. December fills up fast, so ask early!
+                            </p>
+                            <button class="btn btn-primary contact-cta" type="button" aria-haspopup="dialog" data-booking="private-booking">
+                                Request a private booking
+                            </button>
+                        </article>
+                        <article class="contact-card reveal" id="photo-shoots" aria-labelledby="photoTitle">
+                            <span class="fun-icon" aria-hidden="true">📸</span>
+                            <h3 id="photoTitle">Schedule a photo shoot</h3>
+                            <p>
+                                Christmas portraits with Santa are by <b>Written In Light ~ Photo and Film</b>, run by sisters Kelsie
+                                Templin and Kalie Robson. Send a request and they'll get back to you to pick a date and time.
+                            </p>
+                            <button class="btn btn-green contact-cta" type="button" aria-haspopup="dialog" data-booking="photo-shoot">
+                                Request a photo shoot
+                            </button>
+                        </article>
+                    </div>
                 </div>
             </section>
         </main>
@@ -605,6 +665,7 @@
                 <div>
                     <p class="footer-brand">Santa Claus Events</p>
                     <p>&copy; <span id="year">2026</span> Santa Claus Events. Made with cocoa at the North Pole.</p>
+                    <p>Proudly visiting Cody, WY.</p>
                 </div>
                 <div class="footer-actions">
                     <button class="footer-pill" id="snowToggle" type="button" aria-pressed="true">
@@ -636,6 +697,210 @@
         </button>
 
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <!-- Booking requests for private events and photo shoots; sent like the letter, to a Google Apps Script
+             that emails each kind to its own people (see apps-script/README.md) -->
+        <dialog class="advent-dialog booking-dialog" id="bookingDialog" aria-labelledby="bookingTitle">
+            <form
+                class="booking-form"
+                id="bookingForm"
+                action="https://script.google.com/macros/s/AKfycbzZItXwFPL3DgT1jk6pYdrquJ_eWv0FU7LADl5VCv-vyoY8kxIs_zeRBi597A-G3lyXjA/exec"
+                method="POST"
+                novalidate
+            >
+                <div class="booking-head">
+                    <p class="advent-dialog-day" id="bookingKind">Private appearance</p>
+                    <h3 id="bookingTitle">Private booking request</h3>
+                    <input type="hidden" name="formType" id="bookingType" value="private-booking" />
+                    <p class="booking-intro">
+                        <span id="bookingIntro"
+                            >Tell us about your event and we'll call you to confirm the details and talk about pricing.</span
+                        >
+                        <span class="booking-required">Fields marked * are required.</span>
+                    </p>
+                    <button class="icon-btn booking-close" id="bookingClose" type="button" aria-label="Close the booking request">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                            <path
+                                fill="currentColor"
+                                d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4z"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div class="booking-body" id="bookingBody">
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-name">Your name *</label>
+                            <input
+                                id="bk-name"
+                                name="name"
+                                data-kind="name"
+                                data-invalid="Please use only letters, spaces, hyphens and apostrophes in your name."
+                                type="text"
+                                autocomplete="name"
+                                maxlength="100"
+                                required
+                                data-error="Please tell us your name."
+                            />
+                            <p class="field-error" id="bk-name-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="bk-phone">Phone *</label>
+                            <input
+                                id="bk-phone"
+                                name="phone"
+                                type="tel"
+                                autocomplete="tel"
+                                data-invalid="Please enter a phone number with 7 to 15 digits."
+                                maxlength="30"
+                                required
+                                data-error="Please add a phone number so we can call you."
+                            />
+                            <p class="field-error" id="bk-phone-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="bk-email">Email *</label>
+                        <input
+                            id="bk-email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            maxlength="254"
+                            required
+                            data-error="Please add a valid email address."
+                        />
+                        <p class="field-error" id="bk-email-error" aria-live="polite"></p>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="bk-date"><span data-private>Event date</span><span data-photo hidden>Preferred date</span> *</label>
+                            <input
+                                id="bk-date"
+                                name="date"
+                                type="date"
+                                required
+                                data-error="Please pick a date."
+                                data-invalid="Please pick a date from today on."
+                            />
+                            <p class="field-error" id="bk-date-error" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="bk-time"><span data-private>Start time</span><span data-photo hidden>Preferred time</span> *</label>
+                            <!-- main.js fills this with the times still open on Santa's calendar for the chosen date -->
+                            <select id="bk-time" name="time" required data-error="Please pick a time.">
+                                <option value="">Pick a date first</option>
+                            </select>
+                            <p class="field-error" id="bk-time-error" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <p class="booking-availability" id="bookingAvailability" aria-live="polite"></p>
+                    <fieldset class="booking-group" id="bookingPrivate">
+                        <legend class="visually-hidden">About your event</legend>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="bk-type">Type of event *</label>
+                                <select id="bk-type" name="eventType" required data-error="Please choose the type of event.">
+                                    <option value="">Pick one</option>
+                                    <option>Home visit</option>
+                                    <option>Holiday party</option>
+                                    <option>School or classroom</option>
+                                    <option>Business or workplace</option>
+                                    <option>Church or community event</option>
+                                    <option>Something else</option>
+                                </select>
+                                <p class="field-error" id="bk-type-error" aria-live="polite"></p>
+                            </div>
+                            <div class="field">
+                                <label for="bk-place">Town or venue *</label>
+                                <input
+                                    id="bk-place"
+                                    name="place"
+                                    data-kind="line"
+                                    type="text"
+                                    autocomplete="address-level2"
+                                    maxlength="200"
+                                    required
+                                    data-error="Please tell us where the event is."
+                                />
+                                <p class="field-error" id="bk-place-error" aria-live="polite"></p>
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="bk-kids">How many kids?</label>
+                                <input
+                                    id="bk-kids"
+                                    name="kids"
+                                    type="number"
+                                    min="0"
+                                    max="500"
+                                    step="1"
+                                    inputmode="numeric"
+                                    data-invalid="Please enter a whole number from 0 to 500."
+                                />
+                                <p class="field-error" id="bk-kids-error" aria-live="polite"></p>
+                            </div>
+                            <div class="field">
+                                <label for="bk-elf">Add an elf? *</label>
+                                <select id="bk-elf" name="elf" required data-error="Please let us know about the elf.">
+                                    <option value="">Pick one</option>
+                                    <option>Yes, please</option>
+                                    <option>No, thank you</option>
+                                    <option>Not sure yet</option>
+                                </select>
+                                <p class="field-error" id="bk-elf-error" aria-live="polite"></p>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="bk-photo">May we take a photo with Santa for our advertising? *</label>
+                            <select id="bk-photo" name="photo" required data-error="Please choose a photo option.">
+                                <option value="">Pick one</option>
+                                <option>Yes</option>
+                                <option>Yes, but only from behind (no faces)</option>
+                                <option>No photos, please</option>
+                            </select>
+                            <p class="field-error" id="bk-photo-error" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+                    <fieldset class="booking-group" id="bookingPhoto" hidden disabled>
+                        <legend class="visually-hidden">About your photo shoot</legend>
+                        <div class="field">
+                            <label for="bk-people">How many people will be in the photos?</label>
+                            <input
+                                id="bk-people"
+                                name="people"
+                                type="number"
+                                min="1"
+                                max="100"
+                                step="1"
+                                inputmode="numeric"
+                                data-invalid="Please enter a whole number from 1 to 100."
+                            />
+                            <p class="field-error" id="bk-people-error" aria-live="polite"></p>
+                        </div>
+                    </fieldset>
+                    <div class="field">
+                        <label for="bk-notes">Anything else we should know?</label>
+                        <textarea id="bk-notes" name="notes" rows="3" maxlength="2000" data-kind="text"></textarea>
+                    </div>
+                    <!-- Honeypot field for bots; real visitors never see it -->
+                    <div class="honeypot" aria-hidden="true">
+                        <label for="bk-website">Leave this empty</label>
+                        <input id="bk-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+                    </div>
+                    <p class="form-privacy">
+                        We use your details only to answer this request. We never share them or add them to a mailing list.
+                    </p>
+                    <div class="booking-actions">
+                        <button class="btn btn-primary" id="bookingSubmit" type="submit">
+                            <span class="btn-label">Send my request</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-status" id="bookingStatus" role="status" aria-live="polite" hidden></div>
+            </form>
+        </dialog>
 
         <dialog class="advent-dialog" id="adventDialog" aria-labelledby="adventDialogTitle">
             <form method="dialog" class="advent-dialog-inner">

@@ -2,7 +2,6 @@ rules:
   unpinned-uses:
     config:
       policies:
-        # Actions published by GitHub and the OpenSSF are pinned to release tags and kept current by Dependabot.
-        'actions/*': ref-pin
-        'github/*': ref-pin
-        'ossf/*': ref-pin
+        # Every action, GitHub's own included, is pinned to a full commit SHA with its version in a
+        # comment. Dependabot updates both together, and a moved or hijacked tag can't change what runs.
+        '*': hash-pin

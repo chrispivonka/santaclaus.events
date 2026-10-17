@@ -17,6 +17,9 @@ const csp = {
     'form-action': ['https://script.google.com'],
     'base-uri': ["'self'"],
     'object-src': ["'none'"],
+    // No script may write markup through innerHTML, document.write or eval-like sinks.
+    'require-trusted-types-for': ["'script'"],
+    'trusted-types': ["'none'"],
 };
 // Only valid as a header, so these go in the header policy but not the <meta> tag.
 const headerOnly = { 'frame-ancestors': ["'none'"], 'upgrade-insecure-requests': [] };
@@ -95,7 +98,7 @@ export default defineConfig({
 
     // `vp fmt` (Oxfmt, Prettier-compatible) for JS, CSS, HTML and JSON, matched to the existing style.
     fmt: {
-        ignorePatterns: ['dist/**', 'package-lock.json', 'playwright-report/**', 'test-results/**'],
+        ignorePatterns: ['dist/**', 'bun.lock', 'playwright-report/**', 'test-results/**'],
         tabWidth: 4,
         singleQuote: true,
         printWidth: 140,

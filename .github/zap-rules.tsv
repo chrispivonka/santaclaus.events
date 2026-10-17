@@ -5,3 +5,15 @@
 10027	IGNORE	(Suspicious Comments)
 # 10050 "Retrieved from Cache": CloudFront serving cached files is the point of the CDN.
 10050	IGNORE	(Retrieved from Cache)
+# 10015 "Re-examine Cache-control Directives": pages are public and sent with max-age=0, must-revalidate on purpose.
+10015	IGNORE	(Re-examine Cache-control Directives)
+# 10094 "Base64 Disclosure": the CSP's sha256 hashes and the font/asset fingerprints, not secrets.
+10094	IGNORE	(Base64 Disclosure)
+# 10109 "Modern Web Application": informational only.
+10109	IGNORE	(Modern Web Application)
+# 10202 "Absence of Anti-CSRF Tokens": the letter form posts to Google Apps Script; the site has no sessions or cookies to forge.
+10202	IGNORE	(Absence of Anti-CSRF Tokens)
+# 90004 "Cross-Origin-Embedder-Policy": require-corp would block the embedded Google Calendar.
+90004	IGNORE	(Cross-Origin-Embedder-Policy Header Missing or Invalid)
+# 90005 "Sec-Fetch-Dest Header is Missing": about ZAP's own requests, not something a server sends.
+90005	IGNORE	(Sec-Fetch-Dest Header is Missing)

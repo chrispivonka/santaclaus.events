@@ -1,0 +1,16 @@
+name: Idea or feature request
+description: Suggest something new for the site
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe the idea and who it helps (families, kids, event hosts).
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What problem does it solve, or what would it make better?

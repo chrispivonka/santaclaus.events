@@ -75,6 +75,26 @@ for (const theme of ['dark', 'light']) {
             await expect(page.locator('#name')).toHaveAttribute('aria-invalid', 'true');
             await checkA11y(page, 'letter form errors');
         });
+
+        // Separate from the test above so neither runs past the timeout on WebKit, where each axe pass is slow.
+        test(`booking request states have no violations @a11y`, async ({ page }) => {
+            await page.goto('/');
+            await revealAll(page);
+
+            await page.getByRole('button', { name: 'Request a private booking' }).click();
+            await expect(page.locator('#bookingDialog')).toBeVisible();
+            await checkA11y(page, 'private booking request open');
+            await page.locator('#bookingSubmit').click();
+            await expect(page.locator('#bk-name')).toHaveAttribute('aria-invalid', 'true');
+            await checkA11y(page, 'private booking request errors');
+            await page.locator('#bookingClose').click();
+
+            await page.getByRole('button', { name: 'Request a photo shoot' }).click();
+            await expect(page.locator('#bookingDialog')).toBeVisible();
+            await page.locator('#bookingSubmit').click();
+            await expect(page.locator('#bk-name')).toHaveAttribute('aria-invalid', 'true');
+            await checkA11y(page, 'photo shoot request errors');
+        });
     });
 }
 

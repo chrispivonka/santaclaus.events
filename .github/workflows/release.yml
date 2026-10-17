@@ -31,6 +31,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Create or update the release pull request
         run: |
           changes=$(gh api "repos/$GH_REPO/compare/main...development" --paginate \
@@ -67,6 +70,9 @@ jobs:
       GH_REPO: ${{ github.repository }}
       SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Create a dated GitHub Release with generated notes
         id: release
         run: |

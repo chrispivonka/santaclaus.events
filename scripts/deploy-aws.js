@@ -1,5 +1,5 @@
 // Publishes the built site in dist/ to one environment's S3 bucket and CloudFront distribution.
-// Run by the Deploy workflow after `npm run build`, with AWS credentials from GitHub's OIDC role:
+// Run by the Deploy workflow after `bun run build`, with AWS credentials from GitHub's OIDC role:
 //
 //   S3_BUCKET=... CLOUDFRONT_DISTRIBUTION_ID=... node scripts/deploy-aws.js
 //

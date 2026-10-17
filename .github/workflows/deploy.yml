@@ -16,6 +16,9 @@ name: Deploy
 # CLOUDFRONT_DISTRIBUTION_ID: the outputs of that environment's CloudFormation stack. Until they
 # are set, the deploy jobs skip with a notice. The repository variables PREPROD_URL and
 # PRODUCTION_URL say where the checks look (defaults: the two URLs above).
+#
+# A release that changes apps-script/ also pushes the forms' Google Apps Scripts (see the
+# apps-script job and apps-script/README.md).
 on:
   push:
     branches: [development]
@@ -54,6 +57,9 @@ jobs:
       S3_BUCKET: ${{ vars.S3_BUCKET }}
       CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Check the AWS settings are present
         id: gate
         run: |
@@ -63,21 +69,24 @@ jobs:
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.gate.outputs.run == 'true'
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.gate.outputs.run == 'true'
         with:
           node-version-file: .nvmrc
-          cache: npm
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          bun-version-file: package.json
       - if: steps.gate.outputs.run == 'true'
-        run: npm ci
+        run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
       - if: steps.gate.outputs.run == 'true'
-        run: npm run build
+        run: bun run build
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         if: steps.gate.outputs.run == 'true'
         with:
@@ -100,6 +109,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      attestations: write
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
@@ -110,13 +120,16 @@ jobs:
       S3_BUCKET: ${{ vars.S3_BUCKET }}
       CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Check the AWS settings are present
         run: |
           if [ -z "$AWS_ROLE_ARN" ] || [ -z "$S3_BUCKET" ] || [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
             echo "::error::Add AWS_ROLE_ARN, S3_BUCKET and CLOUDFRONT_DISTRIBUTION_ID to the production environment's variables (see CONTRIBUTING.md)."
             exit 1
           fi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ inputs.tag }}
           fetch-depth: 0
@@ -130,14 +143,23 @@ jobs:
           esac
           git merge-base --is-ancestor "refs/tags/$TAG" origin/main \
             || { echo "::error::$TAG is not on main; only released commits deploy to production"; exit 1; }
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npm run build
+      - run: bun run build
+      # A signed record that these exact files were built by this workflow from this tag
+      # (check with `gh attestation verify <file> --repo chrispivonka/santaclaus.events`).
+      # GitHub offers attestations on public repositories only.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-path: 'dist/**'
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
@@ -161,18 +183,23 @@ jobs:
     env:
       BASE_URL: ${{ needs.production.outputs.url || needs.preprod.outputs.url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npx playwright install --with-deps chromium
+      - run: bunx playwright install --with-deps chromium
       - name: Wait for the deployment to answer
         run: |
           for i in $(seq 1 30); do
@@ -182,7 +209,82 @@ jobs:
           done
           echo "::error::$BASE_URL did not answer 200 in time"; exit 1
       - name: Smoke, accessibility and header tests against ${{ env.BASE_URL }}
-        run: npx playwright test --project=chromium --project=mobile-chrome
+        run: bunx playwright test --project=chromium --project=mobile-chrome
+
+  # The forms' Google Apps Scripts, pushed with clasp when a release changes them. Both the
+  # preview and the live site post to the same two web apps, so they update with production only.
+  # Each project's existing deployment gets a new version, so its URL (built into the site) stays.
+  # Until the production environment has the script's secret and variables, it skips with a notice.
+  apps-script:
+    name: Apps Script (${{ matrix.project }})
+    needs: [production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    environment:
+      name: production
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [letter, booking]
+    env:
+      PROJECT: ${{ matrix.project }}
+      TAG: ${{ inputs.tag }}
+      SCRIPT_ID: ${{ matrix.project == 'letter' && vars.LETTER_SCRIPT_ID || vars.BOOKING_SCRIPT_ID }}
+      DEPLOYMENT_ID: ${{ matrix.project == 'letter' && vars.LETTER_DEPLOYMENT_ID || vars.BOOKING_DEPLOYMENT_ID }}
+    steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check whether this release changes the script
+        id: gate
+        env:
+          HAS_CREDENTIALS: ${{ (matrix.project == 'letter' && secrets.CLASPRC_LETTER || secrets.CLASPRC_BOOKING) != '' }}
+        run: |
+          if [ "$HAS_CREDENTIALS" != "true" ] || [ -z "$SCRIPT_ID" ] || [ -z "$DEPLOYMENT_ID" ]; then
+            echo "::notice::Skipping $PROJECT.gs: add its clasp credentials secret and script and deployment IDs to the production environment (see apps-script/README.md)."
+            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files="apps-script/common.gs apps-script/$PROJECT.gs apps-script/appsscript.json"
+          previous=$(git describe --tags --abbrev=0 --match 'v20*' "$TAG^" 2>/dev/null || true)
+          # shellcheck disable=SC2086 # files is a list of paths
+          if [ -n "$previous" ] && git diff --quiet "$previous" "$TAG" -- $files; then
+            echo "::notice::$PROJECT.gs is unchanged since $previous; nothing to deploy."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          bun-version-file: package.json
+      - name: Push and redeploy ${{ matrix.project }}.gs
+        if: steps.gate.outputs.run == 'true'
+        env:
+          CLASPRC: ${{ matrix.project == 'letter' && secrets.CLASPRC_LETTER || secrets.CLASPRC_BOOKING }}
+        run: |
+          umask 077
+          auth="$RUNNER_TEMP/clasprc.json"
+          trap 'rm -f "$auth"' EXIT
+          printf '%s' "$CLASPRC" > "$auth"
+          dir="$RUNNER_TEMP/$PROJECT"
+          mkdir -p "$dir"
+          cp apps-script/common.gs "apps-script/$PROJECT.gs" apps-script/appsscript.json "$dir/"
+          printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > "$dir/.clasp.json"
+          cd "$dir"
+          clasp() { bunx @google/clasp@3.4.1 --auth "$auth" "$@"; }
+          clasp push --force
+          clasp update-deployment "$DEPLOYMENT_ID" --description "$TAG"
 
   # Outside-in scans of the live site, production only: a passive OWASP ZAP baseline scan and
   # Mozilla's HTTP Observatory grade. ZAP opens (or updates) an issue when it finds something.
@@ -197,17 +299,23 @@ jobs:
     env:
       BASE_URL: ${{ needs.production.outputs.url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ inputs.tag }}
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
       - name: Mozilla HTTP Observatory (fails below grade A)
         run: |
           host="${BASE_URL#https://}"; host="${host%%/*}"
-          npx --yes @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
+          bunx @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
           grep -Eq '"grade": "A\+?"' observatory.txt || { echo "::error::HTTP Observatory grade is below A"; exit 1; }
       - name: OWASP ZAP baseline scan
         uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
@@ -236,6 +344,9 @@ jobs:
       S3_BUCKET: ${{ vars.S3_BUCKET }}
       CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Find the release before this one
         id: previous
         env:
@@ -250,18 +361,20 @@ jobs:
             exit 1
           fi
           echo "tag=$previous" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ steps.previous.outputs.tag }}
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npm run build
+      - run: bun run build
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}

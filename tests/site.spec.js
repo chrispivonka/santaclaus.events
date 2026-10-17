@@ -42,6 +42,176 @@ test.describe('home page', () => {
         await expect(calendar).toHaveAttribute('src', /ctz=America%2FDenver/);
     });
 
+    test('hero links lead to events, the letter, private events and photo shoots', async ({ page }) => {
+        const targets = {
+            'See where Santa will be': '#events',
+            'Write Santa a letter': '#letter',
+            'Schedule a private event': '#private-events',
+            'Schedule a photo shoot': '#photo-shoots',
+        };
+        for (const [name, href] of Object.entries(targets)) {
+            await expect(page.locator('.hero').getByRole('link', { name })).toHaveAttribute('href', href);
+        }
+        await page.locator('.hero').getByRole('link', { name: 'Schedule a photo shoot' }).click();
+        await expect(page).toHaveURL(/#photo-shoots$/);
+        await expect(page.getByRole('heading', { name: 'Schedule a photo shoot' })).toBeInViewport();
+    });
+
+    test('the booking cards route requests through the form, with no phone numbers or emails on the page', async ({ page }) => {
+        const contact = page.locator('#contact');
+        await expect(contact.locator('a[href^="tel:"], a[href^="mailto:"]')).toHaveCount(0);
+        await expect(page.locator('#private-events').getByRole('button', { name: 'Request a private booking' })).toBeVisible();
+        await expect(page.locator('#photo-shoots').getByRole('button', { name: 'Request a photo shoot' })).toBeVisible();
+        await expect(page.locator('#photo-shoots')).toContainText('Written In Light');
+        await expect(contact).not.toContainText(/\bHome\b/);
+    });
+
+    test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
+        let sent;
+        await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
+            sent = new URLSearchParams(route.request().postData());
+            return route.fulfill({ status: 200, body: 'ok' });
+        });
+        const dialog = page.locator('#bookingDialog');
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await expect(dialog).toBeVisible();
+        await expect(dialog.getByRole('heading', { name: 'Private booking request' })).toBeVisible();
+        await expect(page.locator('#bk-name')).toBeFocused();
+
+        await dialog.getByRole('button', { name: 'Send my request' }).click();
+        for (const id of ['bk-name', 'bk-phone', 'bk-email', 'bk-date', 'bk-type', 'bk-place', 'bk-elf', 'bk-photo'])
+            await expect(page.locator(`#${id}`)).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#bk-name')).toBeFocused();
+        expect(sent).toBeUndefined();
+
+        await page.locator('#bk-name').fill('Jamie Frost');
+        await page.locator('#bk-phone').fill('307-555-0199');
+        await page.locator('#bk-email').fill('not-an-email');
+        await page.locator('#bk-date').fill('2026-12-20');
+        await expect(page.locator('#bk-time option[value="16:30"]')).toBeDisabled();
+        await expect(page.locator('#bk-time option[value="17:30"]')).toHaveText('5:30 PM (booked)');
+        await expect(page.locator('#bk-time option[value="18:00"]')).toBeEnabled();
+        await page.locator('#bk-time').selectOption('18:30');
+        await page.locator('#bk-type').selectOption('Home visit');
+        await page.locator('#bk-place').fill('Cody');
+        await page.locator('#bk-kids').fill('3');
+        await page.locator('#bk-elf').selectOption('Yes, please');
+        await page.locator('#bk-photo').selectOption('Yes, but only from behind (no faces)');
+        await page.locator('#bk-notes').fill('Christmas Eve surprise');
+        await dialog.getByRole('button', { name: 'Send my request' }).click();
+        await expect(page.locator('#bk-email')).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#bk-email-error')).toHaveText('Please add a valid email address.');
+
+        await page.locator('#bk-email').fill('jamie@example.com');
+        await dialog.getByRole('button', { name: 'Send my request' }).click();
+        await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way');
+        await expect(page.locator('#bookingBody')).toBeHidden();
+        expect(sent.has('people')).toBe(false);
+        expect(Object.fromEntries(sent)).toMatchObject({
+            formType: 'private-booking',
+            name: 'Jamie Frost',
+            phone: '307-555-0199',
+            email: 'jamie@example.com',
+            date: '2026-12-20',
+            time: '18:30',
+            eventType: 'Home visit',
+            place: 'Cody',
+            kids: '3',
+            elf: 'Yes, please',
+            photo: 'Yes, but only from behind (no faces)',
+            notes: 'Christmas Eve surprise',
+            website: '',
+        });
+
+        await dialog.getByRole('button', { name: 'Close the booking request' }).click();
+        await expect(dialog).toBeHidden();
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await expect(page.locator('#bookingBody')).toBeVisible();
+        await expect(page.locator('#bk-name')).toHaveValue('');
+    });
+
+    test('the photo shoot request asks only what the photographers need and is sent as a photo shoot', async ({ page }) => {
+        let sent;
+        await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
+            sent = new URLSearchParams(route.request().postData());
+            return route.fulfill({ status: 200, body: 'ok' });
+        });
+        const dialog = page.locator('#bookingDialog');
+
+        // Half-filling the private form first, then switching, starts the photo request fresh.
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await page.locator('#bk-name').fill('Someone Else');
+        await dialog.getByRole('button', { name: 'Close the booking request' }).click();
+
+        await page.getByRole('button', { name: 'Request a photo shoot' }).click();
+        await expect(dialog.getByRole('heading', { name: 'Photo shoot request' })).toBeVisible();
+        await expect(dialog).toContainText('Written In Light');
+        await expect(page.locator('#bk-name')).toHaveValue('');
+        await expect(page.getByLabel('Preferred date')).toBeVisible();
+        for (const id of ['bk-type', 'bk-place', 'bk-kids', 'bk-elf', 'bk-photo']) await expect(page.locator(`#${id}`)).toBeHidden();
+
+        await page.locator('#bk-name').fill('Jamie Frost');
+        await page.locator('#bk-phone').fill('307-555-0199');
+        await page.locator('#bk-email').fill('jamie@example.com');
+        await page.locator('#bk-date').fill('2026-12-06');
+        await page.locator('#bk-time').selectOption('10:00');
+        await page.locator('#bk-people').fill('5');
+        await dialog.getByRole('button', { name: 'Send my request' }).click();
+        await expect(page.locator('#bookingStatus')).toContainText('Your request is on its way');
+        expect(Object.fromEntries(sent)).toMatchObject({
+            formType: 'photo-shoot',
+            name: 'Jamie Frost',
+            phone: '307-555-0199',
+            email: 'jamie@example.com',
+            date: '2026-12-06',
+            time: '10:00',
+            people: '5',
+        });
+        for (const key of ['eventType', 'place', 'kids', 'elf', 'photo']) expect(sent.has(key)).toBe(false);
+    });
+
+    test('a fully booked day can’t be requested', async ({ page }) => {
+        await page.route(/^https:\/\/script\.google\.com\//, (route) => route.fulfill({ json: { busy: [[0, 24 * 60]], duration: 60 } }));
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await page.locator('#bk-date').fill('2026-12-24');
+        await expect(page.locator('#bk-date-error')).toHaveText('Santa is fully booked that day. Please pick another date.');
+        await expect(page.locator('#bk-date')).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#bk-time option:not([value=""])')).toHaveCount(0);
+    });
+
+    test.describe('when the network is down', () => {
+        // The browser logs the failed requests (Firefox and Safari report the calendar check as a failed
+        // CORS request); those are the only errors this test expects.
+        test.use({ allowedErrors: [/Failed to load resource|CORS request did not succeed|due to access control checks/] });
+
+        test('a failed booking request keeps what was typed and explains', async ({ page }) => {
+            await page.route(/^https:\/\/script\.google\.com\//, (route) => route.abort('failed'));
+            await page.getByRole('button', { name: 'Request a private booking' }).click();
+            await page.locator('#bk-name').fill('Jamie Frost');
+            await page.locator('#bk-phone').fill('307-555-0199');
+            await page.locator('#bk-email').fill('jamie@example.com');
+            await page.locator('#bk-date').fill('2026-12-20');
+            await expect(page.locator('#bookingAvailability')).toContainText('couldn’t check Santa’s calendar');
+            await page.locator('#bk-time').selectOption('17:00');
+            await page.locator('#bk-type').selectOption('Holiday party');
+            await page.locator('#bk-place').fill('Powell');
+            await page.locator('#bk-elf').selectOption('Not sure yet');
+            await page.locator('#bk-photo').selectOption('No photos, please');
+            await page.getByRole('button', { name: 'Send my request' }).click();
+            await expect(page.locator('#bookingStatus')).toContainText('didn’t go through');
+            await expect(page.locator('#bookingBody')).toBeVisible();
+            await expect(page.locator('#bk-name')).toHaveValue('Jamie Frost');
+        });
+    });
+
+    test('mentions Cody, WY and thanks the Cody Rotary Club', async ({ page }) => {
+        await expect(page.locator('.lede')).toContainText('Cody, Wyoming');
+        await expect(page.locator('.site-footer')).toContainText('Cody, WY');
+        await expect(page.locator('#about')).toContainText('Cody Rotary Club');
+    });
+
     test('letter form shows errors for empty fields, then sends', async ({ page }) => {
         const form = page.locator('#letterForm');
         await form.scrollIntoViewIfNeeded();
