@@ -64,6 +64,12 @@ function doPost(e) {
     // The honeypot field is invisible to people, so anything in it came from a bot.
     if (p.website) return ContentService.createTextOutput('ok');
     if (!kind || !p.name || !p.email) return ContentService.createTextOutput('missing fields');
+    // The address becomes the email's Reply-To, so only a plain, single address is accepted.
+    if (!/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(String(p.email)) || String(p.email).length > 254) {
+        return ContentService.createTextOutput('bad email');
+    }
+    // The web app is public, so a script could post to it directly and use up the daily email quota.
+    if (tooMany(p.email)) return ContentService.createTextOutput('too many requests');
 
     var props = PropertiesService.getScriptProperties();
     var recipients = props.getProperty(kind.recipients);
@@ -123,7 +129,7 @@ function doPost(e) {
         sheet.appendRow(
             [new Date()].concat(
                 kind.fields.map(function (f) {
-                    return clean(p[f[0]]);
+                    return asText(clean(p[f[0]]));
                 }),
             ),
         );
@@ -167,4 +173,30 @@ function clean(value) {
         .replace(/[\r\n]+/g, ' ')
         .trim()
         .slice(0, 2000);
+}
+
+// A sheet treats a value starting with =, +, - or @ as a formula, so those are stored as plain text.
+function asText(value) {
+    return /^[=+\-@]/.test(value) ? "'" + value : value;
+}
+
+// At most 3 requests an hour from one email address and 30 an hour in all.
+function tooMany(email) {
+    var cache = CacheService.getScriptCache();
+    var lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+        var keys = ['all', 'email:' + String(email).toLowerCase()];
+        var limits = [30, 3];
+        var counts = keys.map(function (key) {
+            return Number(cache.get(key)) || 0;
+        });
+        if (counts[0] >= limits[0] || counts[1] >= limits[1]) return true;
+        keys.forEach(function (key, i) {
+            cache.put(key, String(counts[i] + 1), 60 * 60);
+        });
+        return false;
+    } finally {
+        lock.releaseLock();
+    }
 }
