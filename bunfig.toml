@@ -1,0 +1,6 @@
+[install]
+# Don't install a package version until it has been public for 3 days; most malicious releases
+# are caught and pulled within that window (Dependabot waits the same 3 days).
+minimumReleaseAge = 259200
+# Never run install scripts from dependencies unless they're listed in package.json's
+# trustedDependencies (none are needed today).

@@ -50,11 +50,11 @@ Change the files here and release as usual. When a release changes `common.gs`, 
 ### Connect GitHub to the scripts (once per project)
 
 1. Signed in as the Google account that owns the project, turn on **Google Apps Script API** at [script.google.com/home/usersettings](https://script.google.com/home/usersettings).
-2. On your computer, run `npx @google/clasp@3.4.1 login` and sign in as that same account. It saves a sign-in to `~/.clasprc.json`. It can manage Apps Script projects and the files clasp creates, not read your mail or calendar, and you can revoke it any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+2. On your computer, run `bunx @google/clasp@3.4.1 login` and sign in as that same account. It saves a sign-in to `~/.clasprc.json`. It can manage Apps Script projects and the files clasp creates, not read your mail or calendar, and you can revoke it any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 3. On GitHub, open Settings → Environments → `production`:
    - Add a **secret** with the whole contents of `~/.clasprc.json`: `CLASPRC_LETTER` for the letter project, `CLASPRC_BOOKING` for the booking project. If one account owns both, use the same contents for both.
    - Add **variables** `LETTER_SCRIPT_ID` and `BOOKING_SCRIPT_ID` (each project's **Project Settings** → **Script ID**) and `LETTER_DEPLOYMENT_ID` and `BOOKING_DEPLOYMENT_ID` (**Deploy** → **Manage deployments** → the web app's **Deployment ID**, which is the part of the URL between `/s/` and `/exec`).
-4. Delete `~/.clasprc.json` (or run `npx @google/clasp@3.4.1 logout`). GitHub keeps the only copy.
+4. Delete `~/.clasprc.json` (or run `bunx @google/clasp@3.4.1 logout`). GitHub keeps the only copy.
 
 Until a project has its secret and both variables, releases skip it with a notice. To deploy a project by hand, use **Deploy** → **Manage deployments** → edit (pencil) → Version: **New version** → **Deploy**.
 

@@ -98,7 +98,7 @@ export default defineConfig({
 
     // `vp fmt` (Oxfmt, Prettier-compatible) for JS, CSS, HTML and JSON, matched to the existing style.
     fmt: {
-        ignorePatterns: ['dist/**', 'package-lock.json', 'playwright-report/**', 'test-results/**'],
+        ignorePatterns: ['dist/**', 'bun.lock', 'playwright-report/**', 'test-results/**'],
         tabWidth: 4,
         singleQuote: true,
         printWidth: 140,

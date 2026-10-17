@@ -22,7 +22,7 @@ test-results/
 .clasprc.json
 .clasp.json
 
-# Vite+ hook dispatcher (recreated by npm install)
+# Vite+ hook dispatcher (recreated by bun install)
 .vite-hooks/_/
 
 # Editor and OS files

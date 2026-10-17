@@ -48,7 +48,7 @@ The site is hosted on AWS: a private S3 bucket behind CloudFront for each enviro
 - Every push to `development` deploys preprod at https://preview.santaclaus.events.
 - Production (santaclaus.events) deploys only from a release tag on `main` (see [Releasing](CONTRIBUTING.md#releasing)).
 
-The Deploy workflow runs `npm run build` and publishes `dist/` with `scripts/deploy-aws.js`, which caches fingerprinted files in `/static/` for a year and keeps the Content-Security-Policy header on CloudFront in step with `infra/content-security-policy.txt`. The other security headers are in the CloudFront response headers policy in `infra/site.yml`.
+The Deploy workflow runs `bun run build` and publishes `dist/` with `scripts/deploy-aws.js`, which caches fingerprinted files in `/static/` for a year and keeps the Content-Security-Policy header on CloudFront in step with `infra/content-security-policy.txt`. The other security headers are in the CloudFront response headers policy in `infra/site.yml`.
 
 The Content-Security-Policy lives in `vite.config.js` and only allows the outside services the page uses (the Google Calendar embed and the Apps Script form endpoints). If you add another one, such as analytics or a new embed, add its domain there.
 

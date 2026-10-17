@@ -9,7 +9,7 @@ scripts:
       - any-glob-to-any-file: ['js/**', 'apps-script/**']
 build:
   - changed-files:
-      - any-glob-to-any-file: ['vite.config.js', 'infra/**', 'scripts/**', 'package.json', 'package-lock.json']
+      - any-glob-to-any-file: ['vite.config.js', 'infra/**', 'scripts/**', 'package.json', 'bun.lock', 'bunfig.toml']
 ci:
   - changed-files:
       - any-glob-to-any-file: ['.github/**', 'tests/**', 'playwright.config.js', 'lighthouserc.json', 'linkinator.config.json']

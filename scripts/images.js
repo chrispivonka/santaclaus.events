@@ -1,5 +1,5 @@
 // Makes the AVIF and WebP versions of the site's photos from the original JPEGs in assets/img,
-// plus a smaller 480px-wide copy of the portrait photos for phones. Run with `npm run images`
+// plus a smaller 480px-wide copy of the portrait photos for phones. Run with `bun run images`
 // after adding or replacing a photo, then commit the results.
 import sharp from 'sharp';
 

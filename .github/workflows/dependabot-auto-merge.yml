@@ -1,8 +1,8 @@
 name: Dependabot auto-merge
 
-# Grouped Dependabot updates (npm minor and patch releases, and GitHub Actions) merge into
+# Grouped Dependabot updates (package minor and patch releases, and GitHub Actions) merge into
 # development on their own once every check the branch rules require is green; no approval is
-# needed. Major npm updates, and any group that contains one, are left for a person to review.
+# needed. Major package updates, and any group that contains one, are left for a person to review.
 on:
   pull_request:
 

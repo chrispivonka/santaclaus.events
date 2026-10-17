@@ -77,13 +77,16 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         with:
           node-version-file: .nvmrc
-          cache: npm
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          bun-version-file: package.json
       - if: steps.gate.outputs.run == 'true'
-        run: npm ci
+        run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
       - if: steps.gate.outputs.run == 'true'
-        run: npm run build
+        run: bun run build
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         if: steps.gate.outputs.run == 'true'
         with:
@@ -143,11 +146,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npm run build
+      - run: bun run build
       # A signed record that these exact files were built by this workflow from this tag
       # (check with `gh attestation verify <file> --repo chrispivonka/santaclaus.events`).
       # GitHub offers attestations on public repositories only.
@@ -188,11 +193,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npx playwright install --with-deps chromium
+      - run: bunx playwright install --with-deps chromium
       - name: Wait for the deployment to answer
         run: |
           for i in $(seq 1 30); do
@@ -202,7 +209,7 @@ jobs:
           done
           echo "::error::$BASE_URL did not answer 200 in time"; exit 1
       - name: Smoke, accessibility and header tests against ${{ env.BASE_URL }}
-        run: npx playwright test --project=chromium --project=mobile-chrome
+        run: bunx playwright test --project=chromium --project=mobile-chrome
 
   # The forms' Google Apps Scripts, pushed with clasp when a release changes them. Both the
   # preview and the live site post to the same two web apps, so they update with production only.
@@ -257,6 +264,10 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         with:
           node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: steps.gate.outputs.run == 'true'
+        with:
+          bun-version-file: package.json
       - name: Push and redeploy ${{ matrix.project }}.gs
         if: steps.gate.outputs.run == 'true'
         env:
@@ -271,7 +282,7 @@ jobs:
           cp apps-script/common.gs "apps-script/$PROJECT.gs" apps-script/appsscript.json "$dir/"
           printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > "$dir/.clasp.json"
           cd "$dir"
-          clasp() { npx --yes @google/clasp@3.4.1 --auth "$auth" "$@"; }
+          clasp() { bunx @google/clasp@3.4.1 --auth "$auth" "$@"; }
           clasp push --force
           clasp update-deployment "$DEPLOYMENT_ID" --description "$TAG"
 
@@ -298,10 +309,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
       - name: Mozilla HTTP Observatory (fails below grade A)
         run: |
           host="${BASE_URL#https://}"; host="${host%%/*}"
-          npx --yes @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
+          bunx @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
           grep -Eq '"grade": "A\+?"' observatory.txt || { echo "::error::HTTP Observatory grade is below A"; exit 1; }
       - name: OWASP ZAP baseline scan
         uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
@@ -354,11 +368,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npm run build
+      - run: bun run build
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
