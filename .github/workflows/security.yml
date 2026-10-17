@@ -23,12 +23,22 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      # Every package must come from the npm registry over HTTPS with an integrity hash, and match
+      # the name it was asked for (vite is deliberately an alias of Vite+'s build of it).
+      - name: Lockfile sources (lockfile-lint)
+        run: >-
+          npx --yes lockfile-lint@5.1.0 --path package-lock.json --type npm --allowed-hosts npm
+          --validate-https --validate-integrity --validate-package-names
+          --allowed-package-name-aliases vite:@voidzero-dev/vite-plus-core
       - run: npm ci --ignore-scripts
         env:
           VP_GIT_HOOKS: '0'
@@ -52,6 +62,9 @@ jobs:
       # gitleaks lists a pull request's commits; private repositories need this granted.
       pull-requests: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
