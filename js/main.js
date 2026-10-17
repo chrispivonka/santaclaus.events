@@ -277,4 +277,242 @@
                 submitLabel.textContent = 'Send my letter';
             });
     });
+
+    // ---- Booking requests (a pop-up form for private events and photo shoots, sent like the letter) ----
+    var booking = document.getElementById('bookingDialog');
+    var bookingForm = document.getElementById('bookingForm');
+    var bookingBody = document.getElementById('bookingBody');
+    var bookingStatus = document.getElementById('bookingStatus');
+    var bookingSubmit = document.getElementById('bookingSubmit');
+    var bookingLabel = bookingSubmit.querySelector('.btn-label');
+    var bookingPrivate = document.getElementById('bookingPrivate');
+    var bookingPhoto = document.getElementById('bookingPhoto');
+    var bookingKinds = {
+        'private-booking': {
+            kind: 'Private appearance',
+            title: 'Private booking request',
+            intro: 'Tell us about your event and we’ll call you to confirm the details and talk about pricing.',
+        },
+        'photo-shoot': {
+            kind: 'Written In Light ~ Photo and Film',
+            title: 'Photo shoot request',
+            intro: 'Tell us when you’d like your Christmas portraits with Santa and we’ll get back to you to set a date and time.',
+        },
+    };
+    var bookingFields = ['bk-name', 'bk-phone', 'bk-email', 'bk-date', 'bk-time', 'bk-type', 'bk-place', 'bk-elf', 'bk-photo'].map(
+        function (id) {
+            return document.getElementById(id);
+        },
+    );
+    var bookingDate = document.getElementById('bk-date');
+
+    function localDate(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function showBookingForm() {
+        bookingBody.hidden = false;
+        bookingStatus.hidden = true;
+        bookingStatus.classList.remove('is-error');
+    }
+
+    // The photo shoot request leaves out the private-event questions; disabled fields are neither checked nor sent.
+    function setBookingKind(type) {
+        var copy = bookingKinds[type];
+        var isPhoto = type === 'photo-shoot';
+        document.getElementById('bookingType').value = type;
+        document.getElementById('bookingKind').textContent = copy.kind;
+        document.getElementById('bookingTitle').textContent = copy.title;
+        document.getElementById('bookingIntro').textContent = copy.intro;
+        bookingPrivate.hidden = bookingPrivate.disabled = isPhoto;
+        bookingPhoto.hidden = bookingPhoto.disabled = !isPhoto;
+        bookingForm.querySelectorAll('[data-private]').forEach(function (el) {
+            el.hidden = isPhoto;
+        });
+        bookingForm.querySelectorAll('[data-photo]').forEach(function (el) {
+            el.hidden = !isPhoto;
+        });
+    }
+
+    // ---- Open times, from Santa's calendar ----
+    // The booking script answers GET ?availability=1&date=YYYY-MM-DD with the busy stretches that day
+    // (minutes after midnight, Santa's time zone) and how long a booking of this kind lasts.
+    var bookingTime = document.getElementById('bk-time');
+    var bookingAvailability = document.getElementById('bookingAvailability');
+    var firstSlot = 9 * 60;
+    var lastSlot = 19 * 60;
+    var slotStep = 30;
+    var availabilityRequest = 0;
+    var fullyBooked = false;
+
+    function clockLabel(minutes) {
+        var h = Math.floor(minutes / 60);
+        var m = minutes % 60;
+        return ((h + 11) % 12) + 1 + ':' + String(m).padStart(2, '0') + (h < 12 ? ' AM' : ' PM');
+    }
+
+    function setTimeOptions(options, placeholder, keep) {
+        bookingTime.textContent = '';
+        bookingTime.appendChild(new Option(placeholder, ''));
+        options.forEach(function (o) {
+            var option = new Option(o.label, o.value);
+            option.disabled = !!o.disabled;
+            bookingTime.appendChild(option);
+        });
+        bookingTime.value = keep || '';
+        if ((bookingTime.selectedOptions[0] || {}).disabled) bookingTime.value = '';
+    }
+
+    function slotsFor(date, busy, duration) {
+        var now = new Date();
+        var today = localDate(now) === date;
+        var nowMinutes = now.getHours() * 60 + now.getMinutes();
+        var slots = [];
+        for (var t = firstSlot; t <= lastSlot; t += slotStep) {
+            var taken = busy.some(function (b) {
+                return t < b[1] && t + duration > b[0];
+            });
+            var past = today && t <= nowMinutes;
+            if (past) continue;
+            var hh = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+            slots.push({ value: hh, label: clockLabel(t) + (taken ? ' (booked)' : ''), disabled: taken });
+        }
+        return slots;
+    }
+
+    function setDateError(text) {
+        var error = document.getElementById('bk-date-error');
+        bookingDate.setAttribute('aria-invalid', String(!!text));
+        if (text) bookingDate.setAttribute('aria-describedby', error.id);
+        else bookingDate.removeAttribute('aria-describedby');
+        error.textContent = text;
+    }
+
+    function loadAvailability() {
+        var date = bookingDate.value;
+        var keep = bookingTime.value;
+        var request = ++availabilityRequest;
+        fullyBooked = false;
+        bookingAvailability.textContent = '';
+        if (!date) {
+            setTimeOptions([], 'Pick a date first');
+            return;
+        }
+        setTimeOptions([], 'Checking Santa’s calendar...');
+        var url =
+            bookingForm.action +
+            '?availability=1&date=' +
+            encodeURIComponent(date) +
+            '&formType=' +
+            encodeURIComponent(document.getElementById('bookingType').value);
+        fetch(url)
+            .then(function (response) {
+                if (!response.ok) throw new Error('availability ' + response.status);
+                return response.json();
+            })
+            .then(function (info) {
+                if (request !== availabilityRequest) return;
+                var slots = slotsFor(date, info.busy || [], info.duration || 60);
+                var open = slots.filter(function (s) {
+                    return !s.disabled;
+                });
+                if (!open.length) {
+                    fullyBooked = true;
+                    setTimeOptions([], 'No open times that day');
+                    setDateError('Santa is fully booked that day. Please pick another date.');
+                    return;
+                }
+                if (bookingDate.getAttribute('aria-invalid') === 'true') validateField(bookingDate);
+                setTimeOptions(slots, 'Pick a time', keep);
+                bookingAvailability.textContent = 'Times already booked on Santa’s calendar are greyed out.';
+            })
+            .catch(function () {
+                if (request !== availabilityRequest) return;
+                // Without the calendar, offer every time and confirm it on the phone instead.
+                setTimeOptions(slotsFor(date, [], 0), 'Pick a time', keep);
+                bookingAvailability.textContent =
+                    'We couldn’t check Santa’s calendar just now, so we’ll confirm the time when we get back to you.';
+            });
+    }
+
+    bookingDate.addEventListener('change', loadAvailability);
+
+    document.querySelectorAll('[data-booking]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (document.getElementById('bookingType').value !== button.dataset.booking) {
+                bookingForm.reset();
+                bookingFields.forEach(function (f) {
+                    f.removeAttribute('aria-invalid');
+                    f.removeAttribute('aria-describedby');
+                    document.getElementById(f.id + '-error').textContent = '';
+                });
+            }
+            setBookingKind(button.dataset.booking);
+            bookingDate.min = localDate(new Date());
+            loadAvailability();
+            showBookingForm();
+            if (typeof booking.showModal === 'function') booking.showModal();
+            else booking.setAttribute('open', '');
+            bookingFields[0].focus();
+        });
+    });
+    document.getElementById('bookingClose').addEventListener('click', function () {
+        booking.close();
+    });
+
+    bookingFields.forEach(function (field) {
+        var event = field.tagName === 'SELECT' ? 'change' : 'input';
+        field.addEventListener('blur', function () {
+            if (field.value) validateField(field);
+        });
+        field.addEventListener(event, function () {
+            if (field.getAttribute('aria-invalid') === 'true') validateField(field);
+        });
+    });
+
+    bookingForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var invalid = bookingFields.filter(function (f) {
+            return !f.matches(':disabled') && !validateField(f);
+        });
+        if (fullyBooked) {
+            setDateError('Santa is fully booked that day. Please pick another date.');
+            if (invalid.indexOf(bookingDate) === -1) invalid.unshift(bookingDate);
+        }
+        if (invalid.length) {
+            invalid[0].focus();
+            return;
+        }
+
+        var data = new URLSearchParams(new FormData(bookingForm));
+
+        bookingSubmit.disabled = true;
+        bookingLabel.textContent = 'Sending your request...';
+        bookingStatus.hidden = true;
+
+        // Same as the letter: Apps Script answers without CORS headers, so the response is opaque.
+        fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data })
+            .then(function () {
+                var type = document.getElementById('bookingType').value;
+                bookingForm.reset();
+                document.getElementById('bookingType').value = type;
+                loadAvailability();
+                bookingFields.forEach(function (f) {
+                    f.removeAttribute('aria-invalid');
+                });
+                bookingBody.hidden = true;
+                bookingStatus.classList.remove('is-error');
+                bookingStatus.textContent = 'Ho ho ho! Your request is on its way. We’ll be in touch soon to confirm the details.';
+                bookingStatus.hidden = false;
+            })
+            .catch(function () {
+                bookingStatus.textContent = 'Ho-ho-oh no! Your request didn’t go through. Check your connection and try again.';
+                bookingStatus.classList.add('is-error');
+                bookingStatus.hidden = false;
+            })
+            .finally(function () {
+                bookingSubmit.disabled = false;
+                bookingLabel.textContent = 'Send my request';
+            });
+    });
 })();

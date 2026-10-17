@@ -1701,9 +1701,17 @@ h3 {
 }
 
 /* Booking and contact */
-.contact-card {
-    max-width: 36rem;
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    max-width: 56rem;
     margin-inline: auto;
+}
+.contact-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     background: var(--surface);
     border: 1px solid var(--border);
     border-top: 6px solid var(--red);
@@ -1711,32 +1719,20 @@ h3 {
     padding: clamp(1.4rem, 3vw, 2rem);
     box-shadow: var(--shadow);
 }
+.contact-card + .contact-card {
+    border-top-color: var(--green);
+}
 .contact-card h3 {
     margin: 0.9rem 0 0.5rem;
 }
 .contact-card > p {
     color: var(--muted);
+    margin-bottom: 1.5rem;
 }
-.contact-list {
-    list-style: none;
-    margin: 1.25rem 0 0;
-    padding: 0;
-    display: grid;
-    gap: 0.75rem;
-}
-.contact-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-.contact-list a {
-    color: var(--accent);
-    font-weight: 600;
-    font-size: 1.1rem;
-    overflow-wrap: anywhere;
+@media (max-width: 760px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Letter to Santa */
@@ -2513,4 +2509,89 @@ html:not(.js) .section-head h2::after {
     .peeker {
         transform: translateY(45%);
     }
+}
+
+/* Private booking request pop-up */
+.contact-cta {
+    margin-top: auto;
+}
+.booking-group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+.booking-dialog {
+    --ink: #2a2f3a;
+    width: min(100% - 2rem, 40rem);
+    max-height: min(100dvh - 2rem, 54rem);
+    overflow-y: auto;
+}
+.booking-form {
+    padding: 1.75rem clamp(1.25rem, 4vw, 2rem) 1.75rem;
+    border-top: 10px solid transparent;
+    border-image: repeating-linear-gradient(90deg, var(--red) 0 16px, #fff 16px 22px, var(--green) 22px 38px, #fff 38px 44px) 10;
+}
+.booking-head {
+    position: relative;
+    padding-right: 2.5rem;
+    margin-bottom: 1.25rem;
+}
+.booking-head h3 {
+    margin: 0.25rem 0 0.5rem;
+}
+.booking-intro {
+    margin: 0;
+    color: #3d4452;
+}
+.booking-required {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    color: #5b6475;
+}
+.booking-close {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    color: #2a2f3a;
+}
+.booking-dialog .field select,
+.booking-dialog .field input,
+.booking-dialog .field textarea {
+    width: 100%;
+    font: 400 1.05rem/1.4 var(--font-body);
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid #ddd5c6;
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+    min-height: 2.9rem;
+}
+.booking-dialog .field textarea {
+    min-height: 6rem;
+}
+.booking-dialog .field select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px rgba(31, 107, 74, 0.18);
+}
+.booking-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+}
+.booking-form .form-status {
+    margin-top: 0;
+}
+.booking-dialog .booking-close {
+    border-color: rgba(42, 47, 58, 0.2);
+}
+.booking-availability {
+    margin: -0.25rem 0 0.75rem;
+    font-size: 0.9rem;
+    color: #5b6475;
+}
+.booking-availability:empty {
+    display: none;
 }
