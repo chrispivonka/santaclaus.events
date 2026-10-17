@@ -9,6 +9,20 @@
     function $(id) {
         return document.getElementById(id);
     }
+    // A new element with a class and its children (elements or text). Builds markup without
+    // innerHTML, so the page can enforce Trusted Types.
+    function make(tag, className, children) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        (children || []).forEach(function (child) {
+            node.append(child);
+        });
+        return node;
+    }
+    function hidden(node) {
+        node.setAttribute('aria-hidden', 'true');
+        return node;
+    }
     function load(key) {
         try {
             return localStorage.getItem(key);
@@ -658,10 +672,10 @@
         door.className = 'door';
         var unlocked = isUnlocked(day);
         door.setAttribute('aria-label', 'Door ' + day + (unlocked ? '' : ', locked until December ' + day));
-        door.innerHTML =
-            '<span class="door-inside" aria-hidden="true"></span><span class="door-front" aria-hidden="true"><span class="door-num"></span><span class="door-lock">🔒</span></span>';
-        door.querySelector('.door-inside').textContent = item.icon;
-        door.querySelector('.door-num').textContent = day;
+        door.append(
+            hidden(make('span', 'door-inside', [item.icon])),
+            hidden(make('span', 'door-front', [make('span', 'door-num', [String(day)]), make('span', 'door-lock', ['🔒'])])),
+        );
         if (!unlocked) door.classList.add('is-locked');
         if (month === 11 && day === date) door.classList.add('is-today');
         if (unlocked && opened[day]) door.classList.add('is-open');
@@ -812,23 +826,26 @@
         if (!lastNice) return;
         var area = $('printArea');
         var when = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-        area.innerHTML =
-            '<div class="certificate"><p class="cert-top">Official North Pole Certificate</p>' +
-            '<h1>Nice List</h1><p>This certifies that</p><p class="cert-name"></p>' +
-            '<p class="cert-body"></p><p class="cert-seal" aria-hidden="true">🎅</p>' +
-            '<div class="cert-sign"><span>Santa Claus<small>Santa Claus</small></span><span class="cert-date"></span></div></div>';
-        area.querySelector('.cert-name').textContent = lastNice.name;
-        area.querySelector('.cert-body').textContent =
-            'has been checked twice and found to be ' +
-            lastNice.score +
-            '% nice, and is hereby an official member of Santa’s Nice List for Christmas ' +
-            adventYear +
-            '.';
-        var dateEl = area.querySelector('.cert-date');
-        dateEl.textContent = when;
-        var small = document.createElement('small');
-        small.textContent = 'Date';
-        dateEl.appendChild(small);
+        area.replaceChildren(
+            make('div', 'certificate', [
+                make('p', 'cert-top', ['Official North Pole Certificate']),
+                make('h1', '', ['Nice List']),
+                make('p', '', ['This certifies that']),
+                make('p', 'cert-name', [lastNice.name]),
+                make('p', 'cert-body', [
+                    'has been checked twice and found to be ' +
+                        lastNice.score +
+                        '% nice, and is hereby an official member of Santa’s Nice List for Christmas ' +
+                        adventYear +
+                        '.',
+                ]),
+                hidden(make('p', 'cert-seal', ['🎅'])),
+                make('div', 'cert-sign', [
+                    make('span', '', ['Santa Claus', make('small', '', ['Santa Claus'])]),
+                    make('span', 'cert-date', [when, make('small', '', ['Date'])]),
+                ]),
+            ]),
+        );
         document.body.classList.add('printing');
         window.print();
     });
@@ -939,10 +956,10 @@
         card.type = 'button';
         card.className = 'deer-card' + (r[0] === 'Rudolph' ? ' rudolph' : '');
         card.setAttribute('aria-pressed', 'false');
-        card.innerHTML =
-            '<span class="deer-face deer-front"><span class="deer-emoji" aria-hidden="true">🦌</span><span class="deer-name"></span></span><span class="deer-face deer-back"></span>';
-        card.querySelector('.deer-name').textContent = r[0];
-        card.querySelector('.deer-back').textContent = r[1];
+        card.append(
+            make('span', 'deer-face deer-front', [hidden(make('span', 'deer-emoji', ['🦌'])), make('span', 'deer-name', [r[0]])]),
+            make('span', 'deer-face deer-back', [r[1]]),
+        );
         card.addEventListener('click', function () {
             var on = card.getAttribute('aria-pressed') !== 'true';
             card.setAttribute('aria-pressed', String(on));

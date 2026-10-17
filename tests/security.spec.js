@@ -19,6 +19,9 @@ test.describe('content security policy', () => {
         expect(csp['object-src']).toEqual(["'none'"]);
         expect(csp['base-uri']).toEqual(["'self'"]);
         expect(csp['form-action']).toEqual(['https://script.google.com']);
+        // Trusted Types: no script can turn a string into markup or code.
+        expect(csp['require-trusted-types-for']).toEqual(["'script'"]);
+        expect(csp['trusted-types']).toEqual(["'none'"]);
         for (const [directive, sources] of Object.entries(csp)) {
             for (const source of sources) {
                 if (directive === 'img-src' && source === 'data:') continue;

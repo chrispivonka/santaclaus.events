@@ -56,6 +56,23 @@ jobs:
           pipx run actionlint-py==1.7.12.25 -color
           pipx run zizmor==1.30.1 --format=github .github/workflows
 
+  infrastructure:
+    name: Infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # cfn-lint checks the template against CloudFormation's own specs; Checkov checks it against
+      # AWS security practice. Deliberate exceptions are explained in the template's Metadata.
+      - name: cfn-lint and Checkov on infra/
+        run: |
+          pipx run cfn-lint==1.57.2 infra/*.yml
+          pipx run checkov==3.3.29 --directory infra --framework cloudformation --compact --quiet
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -210,7 +227,7 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [quality, workflows, build, e2e, lighthouse, links, dependency-review]
+    needs: [quality, workflows, infrastructure, build, e2e, lighthouse, links, dependency-review]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
