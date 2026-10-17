@@ -16,7 +16,7 @@ The site's "Request a private booking" and "Request a photo shoot" buttons open 
    - Execute as: **Me**
    - Who has access: **Anyone**
 5. Click **Deploy**, allow the permissions Google asks for (sending email as you, reading your calendars, and the sheet if you set one), and copy the **Web app URL**. It looks like `https://script.google.com/macros/s/AKfy.../exec`.
-6. Put that URL in the booking form's `action` in `index.html`, replacing the `BOOKING_SCRIPT_ID` placeholder.
+6. Put that URL in the booking form's `action` in `index.html` (the live one is already there; only change it if you make a brand-new deployment).
 
 ## How the calendar check works
 
