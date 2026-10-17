@@ -13,7 +13,7 @@ The site has two forms, and each posts to its own Google Apps Script web app: `b
 
 Letters are emailed to `LETTER_RECIPIENTS` and never stored by the script. The site tells families that the letter is deleted once it's answered, so delete each letter email after replying to it.
 
-To switch the live letter form to this script, open the existing letter project at [script.google.com](https://script.google.com), replace its code with `letter.gs`, add `common.gs` as a second file, add the `LETTER_RECIPIENTS` script property, then **Deploy** → **Manage deployments** → edit → Version: **New version** → **Deploy**. The URL stays the same, so the site doesn't change. If the old script did anything else (such as logging to a sheet), compare it with `letter.gs` before you replace it.
+Once GitHub is connected to the scripts (see [Changing the scripts](#changing-the-scripts)), releases keep both projects up to date. To switch the live letter form to this script by hand, open the existing letter project at [script.google.com](https://script.google.com), replace its code with `letter.gs`, add `common.gs` as a second file, add the `LETTER_RECIPIENTS` script property, then **Deploy** → **Manage deployments** → edit → Version: **New version** → **Deploy**. The URL stays the same, so the site doesn't change. If the old script did anything else (such as logging to a sheet), compare it with `letter.gs` before you replace it.
 
 ## Booking requests (`booking.gs`)
 
@@ -43,6 +43,19 @@ When someone picks a date, the form asks the script which times that day are alr
 
 Edit `PRIVATE_RECIPIENTS` or `PHOTO_RECIPIENTS` in Script Properties. No redeploy is needed, and the site doesn't change.
 
-## Changing the script
+## Changing the scripts
 
-After editing the code (including `common.gs`), use **Deploy** → **Manage deployments** → edit (pencil) → Version: **New version** → **Deploy**. That keeps the same URL, so the site doesn't change either.
+Change the files here and release as usual. When a release changes `common.gs`, `appsscript.json` or a form's script, the Deploy workflow's **Apps Script** job pushes that project with [clasp](https://github.com/google/clasp) and gives its existing deployment a new version, so the URL (and the site) stay the same. Each project gets exactly `common.gs`, its own script and `appsscript.json`; anything else in the project is removed. The job runs only for production releases, because the preview site posts to the same two web apps. A production rollback doesn't roll the scripts back; release a fix instead.
+
+### Connect GitHub to the scripts (once per project)
+
+1. Signed in as the Google account that owns the project, turn on **Google Apps Script API** at [script.google.com/home/usersettings](https://script.google.com/home/usersettings).
+2. On your computer, run `npx @google/clasp@3.4.1 login` and sign in as that same account. It saves a sign-in to `~/.clasprc.json`. It can manage Apps Script projects and the files clasp creates, not read your mail or calendar, and you can revoke it any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+3. On GitHub, open Settings → Environments → `production`:
+   - Add a **secret** with the whole contents of `~/.clasprc.json`: `CLASPRC_LETTER` for the letter project, `CLASPRC_BOOKING` for the booking project. If one account owns both, use the same contents for both.
+   - Add **variables** `LETTER_SCRIPT_ID` and `BOOKING_SCRIPT_ID` (each project's **Project Settings** → **Script ID**) and `LETTER_DEPLOYMENT_ID` and `BOOKING_DEPLOYMENT_ID` (**Deploy** → **Manage deployments** → the web app's **Deployment ID**, which is the part of the URL between `/s/` and `/exec`).
+4. Delete `~/.clasprc.json` (or run `npx @google/clasp@3.4.1 logout`). GitHub keeps the only copy.
+
+Until a project has its secret and both variables, releases skip it with a notice. To deploy a project by hand, use **Deploy** → **Manage deployments** → edit (pencil) → Version: **New version** → **Deploy**.
+
+If a change makes a script need a new Google permission (for example a new Google service), open the project in the editor once after the release and run any function to approve it.
