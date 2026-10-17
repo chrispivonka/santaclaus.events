@@ -315,7 +315,13 @@ jobs:
       - name: Mozilla HTTP Observatory (fails below grade A)
         run: |
           host="${BASE_URL#https://}"; host="${host%%/*}"
-          bunx @mdn/mdn-http-observatory@1.7.1 "$host" | tee observatory.txt
+          # Bun skips install scripts unless a package is trusted, and the scanner's install
+          # script downloads the HSTS preload list it grades against, so install it on its own.
+          tool="$RUNNER_TEMP/observatory"
+          mkdir -p "$tool"
+          printf '{"private":true,"trustedDependencies":["@mdn/mdn-http-observatory","node_extra_ca_certs_mozilla_bundle"]}' > "$tool/package.json"
+          (cd "$tool" && bun add --exact @mdn/mdn-http-observatory@1.7.1)
+          "$tool/node_modules/.bin/mdn-http-observatory-scan" "$host" | tee observatory.txt
           grep -Eq '"grade": "A\+?"' observatory.txt || { echo "::error::HTTP Observatory grade is below A"; exit 1; }
       - name: OWASP ZAP baseline scan
         uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
