@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Tests run against the production build (`npm run build` first) served by `vp preview`,
+// Tests run against the production build (`bun run build` first) served by `vp preview`,
 // or against a deployed site when BASE_URL is set (the post-deploy check does this).
 const remote = process.env.BASE_URL;
 const ci = !!process.env.CI;
@@ -25,5 +25,5 @@ export default defineConfig({
     ],
     webServer: remote
         ? undefined
-        : { command: 'npx vp preview --port 4173 --strictPort', url: 'http://localhost:4173', reuseExistingServer: !ci },
+        : { command: 'bunx vp preview --port 4173 --strictPort', url: 'http://localhost:4173', reuseExistingServer: !ci },
 });

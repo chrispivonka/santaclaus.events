@@ -20,24 +20,29 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
       - name: Formatting (Oxfmt)
-        run: npx vp fmt --check
+        run: bunx vp fmt --check
       - name: JavaScript (Oxlint)
-        run: npx vp lint --deny-warnings
+        run: bunx vp lint --deny-warnings
       - name: CSS (Stylelint)
-        run: npm run lint:css
+        run: bun run lint:css
       - name: HTML (html-validate)
-        run: npm run lint:html
+        run: bun run lint:html
 
   workflows:
     name: Workflow security
@@ -46,6 +51,9 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -63,6 +71,9 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -80,19 +91,24 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
-      - run: npm run build
+      - run: bun run build
       - name: Check the built site
-        run: npm run verify:dist
+        run: bun run verify:dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
@@ -119,14 +135,19 @@ jobs:
           - engine: webkit
             projects: --project=webkit --project=mobile-safari
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
         env:
           VP_GIT_HOOKS: '0'
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -134,13 +155,13 @@ jobs:
           name: dist
           path: dist
       - name: Install ${{ matrix.engine }}
-        run: npx playwright install --with-deps "$ENGINE"
+        run: bunx playwright install --with-deps "$ENGINE"
         env:
           ENGINE: ${{ matrix.engine }}
       - name: Playwright end-to-end and accessibility tests
         run: |
           # shellcheck disable=SC2086 # PROJECTS is a list of flags
-          npx playwright test $PROJECTS
+          bunx playwright test $PROJECTS
         env:
           PROJECTS: ${{ matrix.projects }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -158,18 +179,24 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
       - name: Lighthouse CI (3 runs, budgets in lighthouserc.json)
-        run: npx --yes @lhci/cli@0.15.1 autorun
+        run: bunx @lhci/cli@0.15.1 autorun
 
   links:
     name: Links
@@ -179,18 +206,24 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
       - name: Check internal and external links
-        run: npx --yes linkinator@8.1.0 dist --config linkinator.config.json
+        run: bunx linkinator@8.1.0 dist --config linkinator.config.json
 
   dependency-review:
     name: Dependency review
@@ -203,6 +236,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       # The review needs the repository's Dependency graph (Settings > Advanced Security), and on a
       # private repository GitHub Advanced Security too. Asking for the same comparison the action makes
       # covers both; the SBOM endpoint answers on private repositories without it.
@@ -222,6 +258,8 @@ jobs:
         if: steps.graph.outputs.enabled == 'true'
         with:
           fail-on-severity: moderate
+          # Strong copyleft licenses can't be mixed into the site's code.
+          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, SSPL-1.0
 
   # The one check branch rules require, so adding or renaming jobs never needs a settings change.
   ci-passed:
@@ -232,6 +270,9 @@ jobs:
     timeout-minutes: 2
     permissions: {}
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - name: Fail if any job failed or was cancelled
         if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

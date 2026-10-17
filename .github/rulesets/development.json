@@ -7,6 +7,7 @@
   "rules": [
     { "type": "deletion" },
     { "type": "non_fast_forward" },
+    { "type": "required_signatures" },
     { "type": "required_linear_history" },
     {
       "type": "pull_request",

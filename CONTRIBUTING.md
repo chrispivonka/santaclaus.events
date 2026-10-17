@@ -1,29 +1,31 @@
 # Working on santaclaus.events
 
+By taking part you agree to the [code of conduct](CODE_OF_CONDUCT.md). Found a security problem? Report it privately as described in [SECURITY.md](SECURITY.md).
+
 ## Setup
 
-You need Node.js 24 (it includes npm 11). With [nvm](https://github.com/nvm-sh/nvm), run `nvm use` in the repo.
+You need Node.js 24 (with [nvm](https://github.com/nvm-sh/nvm), run `nvm use` in the repo) and [Bun](https://bun.com) 1.4 for installing packages and running scripts.
 
 ```sh
-npm install        # also installs the pre-commit hook
-npm run dev        # local site with instant reload
+bun install        # also installs the pre-commit hook
+bun run dev        # local site with instant reload
 ```
 
-| Command             | What it does                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------------- |
-| `npm run build`     | Production build into `dist/`                                                                 |
-| `npm run preview`   | Serve `dist/` at http://localhost:4173                                                        |
-| `npm run check`     | Format check + JavaScript lint (Vite+: Oxfmt and Oxlint)                                      |
-| `npm run fmt`       | Format everything                                                                             |
-| `npm run lint`      | JavaScript, CSS and HTML linting                                                              |
-| `npm test`          | Playwright tests on the built site (run `npm run build` first; `npx playwright install` once) |
-| `npm run test:a11y` | Only the accessibility tests                                                                  |
-| `npm run images`    | Make AVIF/WebP versions of photos in `assets/img/`                                            |
-| `npm run fonts`     | Rebuild the trimmed web fonts                                                                 |
+| Command             | What it does                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| `bun run build`     | Production build into `dist/`                                                                  |
+| `bun run preview`   | Serve `dist/` at http://localhost:4173                                                         |
+| `bun run check`     | Format check + JavaScript lint (Vite+: Oxfmt and Oxlint)                                       |
+| `bun run fmt`       | Format everything                                                                              |
+| `bun run lint`      | JavaScript, CSS and HTML linting                                                               |
+| `bun run test`      | Playwright tests on the built site (run `bun run build` first; `bunx playwright install` once) |
+| `bun run test:a11y` | Only the accessibility tests                                                                   |
+| `bun run images`    | Make AVIF/WebP versions of photos in `assets/img/`                                             |
+| `bun run fonts`     | Rebuild the trimmed web fonts                                                                  |
 
-The Content-Security-Policy is sent as a real header from `infra/content-security-policy.txt` (the Deploy workflow puts it on CloudFront), with hashes of the inlined script and styles. The build rewrites that file whenever the hashes change, so if `npm run build` leaves it modified, commit it; CI fails otherwise.
+The Content-Security-Policy is sent as a real header from `infra/content-security-policy.txt` (the Deploy workflow puts it on CloudFront), with hashes of the inlined script and styles. The build rewrites that file whenever the hashes change, so if `bun run build` leaves it modified, commit it; CI fails otherwise.
 
-The pre-commit hook formats and lints the files you're committing. Skip it once with `git commit --no-verify`, or turn it off with `npx vp hooks disable`.
+The pre-commit hook formats and lints the files you're committing. Skip it once with `git commit --no-verify`, or turn it off with `bunx vp hooks disable`.
 
 ## Branches
 
@@ -43,11 +45,17 @@ The pre-commit hook formats and lints the files you're committing. Skip it once 
 | Accessibility     | axe-core against WCAG 2.2 AA plus best practices in both themes, on every interactive state (menu, dialog, toasts, results, form errors), reduced motion and forced colors; landmarks, live regions, 24px targets                                                                                                                                                                                                                                   |
 | Lighthouse        | 3 runs; performance ≥ 90, best practices ≥ 95, accessibility and SEO 100, no console errors, byte budgets per file type                                                                                                                                                                                                                                                                                                                             |
 | Links             | linkinator on internal and outside links                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Dependency review | Blocks new dependencies with known vulnerabilities                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Security          | OSV-Scanner on the lockfile (reviewed exceptions in `.github/osv-scanner.toml`), `npm audit signatures` (registry signatures and provenance), `npm audit` as a warning, gitleaks for committed secrets                                                                                                                                                                                                                                              |
+| Dependency review | Blocks new dependencies with known vulnerabilities or a strong copyleft license (GPL, AGPL, SSPL)                                                                                                                                                                                                                                                                                                                                                   |
+| Security          | `scripts/check-lockfile.js` (every package in `bun.lock` from the npm registry with a sha512 integrity hash and its real name), OSV-Scanner on the lockfile (reviewed exceptions in `.github/osv-scanner.toml`), `bun audit` as a warning, gitleaks for committed secrets                                                                                                                                                                           |
 | CodeQL            | Security analysis of the JavaScript and the workflows                                                                                                                                                                                                                                                                                                                                                                                               |
 
-Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped npm and GitHub Actions updates every Monday (after a 3-day cooldown on new releases), moving each pinned action SHA and its version comment together.
+Every job starts with StepSecurity Harden-Runner, which records each job's network calls and process activity (visible from the run's summary) so a compromised tool phoning home stands out. Production deploys also publish a signed build provenance attestation for every file in `dist/` (public repositories only), and the branch rules only accept signed commits, which merges through GitHub always are.
+
+Separately: OpenSSF Scorecard and CodeQL run weekly, a weekly link check of the live site opens an issue if something breaks, and Dependabot proposes grouped package and GitHub Actions updates every Monday (after a 3-day cooldown on new releases), moving each pinned action SHA and its version comment together.
+
+## Dependency updates
+
+Dependabot opens grouped pull requests against `development` every Monday: one for package minor and patch releases and one for GitHub Actions, each a few days after the release (the cooldown in `.github/dependabot.yml`). The **Dependabot auto-merge** workflow turns on auto-merge for those grouped pull requests, so they squash-merge on their own as soon as every required check is green, with no approval needed. A major package update, or a group that contains one, waits for a person to review it. Updates then ship with the next release like any other change.
 
 ## Releasing
 

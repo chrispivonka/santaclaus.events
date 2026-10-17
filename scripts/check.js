@@ -45,7 +45,7 @@ const cspFile = 'infra/content-security-policy.txt';
 const headerCsp = readFileSync(cspFile, 'utf8').trim();
 const metaCsp = readFileSync('dist/index.html', 'utf8').match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1] ?? '';
 for (const hash of metaCsp.match(/'sha256-[^']+'/g) ?? []) {
-    if (!headerCsp.includes(hash)) fail(`${cspFile}: CSP header is missing ${hash}; run npm run build and commit ${cspFile}`);
+    if (!headerCsp.includes(hash)) fail(`${cspFile}: CSP header is missing ${hash}; run bun run build and commit ${cspFile}`);
 }
 for (const directive of ['frame-ancestors', 'upgrade-insecure-requests']) {
     if (!headerCsp.includes(directive)) fail(`${cspFile}: CSP header is missing ${directive}`);

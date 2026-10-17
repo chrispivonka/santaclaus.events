@@ -2,6 +2,9 @@ name: Something's broken
 description: Part of the site isn't working or looks wrong
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: Found a security problem? Please don't file it here. Use [private vulnerability reporting](https://github.com/chrispivonka/santaclaus.events/security/advisories/new) instead.
   - type: textarea
     id: what
     attributes:
@@ -19,3 +22,10 @@ body:
     attributes:
       label: Screenshot
       description: Paste a screenshot if you have one.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you send
+      options:
+        - label: This issue doesn't include anyone's email, phone number, address or a child's details.
+          required: true

@@ -1,6 +1,7 @@
 {
   "name": "santaclaus-events",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vp dev",
@@ -9,7 +10,7 @@
     "check": "vp check",
     "lint:css": "stylelint \"css/**/*.css\"",
     "lint:html": "html-validate index.html 404.html",
-    "lint": "vp lint && npm run lint:css && npm run lint:html",
+    "lint": "vp lint && bun run lint:css && bun run lint:html",
     "fmt": "vp fmt",
     "verify:dist": "node scripts/check.js",
     "test": "playwright test",
@@ -33,5 +34,6 @@
   },
   "engines": {
     "node": ">=24"
-  }
+  },
+  "packageManager": "bun@1.4.2"
 }

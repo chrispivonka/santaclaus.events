@@ -23,24 +23,32 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
-      - run: npm ci --ignore-scripts
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      # Every package must come from the npm registry with a sha512 integrity hash and be the
+      # package its name says (scripts/check-lockfile.js lists the one deliberate alias).
+      - name: Lockfile sources
+        run: bun scripts/check-lockfile.js
+      - run: bun install --frozen-lockfile --ignore-scripts
         env:
           VP_GIT_HOOKS: '0'
-      - name: Registry signatures and provenance of installed packages
-        run: npm audit signatures
-      - name: npm audit (advisory; OSV-Scanner below is the gate and carries the reviewed exceptions)
-        run: npm audit --audit-level=high || echo "::warning::npm audit found issues. OSV-Scanner decides; reviewed exceptions live in .github/osv-scanner.toml"
-      - name: OSV-Scanner on package-lock.json
+      - name: bun audit (advisory; OSV-Scanner below is the gate and carries the reviewed exceptions)
+        run: bun audit --audit-level=high || echo "::warning::bun audit found issues. OSV-Scanner decides; reviewed exceptions live in .github/osv-scanner.toml"
+      - name: OSV-Scanner on bun.lock
         uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
         with:
           scan-args: |
-            --lockfile=package-lock.json
+            --lockfile=bun.lock
             --config=.github/osv-scanner.toml
 
   secrets:
@@ -52,6 +60,9 @@ jobs:
       # gitleaks lists a pull request's commits; private repositories need this granted.
       pull-requests: read
     steps:
+      - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
