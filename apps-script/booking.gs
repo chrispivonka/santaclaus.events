@@ -88,7 +88,7 @@ function doPost(e) {
     var p = (e && e.parameter) || {};
 
     // The honeypot field is invisible to people, so anything in it came from a bot.
-    if (p.website) return reply('ok', 'ignored: the hidden honeypot field was filled');
+    if (p.website) return reply('ok');
     var kind = Object.prototype.hasOwnProperty.call(KINDS, p.formType) ? KINDS[p.formType] : null;
     if (!kind) return reply('unknown form');
     // The site checks the same rules, so only a request that skipped the site gets turned away here.
@@ -151,7 +151,7 @@ function doPost(e) {
         );
     }
 
-    return reply('ok', 'sent');
+    return reply('ok');
 }
 
 function durationOf(kind) {

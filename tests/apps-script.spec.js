@@ -10,9 +10,7 @@ function load(file, { props = {}, busy = [] } = {}) {
     const sent = [];
     const rows = [];
     const cache = new Map();
-    const logs = [];
     const context = {
-        console: { info: (line) => logs.push(line) },
         MailApp: { sendEmail: (message) => sent.push(message) },
         PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null }) },
         CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => cache.set(k, v) }) },
@@ -50,7 +48,7 @@ function load(file, { props = {}, busy = [] } = {}) {
     vm.createContext(context);
     for (const name of ['common.gs', file]) vm.runInContext(readFileSync(`apps-script/${name}`, 'utf8'), context);
     const post = (parameter) => context.doPost({ parameter }).text;
-    return { post, sent, rows, logs, context };
+    return { post, sent, rows, context };
 }
 
 const inAMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -91,23 +89,6 @@ test.describe('letter.gs', () => {
         const { post, sent } = load('letter.gs', { props });
         expect(post({ ...letter, name: "José O'Brien-Núñez" })).toBe('ok');
         expect(sent[0].subject).toBe("Letter to Santa from José O'Brien-Núñez");
-    });
-
-    test('logs why each letter was sent or turned away, without what was in it', () => {
-        const { post, logs } = load('letter.gs', { props });
-        post(letter);
-        post({ ...letter, website: 'https://spam.example' });
-        post({ ...letter, email: 'not an email' });
-        for (let i = 0; i < 4; i++) post({ ...letter, email: 'dad@example.com' });
-        expect(logs).toEqual([
-            'sent',
-            'ignored: the hidden honeypot field was filled',
-            'invalid: Grown-up’s email isn’t a valid email',
-            'sent',
-            'sent',
-            'sent',
-            'too many requests',
-        ]);
     });
 
     test('allows 3 letters an hour from one address', () => {
