@@ -127,6 +127,36 @@ test.describe('markup hygiene', () => {
     });
 });
 
+test.describe('form input checks', () => {
+    test('the letter sends only safe characters and refuses a name with markup', async ({ page }) => {
+        await page.goto('/');
+        await page.locator('#name').fill('Ava<img src=x>');
+        await page.locator('#email').fill('mom@example.com');
+        await page.locator('#message').fill('<b>Dear Santa</b> 🎄 I want a bike!');
+        await page.locator('#submitButton').click();
+        await expect(page.locator('#name')).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator('#name-error')).toContainText('letters, spaces');
+
+        const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().startsWith('https://script.google.com/'));
+        await page.locator('#name').fill('Ava');
+        await page.locator('#submitButton').click();
+        const params = new URLSearchParams((await posted).postData());
+        expect(params.get('message')).toBe('bDear Santa/b I want a bike!');
+    });
+
+    test('the booking form checks phone numbers, counts and emails', async ({ page }) => {
+        await page.goto('/');
+        await page.getByRole('button', { name: 'Request a private booking' }).click();
+        await page.locator('#bk-phone').fill('555');
+        await page.locator('#bk-kids').fill('9999');
+        await page.locator('#bk-email').fill('a@b.com, c@d.com');
+        await page.locator('#bookingSubmit').click();
+        await expect(page.locator('#bk-phone-error')).toContainText('7 to 15 digits');
+        await expect(page.locator('#bk-kids-error')).toContainText('0 to 500');
+        await expect(page.locator('#bk-email')).toHaveAttribute('aria-invalid', 'true');
+    });
+});
+
 test.describe('outside requests', () => {
     test('the first load talks to no one but this site', async ({ page, baseURL }) => {
         const outside = [];

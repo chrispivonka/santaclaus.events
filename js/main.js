@@ -181,16 +181,71 @@
     var fields = ['name', 'email', 'message'].map(function (id) {
         return document.getElementById(id);
     });
-    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // ---- Field checks, the same rules as apps-script/common.gs (the scripts check again) ----
+    // Free text keeps letters and accents in any language, digits, whitespace and everyday punctuation;
+    // anything else (symbols, emoji, angle brackets, control characters) is removed before sending.
+    var unsafeText = /[^\p{L}\p{M}\p{N}\s.,!?'"\u2018\u2019\u201C\u201D()\-\u2013\u2014:;&/#+%]/gu;
+    var namePattern = /^[\p{L}\p{M}][\p{L}\p{M} '\u2019.,&-]*$/u;
+    var emailPattern = /^[^\s@,;:<>()[\]\\"']+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
+    var phonePattern = /^\+?[0-9 ().-]+$/;
+
+    function safeText(value, max, multiline) {
+        var text = String(value).normalize('NFC').replace(/\r\n?/g, '\n').replace(unsafeText, '');
+        text = multiline
+            ? text
+                  .replace(/[^\S\n]+/g, ' ')
+                  .replace(/ *\n */g, '\n')
+                  .replace(/\n{3,}/g, '\n\n')
+            : text.replace(/\s+/g, ' ');
+        return text.trim().slice(0, max);
+    }
+
+    // The value a field sends: free text cut down to safe characters, everything else trimmed.
+    function fieldValue(field) {
+        var kind = field.dataset.kind;
+        if (kind === 'line' || kind === 'text') return safeText(field.value, field.maxLength > 0 ? field.maxLength : 2000, kind === 'text');
+        return field.value.trim();
+    }
+
+    // '' when the field is fine, 'empty' when a required field is blank, 'invalid' otherwise.
+    function fieldProblem(field) {
+        var value = fieldValue(field);
+        // A number field reads as empty when what was typed isn't a number at all.
+        if (field.validity && field.validity.badInput) return 'invalid';
+        if (!value) return field.required ? 'empty' : '';
+        if (field.maxLength > 0 && value.length > field.maxLength) return 'invalid';
+        if (field.dataset.kind === 'name') return namePattern.test(value.normalize('NFC')) ? '' : 'invalid';
+        if (field.type === 'email') return emailPattern.test(value) && value.length <= 254 ? '' : 'invalid';
+        if (field.type === 'tel') {
+            var digits = value.replace(/\D/g, '').length;
+            return phonePattern.test(value) && digits >= 7 && digits <= 15 ? '' : 'invalid';
+        }
+        if (field.type === 'number') {
+            var n = Number(value);
+            return /^\d{1,4}$/.test(value) && n >= Number(field.min) && n <= Number(field.max) ? '' : 'invalid';
+        }
+        if (field.type === 'date') {
+            var day = new Date(value + 'T00:00:00');
+            return /^\d{4}-\d{2}-\d{2}$/.test(value) && !isNaN(day) && (!field.min || value >= field.min) ? '' : 'invalid';
+        }
+        if (field.tagName === 'SELECT') {
+            return Array.prototype.some.call(field.options, function (o) {
+                return o.value === value && !o.disabled;
+            })
+                ? ''
+                : 'invalid';
+        }
+        return '';
+    }
 
     function validateField(field) {
-        var value = field.value.trim();
-        var ok = value.length > 0 && (field.type !== 'email' || emailPattern.test(value));
+        var problem = fieldProblem(field);
+        var ok = !problem;
         var error = document.getElementById(field.id + '-error');
         field.setAttribute('aria-invalid', String(!ok));
         if (ok) field.removeAttribute('aria-describedby');
         else field.setAttribute('aria-describedby', error.id);
-        error.textContent = ok ? '' : field.dataset.error;
+        error.textContent = ok ? '' : problem === 'invalid' ? field.dataset.invalid || field.dataset.error : field.dataset.error;
         return ok;
     }
 
@@ -240,9 +295,9 @@
         }
 
         var data = new URLSearchParams();
-        data.append('name', fields[0].value.trim());
-        data.append('email', fields[1].value.trim());
-        data.append('message', fields[2].value.trim());
+        fields.forEach(function (f) {
+            data.append(f.name, fieldValue(f));
+        });
         data.append('website', document.getElementById('website').value);
 
         submitButton.disabled = true;
@@ -299,11 +354,21 @@
             intro: 'Tell us when you’d like your Christmas portraits with Santa and we’ll get back to you to set a date and time.',
         },
     };
-    var bookingFields = ['bk-name', 'bk-phone', 'bk-email', 'bk-date', 'bk-time', 'bk-type', 'bk-place', 'bk-elf', 'bk-photo'].map(
-        function (id) {
-            return document.getElementById(id);
-        },
-    );
+    var bookingFields = [
+        'bk-name',
+        'bk-phone',
+        'bk-email',
+        'bk-date',
+        'bk-time',
+        'bk-type',
+        'bk-place',
+        'bk-kids',
+        'bk-elf',
+        'bk-photo',
+        'bk-people',
+    ].map(function (id) {
+        return document.getElementById(id);
+    });
     var bookingDate = document.getElementById('bk-date');
 
     function localDate(d) {
@@ -485,6 +550,9 @@
         }
 
         var data = new URLSearchParams(new FormData(bookingForm));
+        bookingForm.querySelectorAll('[data-kind]').forEach(function (field) {
+            if (!field.matches(':disabled')) data.set(field.name, fieldValue(field));
+        });
 
         bookingSubmit.disabled = true;
         bookingLabel.textContent = 'Sending your request...';
