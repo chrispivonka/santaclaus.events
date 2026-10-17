@@ -74,6 +74,12 @@ for (const theme of ['dark', 'light']) {
             await page.locator('#submitButton').click();
             await expect(page.locator('#name')).toHaveAttribute('aria-invalid', 'true');
             await checkA11y(page, 'letter form errors');
+        });
+
+        // Separate from the test above so neither runs past the timeout on WebKit, where each axe pass is slow.
+        test(`booking request states have no violations @a11y`, async ({ page }) => {
+            await page.goto('/');
+            await revealAll(page);
 
             await page.getByRole('button', { name: 'Request a private booking' }).click();
             await expect(page.locator('#bookingDialog')).toBeVisible();
