@@ -158,7 +158,7 @@ test.describe('booking.gs', () => {
         const { post, sent } = load('booking.gs', { props });
         post({ ...booking, bcc: 'x@example.com', subject: 'hi' });
         expect(sent[0].body).not.toContain('x@example.com');
-        expect(Object.keys(sent[0]).sort()).toEqual(['body', 'name', 'replyTo', 'subject', 'to']);
+        expect(Object.keys(sent[0]).toSorted()).toEqual(['body', 'name', 'replyTo', 'subject', 'to']);
     });
 
     test('logs to the sheet as plain text, never as formulas', () => {
