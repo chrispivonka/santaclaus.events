@@ -129,7 +129,10 @@ function asText(value) {
     return /^[=+\-@]/.test(value) ? "'" + value : value;
 }
 
-function reply(text) {
+// The site posts without reading the answer, so the log line is the only record of what happened
+// to a request: open Executions in the Apps Script project to see it. It never holds form values.
+function reply(text, outcome) {
+    console.info(outcome || text);
     return ContentService.createTextOutput(text);
 }
 

@@ -23,7 +23,7 @@ function doPost(e) {
     var p = (e && e.parameter) || {};
 
     // The honeypot field is invisible to people, so anything in it came from a bot.
-    if (p.website) return reply('ok');
+    if (p.website) return reply('ok', 'ignored: the hidden honeypot field was filled');
     // The site checks the same rules, so only a request that skipped the site gets turned away here.
     var checked = checkFields(LETTER_FIELDS, p);
     if (checked.errors) return reply('invalid: ' + checked.errors.join('; '));
@@ -47,5 +47,5 @@ function doPost(e) {
         name: 'Santa Claus Events',
     });
 
-    return reply('ok');
+    return reply('ok', 'sent');
 }
