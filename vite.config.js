@@ -17,6 +17,9 @@ const csp = {
     'form-action': ['https://script.google.com'],
     'base-uri': ["'self'"],
     'object-src': ["'none'"],
+    // No script may write markup through innerHTML, document.write or eval-like sinks.
+    'require-trusted-types-for': ["'script'"],
+    'trusted-types': ["'none'"],
 };
 // Only valid as a header, so these go in the header policy but not the <meta> tag.
 const headerOnly = { 'frame-ancestors': ["'none'"], 'upgrade-insecure-requests': [] };

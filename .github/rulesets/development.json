@@ -24,7 +24,11 @@
       "parameters": {
         "strict_required_status_checks_policy": true,
         "do_not_enforce_on_create": false,
-        "required_status_checks": [{ "context": "CI passed" }]
+        "required_status_checks": [
+          { "context": "CI passed" },
+          { "context": "Known vulnerabilities in dependencies" },
+          { "context": "Leaked secrets" }
+        ]
       }
     },
     {

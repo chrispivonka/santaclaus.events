@@ -7,44 +7,71 @@
  *   PHOTO_RECIPIENTS    photo shoots (for example Written In Light)
  *   CALENDAR_ID         Santa's Google Calendar, checked for times that are already booked
  *   PRIVATE_MINUTES, PHOTO_MINUTES (optional) how long each kind of booking lasts (default 60 and 30)
- * Setup steps are in apps-script/README.md. Keep email addresses in the script properties,
+ * Needs common.gs in the same project. Setup steps are in apps-script/README.md. Keep email addresses in the script properties,
  * never in this file, so they stay out of the public repository and off the site.
  */
 
+var BOOKING_LIMITS = { all: 30, email: 3 };
+
+// The fields each kind of request accepts, in the order they're emailed (types are in common.gs).
+var CONTACT_FIELDS = [
+    { name: 'name', label: 'Name', type: 'name', required: true, max: 100 },
+    { name: 'phone', label: 'Phone', type: 'phone', required: true, max: 30 },
+    { name: 'email', label: 'Email', type: 'email', required: true, max: 254 },
+];
 var KINDS = {
     'private-booking': {
         label: 'Private booking request',
         recipients: 'PRIVATE_RECIPIENTS',
         minutes: 'PRIVATE_MINUTES',
         defaultMinutes: 60,
-        fields: [
-            ['name', 'Name'],
-            ['phone', 'Phone'],
-            ['email', 'Email'],
-            ['date', 'Event date'],
-            ['time', 'Start time'],
-            ['eventType', 'Type of event'],
-            ['place', 'Town or venue'],
-            ['kids', 'Number of kids'],
-            ['elf', 'Add an elf?'],
-            ['photo', 'Advertising photo'],
-            ['notes', 'Notes'],
-        ],
+        fields: CONTACT_FIELDS.concat([
+            { name: 'date', label: 'Event date', type: 'date', required: true },
+            { name: 'time', label: 'Start time', type: 'time', required: true },
+            {
+                name: 'eventType',
+                label: 'Type of event',
+                type: 'choice',
+                required: true,
+                options: [
+                    'Home visit',
+                    'Holiday party',
+                    'School or classroom',
+                    'Business or workplace',
+                    'Church or community event',
+                    'Something else',
+                ],
+            },
+            { name: 'place', label: 'Town or venue', type: 'line', required: true, max: 200 },
+            { name: 'kids', label: 'Number of kids', type: 'int', min: 0, maxValue: 500 },
+            {
+                name: 'elf',
+                label: 'Add an elf?',
+                type: 'choice',
+                required: true,
+                options: ['Yes, please', 'No, thank you', 'Not sure yet'],
+            },
+            {
+                name: 'photo',
+                label: 'Advertising photo',
+                type: 'choice',
+                required: true,
+                options: ['Yes', 'Yes, but only from behind (no faces)', 'No photos, please'],
+            },
+            { name: 'notes', label: 'Notes', type: 'text', max: 2000 },
+        ]),
     },
     'photo-shoot': {
         label: 'Photo shoot request',
         recipients: 'PHOTO_RECIPIENTS',
         minutes: 'PHOTO_MINUTES',
         defaultMinutes: 30,
-        fields: [
-            ['name', 'Name'],
-            ['phone', 'Phone'],
-            ['email', 'Email'],
-            ['date', 'Preferred date'],
-            ['time', 'Preferred time'],
-            ['people', 'People in the photos'],
-            ['notes', 'Notes'],
-        ],
+        fields: CONTACT_FIELDS.concat([
+            { name: 'date', label: 'Preferred date', type: 'date', required: true },
+            { name: 'time', label: 'Preferred time', type: 'time', required: true },
+            { name: 'people', label: 'People in the photos', type: 'int', min: 1, maxValue: 100 },
+            { name: 'notes', label: 'Notes', type: 'text', max: 2000 },
+        ]),
     },
 };
 
@@ -53,56 +80,51 @@ var KINDS = {
 function doGet(e) {
     var p = (e && e.parameter) || {};
     var kind = KINDS[p.formType] || KINDS['private-booking'];
-    if (!p.availability || !/^\d{4}-\d{2}-\d{2}$/.test(p.date || '')) return json({ error: 'bad request' });
+    if (!p.availability || !isBookableDate(String(p.date || ''))) return json({ error: 'bad request' });
     return json({ date: p.date, duration: durationOf(kind), busy: busyOn(p.date) });
 }
 
 function doPost(e) {
     var p = (e && e.parameter) || {};
-    var kind = KINDS[p.formType];
 
     // The honeypot field is invisible to people, so anything in it came from a bot.
-    if (p.website) return ContentService.createTextOutput('ok');
-    if (!kind || !p.name || !p.email) return ContentService.createTextOutput('missing fields');
+    if (p.website) return reply('ok');
+    var kind = Object.prototype.hasOwnProperty.call(KINDS, p.formType) ? KINDS[p.formType] : null;
+    if (!kind) return reply('unknown form');
+    // The site checks the same rules, so only a request that skipped the site gets turned away here.
+    var checked = checkFields(kind.fields, p);
+    if (checked.errors) return reply('invalid: ' + checked.errors.join('; '));
+    var v = checked.values;
+    if (tooMany(v.email, BOOKING_LIMITS)) return reply('too many requests');
 
     var props = PropertiesService.getScriptProperties();
     var recipients = props.getProperty(kind.recipients);
     if (!recipients) throw new Error('Set the ' + kind.recipients + ' script property (comma-separated emails).');
 
     // The site already hides booked times, but two people can pick the same one at once.
-    var conflict = false;
-    var start = minutesOf(p.time);
-    if (start !== null && /^\d{4}-\d{2}-\d{2}$/.test(p.date || '')) {
-        var end = start + durationOf(kind);
-        conflict = busyOn(p.date).some(function (b) {
-            return start < b[1] && end > b[0];
-        });
-    }
+    var start = minutesOf(v.time);
+    var end = start + durationOf(kind);
+    var conflict = busyOn(v.date).some(function (b) {
+        return start < b[1] && end > b[0];
+    });
 
     var lines = kind.fields.map(function (f) {
-        return f[1] + ': ' + (clean(p[f[0]]) || '(not given)');
+        var value = v[f.name] || '(not given)';
+        return f.type === 'text' && value.indexOf('\n') !== -1 ? f.label + ':\n' + value : f.label + ': ' + value;
     });
-    var body =
-        (conflict ? "HEADS UP: this time overlaps something already on Santa's calendar.\n\n" : '') +
-        'A new ' +
-        kind.label.toLowerCase() +
-        ' came in from santaclaus.events.\n\n' +
-        lines.join('\n') +
-        '\n\nReply to this email to answer ' +
-        clean(p.name) +
-        ' directly.';
-
     MailApp.sendEmail({
         to: recipients,
-        replyTo: clean(p.email),
-        subject:
-            (conflict ? '[Time already booked] ' : '') +
-            kind.label +
-            ': ' +
-            clean(p.name) +
-            ' on ' +
-            (clean(p.date) || 'a date to confirm'),
-        body: body,
+        replyTo: v.email,
+        subject: (conflict ? '[Time already booked] ' : '') + kind.label + ': ' + v.name + ' on ' + v.date,
+        body:
+            (conflict ? "HEADS UP: this time overlaps something already on Santa's calendar.\n\n" : '') +
+            'A new ' +
+            kind.label.toLowerCase() +
+            ' came in from santaclaus.events.\n\n' +
+            lines.join('\n') +
+            '\n\nReply to this email to answer ' +
+            v.name +
+            ' directly.',
         name: 'Santa Claus Events',
     });
 
@@ -115,7 +137,7 @@ function doPost(e) {
             sheet.appendRow(
                 ['Received'].concat(
                     kind.fields.map(function (f) {
-                        return f[1];
+                        return f.label;
                     }),
                 ),
             );
@@ -123,13 +145,13 @@ function doPost(e) {
         sheet.appendRow(
             [new Date()].concat(
                 kind.fields.map(function (f) {
-                    return clean(p[f[0]]);
+                    return asText(v[f.name]);
                 }),
             ),
         );
     }
 
-    return ContentService.createTextOutput('ok');
+    return reply('ok');
 }
 
 function durationOf(kind) {
@@ -155,16 +177,4 @@ function busyOn(date) {
 function minutesOf(time) {
     var m = /^(\d{1,2}):(\d{2})$/.exec(String(time || ''));
     return m ? Number(m[1]) * 60 + Number(m[2]) : null;
-}
-
-function json(value) {
-    return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Keeps each value to one tidy, reasonably short piece of text.
-function clean(value) {
-    return String(value || '')
-        .replace(/[\r\n]+/g, ' ')
-        .trim()
-        .slice(0, 2000);
 }

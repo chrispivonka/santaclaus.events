@@ -544,12 +544,15 @@
                         <p class="letter-greeting">Dear Santa,</p>
                         <div class="field-row">
                             <div class="field">
-                                <label for="name">Your name</label>
+                                <label for="name">Your first name</label>
                                 <input
                                     id="name"
                                     name="name"
+                                    data-kind="name"
+                                    data-invalid="Santa can only read letters, spaces, hyphens and apostrophes in a name."
                                     type="text"
-                                    autocomplete="name"
+                                    autocomplete="given-name"
+                                    maxlength="40"
                                     required
                                     data-error="You need to tell Santa your name!"
                                 />
@@ -562,6 +565,7 @@
                                     name="email"
                                     type="email"
                                     autocomplete="email"
+                                    maxlength="254"
                                     required
                                     data-error="Santa needs a valid email so the elves can write back!"
                                 />
@@ -573,7 +577,9 @@
                             <textarea
                                 id="message"
                                 name="message"
+                                data-kind="text"
                                 rows="6"
+                                maxlength="5000"
                                 required
                                 placeholder="This year I have been very good..."
                                 data-error="The North Pole can't read silence. Please write your letter to Santa!"
@@ -604,6 +610,10 @@
                             </button>
                             <p class="letter-signoff">Love, <span id="signoffName">me</span></p>
                         </div>
+                        <p class="form-privacy">
+                            Kids, ask a grown-up before you send your letter. Grown-ups: we use your email only to send Santa's reply. We
+                            never share it or add it to a mailing list, and we delete the letter once it's answered.
+                        </p>
                         <div class="form-status" id="formStatus" role="status" aria-live="polite" hidden></div>
                     </form>
                 </div>
@@ -724,8 +734,11 @@
                             <input
                                 id="bk-name"
                                 name="name"
+                                data-kind="name"
+                                data-invalid="Please use only letters, spaces, hyphens and apostrophes in your name."
                                 type="text"
                                 autocomplete="name"
+                                maxlength="100"
                                 required
                                 data-error="Please tell us your name."
                             />
@@ -738,6 +751,8 @@
                                 name="phone"
                                 type="tel"
                                 autocomplete="tel"
+                                data-invalid="Please enter a phone number with 7 to 15 digits."
+                                maxlength="30"
                                 required
                                 data-error="Please add a phone number so we can call you."
                             />
@@ -751,6 +766,7 @@
                             name="email"
                             type="email"
                             autocomplete="email"
+                            maxlength="254"
                             required
                             data-error="Please add a valid email address."
                         />
@@ -759,7 +775,14 @@
                     <div class="field-row">
                         <div class="field">
                             <label for="bk-date"><span data-private>Event date</span><span data-photo hidden>Preferred date</span> *</label>
-                            <input id="bk-date" name="date" type="date" required data-error="Please pick a date." />
+                            <input
+                                id="bk-date"
+                                name="date"
+                                type="date"
+                                required
+                                data-error="Please pick a date."
+                                data-invalid="Please pick a date from today on."
+                            />
                             <p class="field-error" id="bk-date-error" aria-live="polite"></p>
                         </div>
                         <div class="field">
@@ -793,8 +816,10 @@
                                 <input
                                     id="bk-place"
                                     name="place"
+                                    data-kind="line"
                                     type="text"
                                     autocomplete="address-level2"
+                                    maxlength="200"
                                     required
                                     data-error="Please tell us where the event is."
                                 />
@@ -804,7 +829,17 @@
                         <div class="field-row">
                             <div class="field">
                                 <label for="bk-kids">How many kids?</label>
-                                <input id="bk-kids" name="kids" type="number" min="0" max="500" inputmode="numeric" />
+                                <input
+                                    id="bk-kids"
+                                    name="kids"
+                                    type="number"
+                                    min="0"
+                                    max="500"
+                                    step="1"
+                                    inputmode="numeric"
+                                    data-invalid="Please enter a whole number from 0 to 500."
+                                />
+                                <p class="field-error" id="bk-kids-error" aria-live="polite"></p>
                             </div>
                             <div class="field">
                                 <label for="bk-elf">Add an elf? *</label>
@@ -832,18 +867,31 @@
                         <legend class="visually-hidden">About your photo shoot</legend>
                         <div class="field">
                             <label for="bk-people">How many people will be in the photos?</label>
-                            <input id="bk-people" name="people" type="number" min="1" max="100" inputmode="numeric" />
+                            <input
+                                id="bk-people"
+                                name="people"
+                                type="number"
+                                min="1"
+                                max="100"
+                                step="1"
+                                inputmode="numeric"
+                                data-invalid="Please enter a whole number from 1 to 100."
+                            />
+                            <p class="field-error" id="bk-people-error" aria-live="polite"></p>
                         </div>
                     </fieldset>
                     <div class="field">
                         <label for="bk-notes">Anything else we should know?</label>
-                        <textarea id="bk-notes" name="notes" rows="3"></textarea>
+                        <textarea id="bk-notes" name="notes" rows="3" maxlength="2000" data-kind="text"></textarea>
                     </div>
                     <!-- Honeypot field for bots; real visitors never see it -->
                     <div class="honeypot" aria-hidden="true">
                         <label for="bk-website">Leave this empty</label>
                         <input id="bk-website" name="website" type="text" tabindex="-1" autocomplete="off" />
                     </div>
+                    <p class="form-privacy">
+                        We use your details only to answer this request. We never share them or add them to a mailing list.
+                    </p>
                     <div class="booking-actions">
                         <button class="btn btn-primary" id="bookingSubmit" type="submit">
                             <span class="btn-label">Send my request</span>

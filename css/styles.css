@@ -1843,6 +1843,12 @@ h3 {
     gap: 1rem;
     margin-top: 0.75rem;
 }
+.form-privacy {
+    flex-basis: 100%;
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+    color: #5b6475;
+}
 .honeypot {
     position: absolute;
     left: -9999px;

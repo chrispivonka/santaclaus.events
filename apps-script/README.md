@@ -1,11 +1,28 @@
-# Google Apps Script for booking requests
+# Google Apps Scripts for the site's forms
+
+The site has two forms, and each posts to its own Google Apps Script web app: `booking.gs` for booking requests and `letter.gs` for letters to Santa. Keep them in separate Apps Script projects, and add `common.gs` to each one as a second file (**+** next to Files → Script → name it `common`, then paste in `common.gs`). Both scripts:
+
+- check every field against a fixed type (name, email, phone, date, time, whole number, one of a set list of choices, or free text) and ignore anything else in the request; the site checks the same rules first, so only a request that skipped the site gets turned away;
+- cut free text down to letters and accents in any language, digits, spaces and everyday punctuation, removing symbols, emoji, angle brackets and control characters;
+- accept only one plain email address, which becomes the email's Reply-To;
+- drop anything a bot fills into the hidden honeypot field;
+- limit how many requests come in an hour (3 per email address, and 30 bookings or 60 letters in all), so a script posting to the public web app can't use up the account's daily email quota (100 recipients a day on a personal Gmail account, 1,500 on Google Workspace);
+- keep recipient addresses in Script Properties, never in this repository.
+
+## Letters to Santa (`letter.gs`)
+
+Letters are emailed to `LETTER_RECIPIENTS` and never stored by the script. The site tells families that the letter is deleted once it's answered, so delete each letter email after replying to it.
+
+To switch the live letter form to this script, open the existing letter project at [script.google.com](https://script.google.com), replace its code with `letter.gs`, add `common.gs` as a second file, add the `LETTER_RECIPIENTS` script property, then **Deploy** → **Manage deployments** → edit → Version: **New version** → **Deploy**. The URL stays the same, so the site doesn't change. If the old script did anything else (such as logging to a sheet), compare it with `letter.gs` before you replace it.
+
+## Booking requests (`booking.gs`)
 
 The site's "Request a private booking" and "Request a photo shoot" buttons open one pop-up form that sends each request to a Google Apps Script web app, the same way the letter to Santa form does. The script emails private event requests to the addresses in `PRIVATE_RECIPIENTS` and photo shoot requests to the addresses in `PHOTO_RECIPIENTS`. Those addresses live only in the script's settings in Google, never in this repository or on the site.
 
 ## Set it up (once)
 
 1. Signed in to the Google account that should own it (ideally the one that owns the letter script), open [script.google.com](https://script.google.com) and click **New project**. Name it "Santa bookings".
-2. Delete the sample code, paste in everything from `booking.gs`, and click **Save**.
+2. Delete the sample code, paste in everything from `booking.gs`, add `common.gs` as a second file, and click **Save**.
 3. Click **Project Settings** (gear icon) → **Script Properties** → **Add script property**:
    - `PRIVATE_RECIPIENTS`: who gets private event requests, separated by commas, for example `hanna@example.com,santa@example.com`.
    - `PHOTO_RECIPIENTS`: who gets photo shoot requests, for example `writteninlightphotoandfilm@gmail.com,hanna@example.com`.
@@ -28,4 +45,4 @@ Edit `PRIVATE_RECIPIENTS` or `PHOTO_RECIPIENTS` in Script Properties. No redeplo
 
 ## Changing the script
 
-After editing the code, use **Deploy** → **Manage deployments** → edit (pencil) → Version: **New version** → **Deploy**. That keeps the same URL, so the site doesn't change either.
+After editing the code (including `common.gs`), use **Deploy** → **Manage deployments** → edit (pencil) → Version: **New version** → **Deploy**. That keeps the same URL, so the site doesn't change either.
