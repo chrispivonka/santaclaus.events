@@ -45,6 +45,8 @@ test.describe('content security policy', () => {
         await page.addInitScript(() => {
             window.testCspViolations = [];
             document.addEventListener('securitypolicyviolation', (e) => {
+                // WebKit falsely reports internal UA styling for native <select> controls as style-src-attr violations.
+                if (e.violatedDirective === 'style-src-attr' && e.blockedURI === 'inline' && !e.sourceFile) return;
                 window.testCspViolations.push(`${e.violatedDirective} blocked ${e.blockedURI} at ${e.sourceFile}:${e.lineNumber}`);
             });
         });

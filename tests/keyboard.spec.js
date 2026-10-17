@@ -1,6 +1,9 @@
 import { test, expect } from './fixtures.js';
 
 // Everything must work with a keyboard alone, with a visible focus ring.
+// On macOS, WebKit only tabs through text controls unless Option/Alt is held.
+const tabKey = (browserName) => (process.platform === 'darwin' && browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
+
 const focused = (page) =>
     page.evaluate(() => {
         const el = document.activeElement;
@@ -17,7 +20,7 @@ test.describe('keyboard', () => {
 
     test('the skip link is the first stop and jumps to the content', async ({ page, browserName, isMobile }) => {
         test.skip(isMobile, 'touch devices have no Tab key');
-        await page.keyboard.press('Tab');
+        await page.keyboard.press(tabKey(browserName));
         expect(await focused(page)).toBe('a.skip-link');
         await expect(page.locator('.skip-link')).toBeInViewport();
         await page.keyboard.press('Enter');
@@ -29,22 +32,22 @@ test.describe('keyboard', () => {
         }
     });
 
-    test('the header controls come in reading order', async ({ page, isMobile }) => {
+    test('the header controls come in reading order', async ({ page, browserName, isMobile }) => {
         test.skip(isMobile, 'touch devices have no Tab key');
         const order = [];
         for (let i = 0; i < 9; i++) {
-            await page.keyboard.press('Tab');
+            await page.keyboard.press(tabKey(browserName));
             order.push(await focused(page));
         }
         expect(order.slice(0, 4)).toEqual(['a.skip-link', 'a.brand', 'button#soundToggle.icon-btn', 'button#themeToggle.icon-btn']);
         expect(order.slice(4, 9).every((o) => o.startsWith('a'))).toBe(true);
     });
 
-    test('keyboard focus is visible on buttons and links', async ({ page, isMobile }) => {
+    test('keyboard focus is visible on buttons and links', async ({ page, browserName, isMobile }) => {
         test.skip(isMobile, 'touch devices have no Tab key');
-        await page.keyboard.press('Tab');
-        await page.keyboard.press('Tab');
-        await page.keyboard.press('Tab');
+        await page.keyboard.press(tabKey(browserName));
+        await page.keyboard.press(tabKey(browserName));
+        await page.keyboard.press(tabKey(browserName));
         const ring = await page.evaluate(() => {
             const s = getComputedStyle(document.activeElement);
             return { style: s.outlineStyle, width: parseFloat(s.outlineWidth) };

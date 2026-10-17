@@ -5,6 +5,7 @@ import { test as base, expect } from '@playwright/test';
 // Messages browsers log about themselves, not about the page.
 const browserNoise = [
     /Navigated away from page/, // Firefox, when a reload interrupts the Web Audio setup
+    /Refused to apply a stylesheet because its hash.*does not appear in the style-src directive/, // WebKit, internal UA stylesheet for native <select> controls under strict CSP
 ];
 
 export const test = base.extend({
