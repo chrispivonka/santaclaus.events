@@ -186,14 +186,19 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      # The review needs the repository's Dependency graph (Settings > Advanced Security).
-      - name: Check that Dependency graph is enabled
+      # The review needs the repository's Dependency graph (Settings > Advanced Security), and on a
+      # private repository GitHub Advanced Security too. Asking for the same comparison the action makes
+      # covers both; the SBOM endpoint answers on private repositories without it.
+      - name: Check that dependency review is available
         id: graph
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          if gh api "repos/$GH_REPO/dependency-graph/sbom" --silent 2>/dev/null; then
+          if gh api "repos/$GH_REPO/dependency-graph/compare/$BASE...$HEAD" --silent 2>/dev/null; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Dependency review skipped: turn on Dependency graph under Settings > Advanced Security (see CONTRIBUTING.md)."
+            echo "::warning::Dependency review skipped: it needs Dependency graph, and GitHub Advanced Security on a private repository (see CONTRIBUTING.md)."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
