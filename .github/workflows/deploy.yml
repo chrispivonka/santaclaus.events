@@ -211,9 +211,10 @@ jobs:
       - name: Smoke, accessibility and header tests against ${{ env.BASE_URL }}
         run: bunx playwright test --project=chromium --project=mobile-chrome
 
-  # The forms' Google Apps Scripts, pushed with clasp when a release changes them. Both the
+  # The forms' Google Apps Scripts, pushed with clasp when they differ from what is live. Both the
   # preview and the live site post to the same two web apps, so they update with production only.
-  # Each project's existing deployment gets a new version, so its URL (built into the site) stays.
+  # Each project's existing deployment gets a new version, so its URL (built into the site) stays,
+  # and the release tag as its description, which is how the next release knows what is live.
   # Until the production environment has the script's secret and variables, it skips with a notice.
   apps-script:
     name: Apps Script (${{ matrix.project }})
@@ -237,29 +238,23 @@ jobs:
       - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         with:
           egress-policy: audit
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: refs/tags/${{ inputs.tag }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Check whether this release changes the script
+      - name: Check that the script can be deployed
         id: gate
         env:
           HAS_CREDENTIALS: ${{ (matrix.project == 'letter' && secrets.CLASPRC_LETTER || secrets.CLASPRC_BOOKING) != '' }}
         run: |
           if [ "$HAS_CREDENTIALS" != "true" ] || [ -z "$SCRIPT_ID" ] || [ -z "$DEPLOYMENT_ID" ]; then
             echo "::notice::Skipping $PROJECT.gs: add its clasp credentials secret and script and deployment IDs to the production environment (see apps-script/README.md)."
-            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
-          fi
-          files="apps-script/common.gs apps-script/$PROJECT.gs apps-script/appsscript.json"
-          previous=$(git describe --tags --abbrev=0 --match 'v20*' "$TAG^" 2>/dev/null || true)
-          # shellcheck disable=SC2086 # files is a list of paths
-          if [ -n "$previous" ] && git diff --quiet "$previous" "$TAG" -- $files; then
-            echo "::notice::$PROJECT.gs is unchanged since $previous; nothing to deploy."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.run == 'true'
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.gate.outputs.run == 'true'
         with:
@@ -268,7 +263,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         with:
           bun-version-file: package.json
-      - name: Push and redeploy ${{ matrix.project }}.gs
+      - name: Push and redeploy ${{ matrix.project }}.gs if it changed
         if: steps.gate.outputs.run == 'true'
         env:
           CLASPRC: ${{ matrix.project == 'letter' && secrets.CLASPRC_LETTER || secrets.CLASPRC_BOOKING }}
@@ -277,12 +272,22 @@ jobs:
           auth="$RUNNER_TEMP/clasprc.json"
           trap 'rm -f "$auth"' EXIT
           printf '%s' "$CLASPRC" > "$auth"
+          files="apps-script/common.gs apps-script/$PROJECT.gs apps-script/appsscript.json"
           dir="$RUNNER_TEMP/$PROJECT"
           mkdir -p "$dir"
-          cp apps-script/common.gs "apps-script/$PROJECT.gs" apps-script/appsscript.json "$dir/"
+          # shellcheck disable=SC2086 # files is a list of paths
+          cp $files "$dir/"
           printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > "$dir/.clasp.json"
-          cd "$dir"
-          clasp() { bunx @google/clasp@3.4.1 --auth "$auth" "$@"; }
+          clasp() { (cd "$dir" && bunx @google/clasp@3.4.1 --auth "$auth" "$@"); }
+          # The live deployment's description names the release it came from. Compare with that
+          # release rather than the previous tag, so a deploy that failed is retried next time.
+          live=$(clasp list-deployments | grep -F "$DEPLOYMENT_ID" | grep -oE 'v20[0-9]+(\.[0-9]+)+' | head -n 1 || true)
+          # shellcheck disable=SC2086 # files is a list of paths
+          if [ -n "$live" ] && git rev-parse -q --verify "refs/tags/$live" >/dev/null && git diff --quiet "$live" "$TAG" -- $files; then
+            echo "::notice::$PROJECT.gs is unchanged since $live, which is live; nothing to deploy."
+            exit 0
+          fi
+          echo "Live: ${live:-unknown}. Deploying $PROJECT.gs from $TAG."
           clasp push --force
           clasp update-deployment "$DEPLOYMENT_ID" --description "$TAG"
 
