@@ -1729,6 +1729,126 @@ h3 {
     color: var(--muted);
     margin-bottom: 1.5rem;
 }
+/* Public photo days tab on the photo shoot card: open by default (no JS), collapsed once main.js
+   enhances it, then opened by hover (mouse) or click/tap/keyboard. */
+.photo-days {
+    align-self: stretch;
+    margin: -0.5rem 0 1.5rem;
+    border: 1.5px dashed rgba(224, 176, 82, 0.7);
+    border-radius: 16px;
+    background: rgba(224, 176, 82, 0.12);
+}
+.photo-days-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 0;
+    border-radius: 14px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+.photo-days-tab:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+.photo-days-dot {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(255, 90, 110, 0.6);
+}
+.photo-days-dates {
+    margin-left: auto;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    background: var(--gold);
+    color: #2a1d05;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+.photo-days-chev {
+    flex: none;
+    transition: transform 0.25s ease;
+}
+.photo-days.is-open .photo-days-chev {
+    transform: rotate(180deg);
+}
+.photo-days-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition:
+        grid-template-rows 0.3s ease,
+        visibility 0.3s;
+}
+.photo-days.is-enhanced:not(.is-open) .photo-days-panel {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+}
+.photo-days-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+.photo-days-lead,
+.photo-days-list,
+.photo-days-where {
+    margin: 0;
+    padding-inline: 0.9rem;
+}
+.photo-days-lead {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+.photo-days-list {
+    display: grid;
+    gap: 0.4rem;
+    margin-block: 0.7rem;
+    list-style: none;
+}
+.photo-days-list li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+.photo-days-list time {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+.photo-days-where {
+    padding-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .photo-days:not(.is-open) .photo-days-dot {
+        animation: photo-days-ping 2s ease-out infinite;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .photo-days-panel,
+    .photo-days-chev {
+        transition: none;
+    }
+}
+@keyframes photo-days-ping {
+    70% {
+        box-shadow: 0 0 0 0.55rem rgba(255, 90, 110, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 90, 110, 0);
+    }
+}
 @media (max-width: 760px) {
     .contact-grid {
         grid-template-columns: 1fr;

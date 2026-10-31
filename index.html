@@ -646,6 +646,43 @@
                                 Christmas portraits with Santa are by <b>Written In Light ~ Photo and Film</b>, run by sisters Kelsie
                                 Templin and Kalie Robson. Send a request and they'll get back to you to pick a date and time.
                             </p>
+                            <!-- Public photo days: a tab that opens on hover (mouse) or click/tap/keyboard.
+                                 Each <li> hides itself once its data-ends time passes, and the whole tab hides
+                                 when none are left. To retire it early, delete this block; the card text above
+                                 is the original and needs no other change. -->
+                            <div class="photo-days" id="photoDays">
+                                <button class="photo-days-tab" type="button" aria-expanded="true" aria-controls="photoDaysPanel">
+                                    <span class="photo-days-dot" aria-hidden="true"></span>
+                                    <span class="photo-days-label">Public photo days</span>
+                                    <span class="photo-days-dates">Nov 15 &amp; 21</span>
+                                    <svg class="photo-days-chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                                        <path fill="currentColor" d="M12 15.4 4.7 8l1.4-1.4 5.9 5.9 5.9-5.9L19.3 8z" />
+                                    </svg>
+                                </button>
+                                <section class="photo-days-panel" id="photoDaysPanel" aria-label="Public photo days">
+                                    <div class="photo-days-inner">
+                                        <p class="photo-days-lead">
+                                            No appointment needed! Drop in to the studio for pictures with Santa, or book a private session
+                                            any time.
+                                        </p>
+                                        <ul class="photo-days-list">
+                                            <li data-ends="2026-11-15T16:00:00-07:00">
+                                                <time datetime="2026-11-15">Sun, Nov 15</time>
+                                                <span>10 AM &ndash; 4 PM</span>
+                                            </li>
+                                            <li data-ends="2026-11-21T16:00:00-07:00">
+                                                <time datetime="2026-11-21">Sat, Nov 21</time>
+                                                <span>10 AM &ndash; 4 PM</span>
+                                            </li>
+                                        </ul>
+                                        <p class="photo-days-where">
+                                            <span aria-hidden="true">📍</span>
+                                            <!-- Studio address: replace the text below once it's known. -->
+                                            <span id="photoDaysWhere">Written In Light studio, address coming soon</span>
+                                        </p>
+                                    </div>
+                                </section>
+                            </div>
                             <button class="btn btn-green contact-cta" type="button" aria-haspopup="dialog" data-booking="photo-shoot">
                                 Request a photo shoot
                             </button>

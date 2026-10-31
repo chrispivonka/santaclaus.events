@@ -3,6 +3,8 @@ import { test, expect } from './fixtures.js';
 // Every interactive feature on the page, end to end. Reduced motion is on for most of these so
 // animations don't slow the flows down; the hero animation test turns it back off.
 const DECEMBER_10 = new Date('2026-12-10T10:00:00');
+const photoDaysTab = (page) => page.locator('#photo-shoots').getByRole('button', { name: /Public photo days/ });
+const photoDaysPanel = (page) => page.getByRole('region', { name: 'Public photo days' });
 
 test.describe('with reduced motion', () => {
     test.beforeEach(async ({ page }) => {
@@ -333,6 +335,54 @@ test.describe('with reduced motion', () => {
                 await expect(page.locator('#message')).toHaveValue('A sled, please.');
                 await expect(page.locator('#submitButton')).toBeEnabled();
             });
+        });
+    });
+
+    test.describe('public photo days on the photo shoot card', () => {
+        test('starts closed and opens with a click or tap, keeping the card text', async ({ page }) => {
+            await page.clock.install({ time: new Date('2026-11-01T10:00:00-07:00') });
+            await page.goto('/');
+            await expect(page.locator('#photo-shoots')).toContainText("they'll get back to you to pick a date and time.");
+            await expect(photoDaysTab(page)).toHaveAttribute('aria-expanded', 'false');
+            await expect(photoDaysPanel(page)).toBeHidden();
+            await photoDaysTab(page).click();
+            await expect(photoDaysTab(page)).toHaveAttribute('aria-expanded', 'true');
+            await expect(photoDaysPanel(page)).toBeVisible();
+            await expect(photoDaysPanel(page).locator('li')).toHaveText([/Sun, Nov 15\s*10 AM – 4 PM/, /Sat, Nov 21\s*10 AM – 4 PM/]);
+            await expect(photoDaysPanel(page)).toContainText('Written In Light studio');
+        });
+
+        test('opens on hover with a mouse and closes when the mouse leaves', async ({ page, isMobile }) => {
+            test.skip(isMobile, 'touch screens have no hover');
+            await page.clock.install({ time: new Date('2026-11-01T10:00:00-07:00') });
+            await page.goto('/');
+            await photoDaysTab(page).hover();
+            await expect(photoDaysPanel(page)).toBeVisible();
+            await page.getByRole('heading', { name: 'Book a visit with Santa' }).hover();
+            await expect(photoDaysPanel(page)).toBeHidden();
+        });
+
+        test('works from the keyboard and Escape closes it', async ({ page }) => {
+            await page.clock.install({ time: new Date('2026-11-01T10:00:00-07:00') });
+            await page.goto('/');
+            await photoDaysTab(page).focus();
+            await page.keyboard.press('Enter');
+            await expect(photoDaysPanel(page)).toBeVisible();
+            await page.keyboard.press('Escape');
+            await expect(photoDaysPanel(page)).toBeHidden();
+            await expect(photoDaysTab(page)).toBeFocused();
+        });
+
+        test('drops days that have passed, then hides itself after the last one', async ({ page }) => {
+            await page.clock.install({ time: new Date('2026-11-18T10:00:00-07:00') });
+            await page.goto('/');
+            await photoDaysTab(page).click();
+            await expect(photoDaysPanel(page).locator('li')).toHaveCount(1);
+            await expect(photoDaysPanel(page)).toContainText('Sat, Nov 21');
+            await page.clock.setSystemTime(new Date('2026-11-22T09:00:00-07:00'));
+            await page.reload();
+            await expect(page.locator('#photoDays')).toHaveCount(0);
+            await expect(page.locator('#photo-shoots').getByRole('button', { name: 'Request a photo shoot' })).toBeVisible();
         });
     });
 });
