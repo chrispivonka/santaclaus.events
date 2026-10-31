@@ -1707,12 +1707,16 @@ h3 {
 }
 
 /* Booking and contact */
+/* Private events and photo shoots side by side; Inclusive Santa Day runs across both below. */
 .contact-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem;
-    max-width: 72rem;
+    max-width: 56rem;
     margin-inline: auto;
+}
+.contact-card-photo {
+    grid-column: 1 / -1;
 }
 .contact-card {
     display: flex;
@@ -1901,17 +1905,8 @@ h3 {
         transform: rotate(14deg) scale(1.15);
     }
 }
-@media (max-width: 1000px) {
-    .contact-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-width: 56rem;
-    }
-    .contact-card-photo {
-        grid-column: 1 / -1;
-    }
-}
-/* Tablet: the Inclusive Santa Day card runs full width, photo on the left and words on the right. */
-@media (min-width: 761px) and (max-width: 1000px) {
+/* Wider than a phone: the Inclusive Santa Day card puts its photo on the left and words on the right. */
+@media (min-width: 761px) {
     .contact-card-photo {
         display: grid;
         grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
@@ -2729,6 +2724,7 @@ html:not(.js) .section-head h2::after {
 /* Private booking request pop-up */
 .contact-cta {
     margin-top: auto;
+    align-self: center;
 }
 .booking-group {
     margin: 0;
