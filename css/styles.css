@@ -1733,6 +1733,7 @@ h3 {
    enhances it, then opened by hover (mouse) or click/tap/keyboard. */
 .photo-days {
     align-self: stretch;
+    min-width: 0;
     margin: -0.5rem 0 1.5rem;
     border: 1.5px dashed rgba(224, 176, 82, 0.7);
     border-radius: 16px;
@@ -1740,6 +1741,7 @@ h3 {
 }
 .photo-days-tab {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem;
     width: 100%;
