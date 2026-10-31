@@ -2025,7 +2025,7 @@ h3 {
 }
 @media (max-width: 760px) {
     .contact-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
