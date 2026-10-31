@@ -1667,8 +1667,14 @@ h3 {
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: center;
 }
+/* Full width of its column, so the lazy photo holds its 4:5 space before it loads and the page
+   below doesn't jump (auto side margins on phones would otherwise shrink it to nothing). */
+.about-photo {
+    width: 100%;
+}
 .about-photo img {
     width: 100%;
+    height: auto;
     aspect-ratio: 4 / 5;
     object-fit: cover;
     border-radius: var(--radius);
@@ -1703,9 +1709,9 @@ h3 {
 /* Booking and contact */
 .contact-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
-    max-width: 56rem;
+    max-width: 72rem;
     margin-inline: auto;
 }
 .contact-card {
@@ -1721,6 +1727,33 @@ h3 {
 }
 .contact-card + .contact-card {
     border-top-color: var(--green);
+}
+.contact-card + .contact-card + .contact-card {
+    border-top-color: var(--gold);
+}
+/* Each booking card's photo sits edge to edge across the top of the card. */
+.contact-card-media {
+    display: block;
+    align-self: stretch;
+    margin: calc(-1 * clamp(1.4rem, 3vw, 2rem)) calc(-1 * clamp(1.4rem, 3vw, 2rem)) 0.4rem;
+}
+.contact-card-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: 50% 30%;
+    border-radius: 16px 16px 0 0;
+}
+.media-storytime img {
+    object-position: 50% 18%;
+}
+.media-gift img {
+    object-position: 50% 38%;
+}
+.media-cabin img {
+    object-position: 50% 43%;
 }
 .contact-card h3 {
     margin: 0.9rem 0 0.5rem;
@@ -1769,8 +1802,13 @@ h3 {
     flex: 1 1 6rem;
     min-width: 0;
 }
-.photo-days-dates {
+.photo-days-end {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     margin-left: auto;
+}
+.photo-days-dates {
     padding: 0.1rem 0.6rem;
     border-radius: 999px;
     background: var(--gold);
@@ -1788,6 +1826,9 @@ h3 {
 .photo-days-panel {
     display: grid;
     grid-template-rows: 1fr;
+}
+/* Animate only after the first collapse, so the page doesn't shift as it loads. */
+.photo-days.is-ready .photo-days-panel {
     transition:
         grid-template-rows 0.3s ease,
         visibility 0.3s;
@@ -1858,6 +1899,43 @@ h3 {
     }
     20% {
         transform: rotate(14deg) scale(1.15);
+    }
+}
+@media (max-width: 1000px) {
+    .contact-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 56rem;
+    }
+    .contact-card-photo {
+        grid-column: 1 / -1;
+    }
+}
+/* Tablet: the Inclusive Santa Day card runs full width, photo on the left and words on the right. */
+@media (min-width: 761px) and (max-width: 1000px) {
+    .contact-card-photo {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        column-gap: 1.75rem;
+        align-content: center;
+    }
+    .contact-card-photo .contact-card-media {
+        grid-row: 1 / span 2;
+        margin: calc(-1 * clamp(1.4rem, 3vw, 2rem)) 0 calc(-1 * clamp(1.4rem, 3vw, 2rem)) calc(-1 * clamp(1.4rem, 3vw, 2rem));
+    }
+    .contact-card-photo .contact-card-media {
+        position: relative;
+        min-height: 14rem;
+    }
+    /* Taken out of flow so the portrait photo fills the row instead of setting its height. */
+    .contact-card-photo .contact-card-media img {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        aspect-ratio: auto;
+        border-radius: 16px 0 0 16px;
+    }
+    .contact-card-photo h3 {
+        align-self: end;
     }
 }
 @media (max-width: 760px) {

@@ -66,6 +66,13 @@ test.describe('home page', () => {
         await expect(contact).not.toContainText(/\bHome\b/);
     });
 
+    test('the Inclusive Santa Day card sits beside the booking cards with the cabin photo', async ({ page }) => {
+        const card = page.locator('#inclusive-santa');
+        await expect(card.getByRole('heading', { name: 'Inclusive Santa Day' })).toBeVisible();
+        await expect(card).toContainText('Where everyone belongs, more magic, less sensory overload, & wheelchair accessible!');
+        await expect(card.getByRole('img', { name: /Santa's cabin/ })).toBeVisible();
+    });
+
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {

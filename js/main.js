@@ -604,6 +604,11 @@
             };
             photoDays.classList.add('is-enhanced');
             setPhotoDays();
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    photoDays.classList.add('is-ready');
+                });
+            });
             photoDays.addEventListener('pointerenter', function (e) {
                 if (e.pointerType !== 'mouse') return;
                 hovering = true;

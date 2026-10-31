@@ -349,7 +349,7 @@ test.describe('with reduced motion', () => {
             await expect(photoDaysTab(page)).toHaveAttribute('aria-expanded', 'true');
             await expect(photoDaysPanel(page)).toBeVisible();
             await expect(photoDaysPanel(page).locator('li')).toHaveText([/Sun, Nov 15\s*10 AM – 4 PM/, /Sat, Nov 21\s*10 AM – 4 PM/]);
-            await expect(photoDaysPanel(page)).toContainText('Written In Light studio');
+            await expect(photoDaysPanel(page)).toContainText('Cody, WY');
         });
 
         test('opens on hover with a mouse and closes when the mouse leaves', async ({ page, isMobile }) => {

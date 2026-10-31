@@ -200,20 +200,20 @@
                         <div class="photo-frame">
                             <picture>
                                 <source
-                                    srcset="assets/img/cabin-480.avif 480w, assets/img/cabin.avif 736w"
+                                    srcset="assets/img/santa-studio-480.avif 480w, assets/img/santa-studio.avif 736w"
                                     sizes="min(26rem, 100vw)"
                                     type="image/avif"
                                 />
                                 <source
-                                    srcset="assets/img/cabin-480.webp 480w, assets/img/cabin.webp 736w"
+                                    srcset="assets/img/santa-studio-480.webp 480w, assets/img/santa-studio.webp 736w"
                                     sizes="min(26rem, 100vw)"
                                     type="image/webp"
                                 />
                                 <img
-                                    src="assets/img/cabin.jpg"
+                                    src="assets/img/santa-studio.jpg"
                                     width="736"
-                                    height="1000"
-                                    alt="Santa's cabin glowing with Christmas lights and candy canes at night"
+                                    height="920"
+                                    alt="Santa holding his hat in mock surprise, in an armchair between glowing Christmas trees by the fireplace"
                                     fetchpriority="high"
                                 />
                             </picture>
@@ -629,7 +629,26 @@
                     </div>
                     <div class="contact-grid">
                         <article class="contact-card reveal" id="private-events" aria-labelledby="privateTitle">
-                            <span class="fun-icon" aria-hidden="true">🎅</span>
+                            <picture class="contact-card-media media-storytime">
+                                <source
+                                    srcset="assets/img/santa-storytime-480.avif 480w, assets/img/santa-storytime.avif 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/avif"
+                                />
+                                <source
+                                    srcset="assets/img/santa-storytime-480.webp 480w, assets/img/santa-storytime.webp 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/webp"
+                                />
+                                <img
+                                    src="assets/img/santa-storytime.jpg"
+                                    width="736"
+                                    height="1104"
+                                    alt="Santa reading a Christmas storybook to three children gathered at his feet"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </picture>
                             <h3 id="privateTitle">Schedule a private event</h3>
                             <p>
                                 Santa can visit your home, holiday party, school, or business. Send a request and we'll call you to confirm
@@ -640,7 +659,26 @@
                             </button>
                         </article>
                         <article class="contact-card reveal" id="photo-shoots" aria-labelledby="photoTitle">
-                            <span class="fun-icon" aria-hidden="true">📸</span>
+                            <picture class="contact-card-media media-gift">
+                                <source
+                                    srcset="assets/img/santa-gift-480.avif 480w, assets/img/santa-gift.avif 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/avif"
+                                />
+                                <source
+                                    srcset="assets/img/santa-gift-480.webp 480w, assets/img/santa-gift.webp 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/webp"
+                                />
+                                <img
+                                    src="assets/img/santa-gift.jpg"
+                                    width="736"
+                                    height="1104"
+                                    alt="Santa handing a wrapped present to a little boy in a green vest"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </picture>
                             <h3 id="photoTitle">Schedule a photo shoot</h3>
                             <p>
                                 Christmas portraits with Santa are by <b>Written In Light ~ Photo and Film</b>, run by sisters Kelsie
@@ -654,10 +692,12 @@
                                 <button class="photo-days-tab" type="button" aria-expanded="true" aria-controls="photoDaysPanel">
                                     <span class="photo-days-emoji" aria-hidden="true">🎉</span>
                                     <span class="photo-days-label">Public photo days</span>
-                                    <span class="photo-days-dates">Nov 15 &amp; 21</span>
-                                    <svg class="photo-days-chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                                        <path fill="currentColor" d="M12 15.4 4.7 8l1.4-1.4 5.9 5.9 5.9-5.9L19.3 8z" />
-                                    </svg>
+                                    <span class="photo-days-end">
+                                        <span class="photo-days-dates">Nov 15 &amp; 21</span>
+                                        <svg class="photo-days-chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                                            <path fill="currentColor" d="M12 15.4 4.7 8l1.4-1.4 5.9 5.9 5.9-5.9L19.3 8z" />
+                                        </svg>
+                                    </span>
                                 </button>
                                 <section class="photo-days-panel" id="photoDaysPanel" aria-label="Public photo days">
                                     <div class="photo-days-inner">
@@ -677,8 +717,7 @@
                                         </ul>
                                         <p class="photo-days-where">
                                             <span aria-hidden="true">📍</span>
-                                            <!-- Studio address: replace the text below once it's known. -->
-                                            <span id="photoDaysWhere">Written In Light studio, address coming soon</span>
+                                            <span id="photoDaysWhere">Cody, WY</span>
                                         </p>
                                     </div>
                                 </section>
@@ -686,6 +725,30 @@
                             <button class="btn btn-green contact-cta" type="button" aria-haspopup="dialog" data-booking="photo-shoot">
                                 Request a photo shoot
                             </button>
+                        </article>
+                        <article class="contact-card contact-card-photo reveal" id="inclusive-santa" aria-labelledby="inclusiveTitle">
+                            <picture class="contact-card-media media-cabin">
+                                <source
+                                    srcset="assets/img/cabin-480.avif 480w, assets/img/cabin.avif 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/avif"
+                                />
+                                <source
+                                    srcset="assets/img/cabin-480.webp 480w, assets/img/cabin.webp 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/webp"
+                                />
+                                <img
+                                    src="assets/img/cabin.jpg"
+                                    width="736"
+                                    height="1000"
+                                    alt="Santa's cabin glowing with Christmas lights and candy canes at night"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </picture>
+                            <h3 id="inclusiveTitle">Inclusive Santa Day</h3>
+                            <p>Where everyone belongs, more magic, less sensory overload, &amp; wheelchair accessible!</p>
                         </article>
                     </div>
                 </div>

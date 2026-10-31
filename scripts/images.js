@@ -4,7 +4,10 @@
 import sharp from 'sharp';
 
 const photos = [
+    { name: 'santa-studio', widths: [480, 736] },
     { name: 'cabin', widths: [480, 736] },
+    { name: 'santa-storytime', widths: [480, 736] },
+    { name: 'santa-gift', widths: [480, 736] },
     { name: 'santa-and-elves', widths: [480, 736] },
     { name: 'letter-bg', widths: [null] },
 ];
