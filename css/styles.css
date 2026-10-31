@@ -1739,6 +1739,7 @@ h3 {
 /* Inclusive Santa Day: a little calendar page beside the time and a map link. */
 .event-when {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
     margin-bottom: 0.25rem;
@@ -1779,6 +1780,7 @@ h3 {
 }
 .event-details {
     display: grid;
+    flex: 1 1 11rem;
     gap: 0.4rem;
     min-width: 0;
 }
@@ -1811,6 +1813,10 @@ h3 {
 }
 .event-place strong {
     display: block;
+}
+.event-place > span:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 .event-place-addr {
     color: var(--muted);
