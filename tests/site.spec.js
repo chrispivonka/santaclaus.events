@@ -66,6 +66,18 @@ test.describe('home page', () => {
         await expect(contact).not.toContainText(/\bHome\b/);
     });
 
+    test('the Inclusive Santa Day card sits beside the booking cards with the cabin photo', async ({ page }) => {
+        const card = page.locator('#inclusive-santa');
+        await expect(card.getByRole('heading', { name: 'Inclusive Santa Day' })).toBeVisible();
+        await expect(card).toContainText('Where everyone belongs, more magic, less sensory overload, & wheelchair accessible!');
+        await expect(card.getByRole('img', { name: /Santa's cabin/ })).toBeVisible();
+        await expect(card.locator('time')).toHaveAttribute('datetime', '2026-12-15T18:00-07:00');
+        await expect(card).toContainText('6 – 8 PM');
+        const map = card.getByRole('link', { name: /Spearheart Studio.*1608 Alger Ave, Cody, WY/ });
+        await expect(map).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=Spearheart/);
+        await expect(map).toHaveAttribute('target', '_blank');
+    });
+
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {

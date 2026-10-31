@@ -583,4 +583,57 @@
                 bookingLabel.textContent = 'Send my request';
             });
     });
+    // ---- Public photo days tab (photo shoot card) ----
+    // Past days drop off by themselves; the tab opens on mouse hover, and click/tap/Enter pins it open.
+    var photoDays = document.getElementById('photoDays');
+    if (photoDays) {
+        var now = Date.now();
+        photoDays.querySelectorAll('li[data-ends]').forEach(function (li) {
+            if (Date.parse(li.getAttribute('data-ends')) < now) li.remove();
+        });
+        if (!photoDays.querySelector('li')) {
+            photoDays.remove();
+        } else {
+            var photoDaysTab = photoDays.querySelector('.photo-days-tab');
+            var pinned = false;
+            var hovering = false;
+            var setPhotoDays = function () {
+                var open = pinned || hovering;
+                photoDays.classList.toggle('is-open', open);
+                photoDaysTab.setAttribute('aria-expanded', String(open));
+            };
+            photoDays.classList.add('is-enhanced');
+            setPhotoDays();
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    photoDays.classList.add('is-ready');
+                });
+            });
+            photoDays.addEventListener('pointerenter', function (e) {
+                if (e.pointerType !== 'mouse') return;
+                hovering = true;
+                setPhotoDays();
+            });
+            photoDays.addEventListener('pointerleave', function (e) {
+                if (e.pointerType !== 'mouse') return;
+                hovering = false;
+                setPhotoDays();
+            });
+            photoDaysTab.addEventListener('click', function () {
+                // A click while it's only hover-open pins it; otherwise the click toggles.
+                if (hovering && !pinned) pinned = true;
+                else {
+                    pinned = !pinned;
+                    if (!pinned) hovering = false;
+                }
+                setPhotoDays();
+            });
+            photoDays.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape' || !photoDays.classList.contains('is-open')) return;
+                pinned = hovering = false;
+                setPhotoDays();
+                photoDaysTab.focus();
+            });
+        }
+    }
 })();

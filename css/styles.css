@@ -1667,8 +1667,14 @@ h3 {
     gap: clamp(2rem, 5vw, 4.5rem);
     align-items: center;
 }
+/* Full width of its column, so the lazy photo holds its 4:5 space before it loads and the page
+   below doesn't jump (auto side margins on phones would otherwise shrink it to nothing). */
+.about-photo {
+    width: 100%;
+}
 .about-photo img {
     width: 100%;
+    height: auto;
     aspect-ratio: 4 / 5;
     object-fit: cover;
     border-radius: var(--radius);
@@ -1701,12 +1707,16 @@ h3 {
 }
 
 /* Booking and contact */
+/* Private events and photo shoots side by side; Inclusive Santa Day runs across both below. */
 .contact-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem;
     max-width: 56rem;
     margin-inline: auto;
+}
+.contact-card-photo {
+    grid-column: 1 / -1;
 }
 .contact-card {
     display: flex;
@@ -1722,6 +1732,123 @@ h3 {
 .contact-card + .contact-card {
     border-top-color: var(--green);
 }
+.contact-card + .contact-card + .contact-card {
+    border-top-color: var(--gold);
+}
+/* Each booking card's photo sits edge to edge across the top of the card. */
+/* Inclusive Santa Day: a little calendar page beside the time and a map link. */
+.event-when {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+}
+.cal-tile {
+    display: grid;
+    flex: none;
+    width: 4.5rem;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    text-align: center;
+    line-height: 1.1;
+    box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.6);
+}
+.cal-month {
+    padding: 0.2rem 0;
+    background: var(--red);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.cal-day {
+    padding-top: 0.3rem;
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 700;
+}
+.cal-dow {
+    padding-bottom: 0.35rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.event-details {
+    display: grid;
+    flex: 1 1 11rem;
+    gap: 0.4rem;
+    min-width: 0;
+}
+.event-time {
+    margin: 0;
+    font-weight: 700;
+}
+.event-place {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 12px;
+    border: 1.5px dashed rgba(224, 176, 82, 0.7);
+    background: rgba(224, 176, 82, 0.12);
+    color: var(--text);
+    line-height: 1.3;
+    text-decoration: none;
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+.event-place:hover {
+    background: rgba(224, 176, 82, 0.22);
+    transform: translateY(-1px);
+}
+.event-place:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+.event-place strong {
+    display: block;
+}
+.event-place > span:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.event-place-addr {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+.event-place-go {
+    margin-left: auto;
+    font-weight: 700;
+}
+.contact-card-media {
+    display: block;
+    align-self: stretch;
+    margin: calc(-1 * clamp(1.4rem, 3vw, 2rem)) calc(-1 * clamp(1.4rem, 3vw, 2rem)) 0.4rem;
+}
+.contact-card-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: 50% 30%;
+    border-radius: 16px 16px 0 0;
+}
+.media-storytime img {
+    object-position: 50% 18%;
+}
+.media-gift img {
+    object-position: 50% 38%;
+}
+.media-cabin img {
+    object-position: 50% 43%;
+}
 .contact-card h3 {
     margin: 0.9rem 0 0.5rem;
 }
@@ -1729,9 +1856,176 @@ h3 {
     color: var(--muted);
     margin-bottom: 1.5rem;
 }
+/* Public photo days tab on the photo shoot card: open by default (no JS), collapsed once main.js
+   enhances it, then opened by hover (mouse) or click/tap/keyboard. */
+.photo-days {
+    align-self: stretch;
+    min-width: 0;
+    margin: -0.5rem 0 1.5rem;
+    border: 1.5px dashed rgba(224, 176, 82, 0.7);
+    border-radius: 16px;
+    background: rgba(224, 176, 82, 0.12);
+}
+.photo-days-tab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 0;
+    border-radius: 14px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+.photo-days-tab:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+.photo-days-emoji {
+    flex: none;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+/* The label takes the spare room and wraps its own words first, so the row stays one line on a phone. */
+.photo-days-label {
+    flex: 1 1 6rem;
+    min-width: 0;
+}
+.photo-days-end {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: auto;
+}
+.photo-days-dates {
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    background: var(--gold);
+    color: #2a1d05;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+.photo-days-chev {
+    flex: none;
+    transition: transform 0.25s ease;
+}
+.photo-days.is-open .photo-days-chev {
+    transform: rotate(180deg);
+}
+.photo-days-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+}
+/* Animate only after the first collapse, so the page doesn't shift as it loads. */
+.photo-days.is-ready .photo-days-panel {
+    transition:
+        grid-template-rows 0.3s ease,
+        visibility 0.3s;
+}
+.photo-days.is-enhanced:not(.is-open) .photo-days-panel {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+}
+.photo-days-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+.photo-days-lead,
+.photo-days-list,
+.photo-days-where {
+    margin: 0;
+    padding-inline: 0.9rem;
+}
+.photo-days-lead {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+.photo-days-list {
+    display: grid;
+    gap: 0.4rem;
+    margin-block: 0.7rem;
+    list-style: none;
+}
+.photo-days-list li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+.photo-days-list time {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+.photo-days-where {
+    padding-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .photo-days:not(.is-open) .photo-days-emoji {
+        animation: photo-days-wiggle 2.4s ease-in-out infinite;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .photo-days-panel,
+    .photo-days-chev {
+        transition: none;
+    }
+}
+/* A short party wiggle, then a rest, so it catches the eye without nagging. */
+@keyframes photo-days-wiggle {
+    0%,
+    40%,
+    100% {
+        transform: rotate(0);
+    }
+    10%,
+    30% {
+        transform: rotate(-14deg) scale(1.15);
+    }
+    20% {
+        transform: rotate(14deg) scale(1.15);
+    }
+}
+/* Wider than a phone: the Inclusive Santa Day card puts its photo on the left and words on the right. */
+@media (min-width: 761px) {
+    .contact-card-photo {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        column-gap: 1.75rem;
+        align-content: center;
+    }
+    .contact-card-photo .contact-card-media {
+        grid-row: 1 / span 3;
+        margin: calc(-1 * clamp(1.4rem, 3vw, 2rem)) 0 calc(-1 * clamp(1.4rem, 3vw, 2rem)) calc(-1 * clamp(1.4rem, 3vw, 2rem));
+    }
+    .contact-card-photo .contact-card-media {
+        position: relative;
+        min-height: 14rem;
+    }
+    /* Taken out of flow so the portrait photo fills the row instead of setting its height. */
+    .contact-card-photo .contact-card-media img {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        aspect-ratio: auto;
+        border-radius: 16px 0 0 16px;
+    }
+    .contact-card-photo h3 {
+        align-self: end;
+    }
+}
 @media (max-width: 760px) {
     .contact-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -2520,6 +2814,7 @@ html:not(.js) .section-head h2::after {
 /* Private booking request pop-up */
 .contact-cta {
     margin-top: auto;
+    align-self: center;
 }
 .booking-group {
     margin: 0;
