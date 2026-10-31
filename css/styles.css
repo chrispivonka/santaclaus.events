@@ -1759,13 +1759,10 @@ h3 {
     outline: 3px solid var(--gold);
     outline-offset: 2px;
 }
-.photo-days-dot {
+.photo-days-emoji {
     flex: none;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 0 rgba(255, 90, 110, 0.6);
+    font-size: 1.25rem;
+    line-height: 1;
 }
 /* The label takes the spare room and wraps its own words first, so the row stays one line on a phone. */
 .photo-days-label {
@@ -1838,8 +1835,8 @@ h3 {
     font-size: 0.95rem;
 }
 @media (prefers-reduced-motion: no-preference) {
-    .photo-days:not(.is-open) .photo-days-dot {
-        animation: photo-days-ping 2s ease-out infinite;
+    .photo-days:not(.is-open) .photo-days-emoji {
+        animation: photo-days-wiggle 2.4s ease-in-out infinite;
     }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1848,12 +1845,19 @@ h3 {
         transition: none;
     }
 }
-@keyframes photo-days-ping {
-    70% {
-        box-shadow: 0 0 0 0.55rem rgba(255, 90, 110, 0);
-    }
+/* A short party wiggle, then a rest, so it catches the eye without nagging. */
+@keyframes photo-days-wiggle {
+    0%,
+    40%,
     100% {
-        box-shadow: 0 0 0 0 rgba(255, 90, 110, 0);
+        transform: rotate(0);
+    }
+    10%,
+    30% {
+        transform: rotate(-14deg) scale(1.15);
+    }
+    20% {
+        transform: rotate(14deg) scale(1.15);
     }
 }
 @media (max-width: 760px) {
