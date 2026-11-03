@@ -353,7 +353,10 @@ test.describe('with reduced motion', () => {
             await expect(photoDaysPanel(page)).toContainText(
                 'Click the link to select available times and set up your personalized santa experience!',
             );
-            await expect(photoDaysPanel(page).getByRole('link', { name: 'Book a photo day time' })).toBeVisible();
+            const book = photoDaysPanel(page).getByRole('link', { name: /Book a photo day time/ });
+            await expect(book).toHaveAttribute('href', 'https://writteninlight-photoandfilm.pixieset.com/booking/magical-santa-experience');
+            await expect(book).toHaveAttribute('target', '_blank');
+            await expect(book).toHaveAttribute('rel', 'noopener');
         });
 
         test('opens on hover with a mouse and closes when the mouse leaves', async ({ page, isMobile }) => {
