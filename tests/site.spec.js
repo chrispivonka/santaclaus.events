@@ -66,16 +66,26 @@ test.describe('home page', () => {
         await expect(contact).not.toContainText(/\bHome\b/);
     });
 
-    test('the Inclusive Santa Day card sits beside the booking cards with the cabin photo', async ({ page }) => {
+    test('the Inclusive Santa Day card sits beside the booking cards with a gallery photo', async ({ page }) => {
         const card = page.locator('#inclusive-santa');
         await expect(card.getByRole('heading', { name: 'Inclusive Santa Day' })).toBeVisible();
         await expect(card).toContainText('Where everyone belongs, more magic, less sensory overload, & wheelchair accessible!');
-        await expect(card.getByRole('img', { name: /Santa's cabin/ })).toBeVisible();
+        await expect(card.getByRole('img', { name: /Santa and Mrs\. Claus/ })).toBeVisible();
         await expect(card.locator('time')).toHaveAttribute('datetime', '2026-12-15T18:00-07:00');
         await expect(card).toContainText('6 – 8 PM');
         const map = card.getByRole('link', { name: /Spearheart Studio.*1608 Alger Ave, Cody, WY/ });
         await expect(map).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=Spearheart/);
         await expect(map).toHaveAttribute('target', '_blank');
+    });
+
+    test("the Santa's house card shows the house photo and points to the calendar for dates", async ({ page }) => {
+        const card = page.locator('#santa-house');
+        await expect(card.getByRole('heading', { name: "Visit Santa's house" })).toBeVisible();
+        await expect(card.getByRole('img', { name: /Santa's house glowing/ })).toBeVisible();
+        await expect(card.getByRole('link', { name: "See Santa's house dates" })).toHaveAttribute('href', '#events');
+        const cal = card.getByRole('link', { name: /Open in Google Calendar/ });
+        await expect(cal).toHaveAttribute('href', /^https:\/\/calendar\.google\.com\/calendar\/embed\?src=/);
+        await expect(cal).toHaveAttribute('target', '_blank');
     });
 
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {

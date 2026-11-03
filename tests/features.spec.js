@@ -350,6 +350,10 @@ test.describe('with reduced motion', () => {
             await expect(photoDaysPanel(page)).toBeVisible();
             await expect(photoDaysPanel(page).locator('li')).toHaveText([/Sun, Nov 15\s*10 AM – 4 PM/, /Sat, Nov 21\s*10 AM – 4 PM/]);
             await expect(photoDaysPanel(page)).toContainText('Cody, WY');
+            await expect(photoDaysPanel(page)).toContainText(
+                'Click the link to select available times and set up your personalized santa experience!',
+            );
+            await expect(photoDaysPanel(page).getByRole('link', { name: 'Book a photo day time' })).toBeVisible();
         });
 
         test('opens on hover with a mouse and closes when the mouse leaves', async ({ page, isMobile }) => {

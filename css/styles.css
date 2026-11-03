@@ -1707,7 +1707,7 @@ h3 {
 }
 
 /* Booking and contact */
-/* Private events and photo shoots side by side; Inclusive Santa Day runs across both below. */
+/* Private events and photo shoots side by side; Inclusive Santa Day and Santa's house run across both below. */
 .contact-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1849,6 +1849,18 @@ h3 {
 .media-cabin img {
     object-position: 50% 43%;
 }
+.media-elves img {
+    object-position: 50% 30%;
+}
+.contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+.contact-link {
+    font-weight: 700;
+}
 .contact-card h3 {
     margin: 0.9rem 0 0.5rem;
 }
@@ -1969,6 +1981,10 @@ h3 {
     padding-bottom: 0.8rem;
     font-size: 0.95rem;
 }
+.photo-days-book {
+    margin: 0;
+    padding: 0 0.9rem 0.9rem;
+}
 @media (prefers-reduced-motion: no-preference) {
     .photo-days:not(.is-open) .photo-days-emoji {
         animation: photo-days-wiggle 2.4s ease-in-out infinite;
@@ -1995,7 +2011,7 @@ h3 {
         transform: rotate(14deg) scale(1.15);
     }
 }
-/* Wider than a phone: the Inclusive Santa Day card puts its photo on the left and words on the right. */
+/* Wider than a phone: the Inclusive Santa Day and Santa's house cards put their photo on the left and words on the right. */
 @media (min-width: 761px) {
     .contact-card-photo {
         display: grid;
