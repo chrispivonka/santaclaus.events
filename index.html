@@ -702,8 +702,7 @@
                                 <section class="photo-days-panel" id="photoDaysPanel" aria-label="Public photo days">
                                     <div class="photo-days-inner">
                                         <p class="photo-days-lead">
-                                            No appointment needed! Drop in to the studio for pictures with Santa, or book a private session
-                                            any time.
+                                            Click the link to select available times and set up your personalized santa experience!
                                         </p>
                                         <ul class="photo-days-list">
                                             <li data-ends="2026-11-15T16:00:00-07:00">
@@ -719,6 +718,18 @@
                                             <span aria-hidden="true">📍</span>
                                             <span id="photoDaysWhere">Cody, WY</span>
                                         </p>
+                                        <!-- TODO(photo-day-booking-link): PLACEHOLDER. Kelsie is sending the real booking link.
+                                             When it arrives: set href to that URL, add target="_blank" rel="noopener",
+                                             and delete data-booking (until then this opens the photo shoot request form). -->
+                                        <p class="photo-days-book">
+                                            <a
+                                                class="btn btn-green btn-small"
+                                                id="photoDaysBook"
+                                                href="#photo-shoots"
+                                                data-booking="photo-shoot"
+                                                >Book a photo day time</a
+                                            >
+                                        </p>
                                     </div>
                                 </section>
                             </div>
@@ -727,22 +738,22 @@
                             </button>
                         </article>
                         <article class="contact-card contact-card-photo reveal" id="inclusive-santa" aria-labelledby="inclusiveTitle">
-                            <picture class="contact-card-media media-cabin">
+                            <picture class="contact-card-media media-elves">
                                 <source
-                                    srcset="assets/img/cabin-480.avif 480w, assets/img/cabin.avif 736w"
+                                    srcset="assets/img/santa-and-elves-480.avif 480w, assets/img/santa-and-elves.avif 736w"
                                     sizes="(max-width: 760px) 100vw, 24rem"
                                     type="image/avif"
                                 />
                                 <source
-                                    srcset="assets/img/cabin-480.webp 480w, assets/img/cabin.webp 736w"
+                                    srcset="assets/img/santa-and-elves-480.webp 480w, assets/img/santa-and-elves.webp 736w"
                                     sizes="(max-width: 760px) 100vw, 24rem"
                                     type="image/webp"
                                 />
                                 <img
-                                    src="assets/img/cabin.jpg"
+                                    src="assets/img/santa-and-elves.jpg"
                                     width="736"
-                                    height="1000"
-                                    alt="Santa's cabin glowing with Christmas lights and candy canes at night"
+                                    height="1104"
+                                    alt="Santa and Mrs. Claus sitting together on Santa's big red chair, with two smiling elves beside them"
                                     loading="lazy"
                                     decoding="async"
                                 />
@@ -772,6 +783,43 @@
                                         <span class="visually-hidden">(opens Google Maps)</span>
                                     </a>
                                 </div>
+                            </div>
+                        </article>
+                        <article class="contact-card contact-card-photo reveal" id="santa-house" aria-labelledby="houseTitle">
+                            <picture class="contact-card-media media-cabin">
+                                <source
+                                    srcset="assets/img/cabin-480.avif 480w, assets/img/cabin.avif 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/avif"
+                                />
+                                <source
+                                    srcset="assets/img/cabin-480.webp 480w, assets/img/cabin.webp 736w"
+                                    sizes="(max-width: 760px) 100vw, 24rem"
+                                    type="image/webp"
+                                />
+                                <img
+                                    src="assets/img/cabin.jpg"
+                                    width="736"
+                                    height="1000"
+                                    alt="Santa's house glowing with Christmas lights and candy canes at night"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </picture>
+                            <h3 id="houseTitle">Visit Santa's house</h3>
+                            <p>
+                                Santa's little house is all lit up for the season! Stop by to say hello and share your Christmas wishes.
+                                Check the calendar for the days and times Santa will be home.
+                            </p>
+                            <div class="contact-actions">
+                                <a class="btn btn-primary" href="#events">See Santa's house dates</a>
+                                <a
+                                    class="contact-link"
+                                    href="https://calendar.google.com/calendar/embed?src=c_4f204d20a0c44782fb0858fa3014913a9168af1cc6fb80a6222ba7aa8619948c%40group.calendar.google.com&ctz=America%2FDenver"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Open in Google Calendar<span class="visually-hidden"> (opens in a new tab)</span></a
+                                >
                             </div>
                         </article>
                     </div>
