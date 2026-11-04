@@ -4,5 +4,10 @@
   "retry": true,
   "retryErrors": true,
   "retryErrorsCount": 3,
-  "skip": ["^https://script\\.google\\.com", "^https://(www\\.)?facebook\\.com", "^https://santaclaus\\.events"]
+  "skip": [
+    "^https://script\\.google\\.com",
+    "^https://(www\\.)?facebook\\.com",
+    "^https://santaclaus\\.events",
+    "^https://www\\.google\\.com/maps"
+  ]
 }

@@ -36,6 +36,15 @@ for (const theme of ['dark', 'light']) {
             await checkA11y(page, '404');
         });
 
+        test(`public photo days, open, has no violations @a11y`, async ({ page }) => {
+            await page.clock.install({ time: new Date('2026-11-01T10:00:00') });
+            await page.goto('/');
+            await revealAll(page);
+            await page.locator('.photo-days-tab').click();
+            await expect(page.locator('#photoDaysPanel')).toBeVisible();
+            await checkA11y(page, 'public photo days open');
+        });
+
         test(`every interactive state has no violations @a11y`, async ({ page, isMobile }) => {
             await page.clock.install({ time: new Date('2026-12-10T10:00:00') });
             await page.goto('/');
