@@ -70,7 +70,7 @@ test.describe('home page', () => {
         const card = page.locator('#inclusive-santa');
         await expect(card.getByRole('heading', { name: 'Inclusive Santa Day' })).toBeVisible();
         await expect(card).toContainText('Where everyone belongs, more magic, less sensory overload, & wheelchair accessible!');
-        await expect(card.getByRole('img', { name: /Santa and Mrs\. Claus/ })).toBeVisible();
+        await expect(card.getByRole('img', { name: /Santa raising his hands/ })).toBeVisible();
         await expect(card.locator('time')).toHaveAttribute('datetime', '2026-12-15T18:00-07:00');
         await expect(card).toContainText('6 – 8 PM');
         const map = card.getByRole('link', { name: /Spearheart Studio.*1608 Alger Ave, Cody, WY/ });

@@ -9,6 +9,7 @@ const photos = [
     { name: 'santa-storytime', widths: [480, 736] },
     { name: 'santa-gift', widths: [480, 736] },
     { name: 'santa-and-elves', widths: [480, 736] },
+    { name: 'santa-inclusive', widths: [480, 960] },
     { name: 'letter-bg', widths: [null] },
 ];
 
