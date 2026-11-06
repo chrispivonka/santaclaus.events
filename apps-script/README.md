@@ -6,8 +6,23 @@ The site has two forms, and each posts to its own Google Apps Script web app: `b
 - cut free text down to letters and accents in any language, digits, spaces and everyday punctuation, removing symbols, emoji, angle brackets and control characters;
 - accept only one plain email address, which becomes the email's Reply-To;
 - drop anything a bot fills into the hidden honeypot field;
+- drop spam without telling the sender (see [Spam](#spam));
 - limit how many requests come in an hour (3 per email address, and 30 bookings or 60 letters in all), so a script posting to the public web app can't use up the account's daily email quota (100 recipients a day on a personal Gmail account, 1,500 on Google Workspace);
 - keep recipient addresses in Script Properties, never in this repository.
+
+## Spam
+
+Anything the scripts treat as spam gets the same `ok` answer a real letter or request gets, and no email goes out, so a spammer can't tell their messages are being thrown away and has no reason to try something new.
+
+- **Form tokens.** When someone starts on a form, the page asks its script for a one-time token (`GET ?token=1`) and sends it back with the form. The script drops a post with no token, a made-up one, one used before, one used within 3 seconds of being handed out (people can't type a letter that fast), or one older than six hours. Bots that post straight to the web app address, which is public in the page, don't have one. Tokens are signed with a key the script makes on first use and keeps as the `FORM_SECRET` script property; deleting it makes a new key and cancels every token already handed out. Nobody needs to set it.
+- **Links.** A letter with a web link in it (`http://`, `https://`, `www.` or `something.com/page`) is dropped, since children's letters don't need them. Booking requests may include a venue's website, so links are allowed there.
+- **Block lists.** Add these script properties (**Project Settings** → **Script Properties**) to either project whenever a spammer gets through. They take effect on the next post, with no redeploy:
+  - `BLOCKED_EMAILS`: addresses or whole domains, separated by commas, for example `spammer@example.com, @spam-domain.example`.
+  - `BLOCKED_WORDS`: words or phrases that only spam would contain, separated by commas, any case, for example `seo services, crypto`.
+
+Dropped spam doesn't count toward the hourly limits, so it can't crowd out real letters.
+
+Apps Script never tells a script the sender's IP address, so the scripts can't block by IP. Blocking by IP would need a server of our own in front of the scripts (for example on AWS, next to the site), and spammers usually switch addresses as easily as they switch emails, so tokens and content checks catch more.
 
 ## Letters to Santa (`letter.gs`)
 

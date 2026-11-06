@@ -172,12 +172,70 @@
     // ---- Footer year ----
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    // ---- Form tokens (see tokenOk in apps-script/common.gs) ----
+    // Each form script hands out a one-time token when someone starts on the form, and drops posts
+    // without one. The script also drops a token used within 3 seconds of being handed out, so a post
+    // waits until then; nobody fills a form that fast, so people never notice the wait.
+    var TOKEN_WAIT = 3500;
+    var TOKEN_LIFE = 5 * 60 * 60 * 1000;
+    function formToken(action) {
+        var token = '';
+        var fetchedAt = 0;
+        var pending = null;
+        function fresh() {
+            return token && Date.now() - fetchedAt < TOKEN_LIFE;
+        }
+        function load() {
+            if (!pending) {
+                pending = fetch(action + '?token=1')
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('token ' + response.status);
+                        return response.text();
+                    })
+                    .then(function (text) {
+                        text = text.trim();
+                        if (!/^[\w.-]{20,200}$/.test(text)) throw new Error('unexpected token');
+                        token = text;
+                        fetchedAt = Date.now();
+                    })
+                    .finally(function () {
+                        pending = null;
+                    });
+            }
+            return pending;
+        }
+        return {
+            // Fetch a token ahead of time, so sending doesn't wait for one.
+            warm: function () {
+                if (!fresh()) load().catch(function () {});
+            },
+            // A promise of a token that's ready to use; each token is handed out once.
+            take: function () {
+                return (fresh() ? Promise.resolve() : load()).then(function () {
+                    var ready = token;
+                    var wait = TOKEN_WAIT - (Date.now() - fetchedAt);
+                    token = '';
+                    return new Promise(function (resolve) {
+                        setTimeout(
+                            function () {
+                                resolve(ready);
+                            },
+                            Math.max(0, wait),
+                        );
+                    });
+                });
+            },
+        };
+    }
+
     // ---- Letter to Santa form ----
     var form = document.getElementById('letterForm');
     var submitButton = document.getElementById('submitButton');
     var submitLabel = submitButton.querySelector('.btn-label');
     var status = document.getElementById('formStatus');
     var signoff = document.getElementById('signoffName');
+    var letterToken = formToken(form.action);
+    form.addEventListener('focusin', letterToken.warm);
     var fields = ['name', 'email', 'message'].map(function (id) {
         return document.getElementById(id);
     });
@@ -306,7 +364,12 @@
 
         // Apps Script doesn't send CORS headers, so the response is opaque:
         // a resolved fetch means the letter was delivered, a rejection means a network problem.
-        fetch(form.action, { method: 'POST', mode: 'no-cors', body: data })
+        letterToken
+            .take()
+            .then(function (token) {
+                data.append('token', token);
+                return fetch(form.action, { method: 'POST', mode: 'no-cors', body: data });
+            })
             .then(function () {
                 form.reset();
                 signoff.textContent = 'me';
@@ -338,6 +401,7 @@
     var bookingForm = document.getElementById('bookingForm');
     var bookingBody = document.getElementById('bookingBody');
     var bookingStatus = document.getElementById('bookingStatus');
+    var bookingToken = formToken(bookingForm.action);
     var bookingSubmit = document.getElementById('bookingSubmit');
     var bookingLabel = bookingSubmit.querySelector('.btn-label');
     var bookingPrivate = document.getElementById('bookingPrivate');
@@ -515,6 +579,7 @@
             setBookingKind(button.dataset.booking);
             bookingDate.min = localDate(new Date());
             loadAvailability();
+            bookingToken.warm();
             showBookingForm();
             if (typeof booking.showModal === 'function') booking.showModal();
             else booking.setAttribute('open', '');
@@ -559,7 +624,12 @@
         bookingStatus.hidden = true;
 
         // Same as the letter: Apps Script answers without CORS headers, so the response is opaque.
-        fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data })
+        bookingToken
+            .take()
+            .then(function (token) {
+                data.set('token', token);
+                return fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data });
+            })
             .then(function () {
                 var type = document.getElementById('bookingType').value;
                 bookingForm.reset();

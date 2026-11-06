@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, FORM_TOKEN } from './fixtures.js';
 
 // Parses "default-src 'self'; img-src 'self' data:" into { 'default-src': ["'self'"], ... }
 function parseCsp(text) {
@@ -129,6 +129,21 @@ test.describe('markup hygiene', () => {
         expect(params.get('website')).toBe('');
         expect(params.get('name')).toBe('Ava');
         expect(params.get('message')).toBe('Hello Santa');
+    });
+
+    test('a letter fetches its form token once someone starts on it and posts it no sooner than 3 seconds later', async ({ page }) => {
+        await page.goto('/');
+        const asked = page.waitForRequest((r) => r.method() === 'GET' && /[?&]token=1/.test(r.url()));
+        await page.locator('#name').fill('Ava');
+        await asked;
+        const askedAt = Date.now();
+        await page.locator('#email').fill('ava@example.com');
+        await page.locator('#message').fill('Hello Santa');
+        const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().startsWith('https://script.google.com/'));
+        await page.locator('#submitButton').click();
+        const params = new URLSearchParams((await posted).postData());
+        expect(Date.now() - askedAt).toBeGreaterThanOrEqual(3000);
+        expect(params.get('token')).toBe(FORM_TOKEN);
     });
 });
 

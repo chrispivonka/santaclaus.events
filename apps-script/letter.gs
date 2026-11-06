@@ -2,7 +2,7 @@
  * Letters to Santa from santaclaus.events.
  *
  * The site's letter form posts the child's first name, a grown-up's email, the letter and the hidden
- * honeypot field here. Each letter is emailed to the people in the LETTER_RECIPIENTS script property,
+ * honeypot field here, with the form token the page got from doGet. Each letter is emailed to the people in the LETTER_RECIPIENTS script property,
  * with Reply-To set to the grown-up's address so a reply goes straight back to the family.
  *   LETTER_RECIPIENTS  who reads the letters, comma-separated emails
  * Letters are emailed only and never stored here, so once a letter is answered it can be deleted
@@ -19,15 +19,24 @@ var LETTER_FIELDS = [
     { name: 'message', label: 'Letter', type: 'text', required: true, max: 5000 },
 ];
 
+// GET ?token=1: a form token for the next letter (see tokenOk in common.gs).
+function doGet(e) {
+    var p = (e && e.parameter) || {};
+    return p.token ? reply(issueToken()) : reply('bad request');
+}
+
 function doPost(e) {
     var p = (e && e.parameter) || {};
 
-    // The honeypot field is invisible to people, so anything in it came from a bot.
-    if (p.website) return reply('ok');
+    // The honeypot field is invisible to people, so anything in it came from a bot. A post without a
+    // fresh form token didn't come through the page. Spam gets the same answer as a real letter.
+    if (p.website || !tokenOk(p.token)) return reply('ok');
     // The site checks the same rules, so only a request that skipped the site gets turned away here.
     var checked = checkFields(LETTER_FIELDS, p);
     if (checked.errors) return reply('invalid: ' + checked.errors.join('; '));
     var v = checked.values;
+    // Children's letters don't need web links, so a letter with one is dropped as spam.
+    if (isSpam(v, { noLinks: true })) return reply('ok');
     if (tooMany(v.email, LETTER_LIMITS)) return reply('too many requests');
 
     var recipients = PropertiesService.getScriptProperties().getProperty('LETTER_RECIPIENTS');
