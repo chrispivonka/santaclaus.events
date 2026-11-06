@@ -7,14 +7,29 @@ import vm from 'node:vm';
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'Plain script checks; one browser is enough.');
 
-function load(file, { props: given = {}, busy = [] } = {}) {
+function load(file, { props: given = {}, busy = [], cloudflare = () => ({ success: true }) } = {}) {
     // A copy, so a key one script makes for itself doesn't leak into the next test's script.
     const props = { ...given };
     const sent = [];
     const rows = [];
+    const verified = [];
+    const errors = [];
     const cache = new Map();
     const context = {
         MailApp: { sendEmail: (message) => sent.push(message) },
+        // Cloudflare's siteverify: `cloudflare` gets each request's payload and returns the JSON
+        // answer, a number for an HTTP error code, or throws to act as if Cloudflare can't be reached.
+        UrlFetchApp: {
+            fetch: (url, options) => {
+                verified.push({ url, ...options });
+                const answer = cloudflare(options.payload);
+                return {
+                    getResponseCode: () => (typeof answer === 'number' ? answer : 200),
+                    getContentText: () => JSON.stringify(answer),
+                };
+            },
+        },
+        console: { error: (text) => errors.push(text) },
         PropertiesService: {
             getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null, setProperty: (k, v) => (props[k] = v) }),
         },
@@ -69,7 +84,7 @@ function load(file, { props: given = {}, busy = [] } = {}) {
     };
     // Posts the way the page does, with a fresh token unless the request names its own.
     const post = (parameter) => context.doPost({ parameter: 'token' in parameter ? parameter : { ...parameter, token: token() } }).text;
-    return { post, token, sent, rows, context, clock, props };
+    return { post, token, sent, rows, context, clock, props, verified, errors };
 }
 
 const inAMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -211,6 +226,74 @@ test.describe('spam filters', () => {
         expect(post({ ...photo, email: 'x@spam.example' })).toBe('ok');
         expect(sent).toHaveLength(0);
         expect(post({ ...photo, notes: 'Our venue: www.codyhall.example' })).toBe('ok');
+        expect(sent).toHaveLength(1);
+    });
+});
+
+test.describe('Cloudflare Turnstile', () => {
+    const props = { LETTER_RECIPIENTS: 'santa@example.com', TURNSTILE_SECRET: 'turnstile-secret' };
+    const letter = { name: 'Ava', email: 'mom@example.com', message: 'Dear Santa', website: '', 'cf-turnstile-response': 'answer' };
+
+    test('is off until TURNSTILE_SECRET is set', () => {
+        const { post, sent, verified } = load('letter.gs', { props: { LETTER_RECIPIENTS: 'santa@example.com' } });
+        expect(post({ ...letter, 'cf-turnstile-response': '' })).toBe('ok');
+        expect(sent).toHaveLength(1);
+        expect(verified).toHaveLength(0);
+    });
+
+    test('sends a letter Cloudflare confirms, with the secret and the answer', () => {
+        const { post, sent, verified } = load('letter.gs', { props });
+        expect(post(letter)).toBe('ok');
+        expect(sent).toHaveLength(1);
+        expect(verified[0]).toMatchObject({
+            url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            method: 'post',
+            payload: { secret: 'turnstile-secret', response: 'answer' },
+        });
+    });
+
+    test('a letter with no answer, or one Cloudflare turns down, looks sent but isn’t', () => {
+        const { post, sent, verified } = load('letter.gs', { props, cloudflare: () => ({ success: false }) });
+        expect(post({ ...letter, 'cf-turnstile-response': '' })).toBe('ok');
+        expect(verified).toHaveLength(0);
+        expect(post(letter)).toBe('ok');
+        expect(sent).toHaveLength(0);
+    });
+
+    test('lets letters through, and logs the error, when Cloudflare can’t be reached', () => {
+        const down = load('letter.gs', {
+            props,
+            cloudflare: () => {
+                throw new Error('DNS error');
+            },
+        });
+        expect(down.post(letter)).toBe('ok');
+        expect(down.sent).toHaveLength(1);
+        expect(down.errors[0]).toContain('DNS error');
+        const failing = load('letter.gs', { props, cloudflare: () => 500 });
+        expect(failing.post(letter)).toBe('ok');
+        expect(failing.sent).toHaveLength(1);
+    });
+
+    test('checks bookings too, only after the cheaper checks pass', () => {
+        const booking = { PRIVATE_RECIPIENTS: 'h@example.com', PHOTO_RECIPIENTS: 'p@example.com', TURNSTILE_SECRET: 's' };
+        const { post, sent, verified } = load('booking.gs', {
+            props: booking,
+            cloudflare: ({ response }) => ({ success: response === 'good' }),
+        });
+        const photo = {
+            formType: 'photo-shoot',
+            name: 'Jamie',
+            phone: '3075550199',
+            email: 'j@example.com',
+            date: inAMonth,
+            time: '09:00',
+        };
+        expect(post({ ...photo, 'cf-turnstile-response': 'bad' })).toBe('ok');
+        expect(post({ ...photo, website: 'x', 'cf-turnstile-response': 'good' })).toBe('ok');
+        expect(verified).toHaveLength(1);
+        expect(sent).toHaveLength(0);
+        expect(post({ ...photo, 'cf-turnstile-response': 'good' })).toBe('ok');
         expect(sent).toHaveLength(1);
     });
 });

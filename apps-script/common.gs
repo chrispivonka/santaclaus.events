@@ -187,6 +187,35 @@ function sameText(a, b) {
     return diff === 0;
 }
 
+// Cloudflare Turnstile: once the TURNSTILE_SECRET script property is set, a post must carry an answer
+// from the Turnstile check on the page that Cloudflare confirms. Without the property it's off. If
+// Cloudflare can't be reached, the post goes through rather than losing a real letter.
+var TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+function turnstileOk(answer) {
+    var secret = PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
+    if (!secret) return true;
+    answer = String(answer || '');
+    if (!answer || answer.length > 2048) return false;
+    var response;
+    try {
+        response = UrlFetchApp.fetch(TURNSTILE_VERIFY, {
+            method: 'post',
+            payload: { secret: secret, response: answer },
+            muteHttpExceptions: true,
+        });
+    } catch (err) {
+        console.error('Turnstile check could not reach Cloudflare: ' + err);
+        return true;
+    }
+    if (response.getResponseCode() !== 200) {
+        console.error('Turnstile check answered ' + response.getResponseCode());
+        return true;
+    }
+    var result = JSON.parse(response.getContentText());
+    return result.success === true;
+}
+
 // Web links: http(s)://, www. or a domain followed by a path.
 var LINK_PATTERN = /https?:\/\/|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}\/\S/i;
 

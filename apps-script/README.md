@@ -20,6 +20,14 @@ Anything the scripts treat as spam gets the same `ok` answer a real letter or re
   - `BLOCKED_EMAILS`: addresses or whole domains, separated by commas, for example `spammer@example.com, @spam-domain.example`.
   - `BLOCKED_WORDS`: words or phrases that only spam would contain, separated by commas, any case, for example `seo services, crypto`.
 
+- **Cloudflare Turnstile** (off until set up). When the page has a Turnstile site key, each form loads Cloudflare's check once someone starts on it. Most people never see it; it shows a box to tick only when it isn't sure. The script asks Cloudflare whether the answer is real and drops the post if it isn't. If Cloudflare can't be reached, the post goes through (and the error is logged) rather than losing a real letter. To turn it on:
+  1. In the Cloudflare dashboard, open **Turnstile** → **Add widget**. Name it "santaclaus.events", add the hostnames `santaclaus.events` and `preview.santaclaus.events`, and pick **Managed** mode. Copy the **site key** and the **secret key**.
+  2. Put the site key in `index.html` (`<meta name="turnstile-site-key" content="...">`) and release. The site key is public; it's fine in the repository.
+  3. After that release, open each Apps Script project in the editor and run `doPost` once to approve the new permission ("Connect to an external service", which the script uses to ask Cloudflare). If that doesn't prompt, see the fix in [Changing the scripts](#changing-the-scripts).
+  4. Add the secret key as the `TURNSTILE_SECRET` script property in both projects. The check starts on the next post. Never put the secret key in the repository.
+
+  To turn it off again, delete `TURNSTILE_SECRET` from Script Properties.
+
 Dropped spam doesn't count toward the hourly limits, so it can't crowd out real letters.
 
 Apps Script never tells a script the sender's IP address, so the scripts can't block by IP. Blocking by IP would need a server of our own in front of the scripts (for example on AWS, next to the site), and spammers usually switch addresses as easily as they switch emails, so tokens and content checks catch more.

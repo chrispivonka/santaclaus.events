@@ -37,6 +37,7 @@ function doPost(e) {
     var v = checked.values;
     // Children's letters don't need web links, so a letter with one is dropped as spam.
     if (isSpam(v, { noLinks: true })) return reply('ok');
+    if (!turnstileOk(p['cf-turnstile-response'])) return reply('ok');
     if (tooMany(v.email, LETTER_LIMITS)) return reply('too many requests');
 
     var recipients = PropertiesService.getScriptProperties().getProperty('LETTER_RECIPIENTS');

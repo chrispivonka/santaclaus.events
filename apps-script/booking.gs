@@ -100,6 +100,7 @@ function doPost(e) {
     var v = checked.values;
     // Venues sometimes share a website in the notes, so links are allowed here; the block lists still apply.
     if (isSpam(v)) return reply('ok');
+    if (!turnstileOk(p['cf-turnstile-response'])) return reply('ok');
     if (tooMany(v.email, BOOKING_LIMITS)) return reply('too many requests');
 
     var props = PropertiesService.getScriptProperties();

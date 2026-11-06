@@ -228,6 +228,117 @@
         };
     }
 
+    // ---- Cloudflare Turnstile (see turnstileOk in apps-script/common.gs) ----
+    // When the page has a site key, each form loads Cloudflare's check once someone starts on it and
+    // sends its answer with the post. Most people never see it; it shows a box to tick only when it
+    // isn't sure. With no site key (the meta tag in index.html is empty) the check is off.
+    var TURNSTILE_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    var TURNSTILE_WAIT = 60 * 1000;
+    var siteKeyMeta = document.querySelector('meta[name="turnstile-site-key"]');
+    var turnstileKey = siteKeyMeta ? siteKeyMeta.content.trim() : '';
+    var turnstileScript = null;
+    var turnstilePolicy = null;
+    function loadTurnstile() {
+        if (!turnstileScript) {
+            turnstileScript = new Promise(function (resolve, reject) {
+                // Trusted Types lets this one policy hand out exactly one script address, and nothing else.
+                if (window.trustedTypes && !turnstilePolicy) {
+                    turnstilePolicy = window.trustedTypes.createPolicy('turnstile', {
+                        createScriptURL: function (url) {
+                            if (url !== TURNSTILE_URL) throw new TypeError('Only the Turnstile script may load.');
+                            return url;
+                        },
+                    });
+                }
+                var script = document.createElement('script');
+                script.src = turnstilePolicy ? turnstilePolicy.createScriptURL(TURNSTILE_URL) : TURNSTILE_URL;
+                script.async = true;
+                script.addEventListener('load', function () {
+                    if (window.turnstile) resolve(window.turnstile);
+                    else reject(new Error('Turnstile did not start'));
+                });
+                script.addEventListener('error', function () {
+                    script.remove();
+                    reject(new Error('Turnstile did not load'));
+                });
+                document.head.appendChild(script);
+            });
+            // Let a later attempt try again after a failed load.
+            turnstileScript.catch(function () {
+                turnstileScript = null;
+            });
+        }
+        return turnstileScript;
+    }
+
+    function humanCheck(container) {
+        var widget = null;
+        var rendering = false;
+        var answer = '';
+        var waiting = [];
+        function settle(error) {
+            var list = waiting;
+            waiting = [];
+            list.forEach(function (w) {
+                if (error) w.reject(error);
+                else w.resolve();
+            });
+        }
+        function render() {
+            if (!turnstileKey || widget !== null || rendering) return;
+            rendering = true;
+            loadTurnstile()
+                .then(function (turnstile) {
+                    widget = turnstile.render(container, {
+                        sitekey: turnstileKey,
+                        action: container.dataset.action,
+                        appearance: 'interaction-only',
+                        size: 'flexible',
+                        callback: function (token) {
+                            answer = token;
+                            settle();
+                        },
+                        'expired-callback': function () {
+                            answer = '';
+                        },
+                        'error-callback': function () {
+                            settle(new Error('Turnstile could not check this visitor'));
+                        },
+                    });
+                })
+                .catch(settle)
+                .finally(function () {
+                    rendering = false;
+                });
+        }
+        return {
+            warm: render,
+            // A promise of the check's answer ('' when the check is off). Each answer works once.
+            take: function () {
+                if (!turnstileKey) return Promise.resolve('');
+                render();
+                var ready = answer
+                    ? Promise.resolve()
+                    : new Promise(function (resolve, reject) {
+                          var entry = { resolve: resolve, reject: reject };
+                          waiting.push(entry);
+                          setTimeout(function () {
+                              waiting = waiting.filter(function (w) {
+                                  return w !== entry;
+                              });
+                              reject(new Error('Turnstile took too long'));
+                          }, TURNSTILE_WAIT);
+                      });
+                return ready.then(function () {
+                    var token = answer;
+                    answer = '';
+                    if (widget !== null && window.turnstile) window.turnstile.reset(widget);
+                    return token;
+                });
+            },
+        };
+    }
+
     // ---- Letter to Santa form ----
     var form = document.getElementById('letterForm');
     var submitButton = document.getElementById('submitButton');
@@ -235,7 +346,11 @@
     var status = document.getElementById('formStatus');
     var signoff = document.getElementById('signoffName');
     var letterToken = formToken(form.action);
-    form.addEventListener('focusin', letterToken.warm);
+    var letterCheck = humanCheck(document.getElementById('letterCheck'));
+    form.addEventListener('focusin', function () {
+        letterToken.warm();
+        letterCheck.warm();
+    });
     var fields = ['name', 'email', 'message'].map(function (id) {
         return document.getElementById(id);
     });
@@ -364,10 +479,10 @@
 
         // Apps Script doesn't send CORS headers, so the response is opaque:
         // a resolved fetch means the letter was delivered, a rejection means a network problem.
-        letterToken
-            .take()
-            .then(function (token) {
-                data.append('token', token);
+        Promise.all([letterToken.take(), letterCheck.take()])
+            .then(function (answers) {
+                data.append('token', answers[0]);
+                if (answers[1]) data.append('cf-turnstile-response', answers[1]);
                 return fetch(form.action, { method: 'POST', mode: 'no-cors', body: data });
             })
             .then(function () {
@@ -402,6 +517,7 @@
     var bookingBody = document.getElementById('bookingBody');
     var bookingStatus = document.getElementById('bookingStatus');
     var bookingToken = formToken(bookingForm.action);
+    var bookingCheck = humanCheck(document.getElementById('bookingCheck'));
     var bookingSubmit = document.getElementById('bookingSubmit');
     var bookingLabel = bookingSubmit.querySelector('.btn-label');
     var bookingPrivate = document.getElementById('bookingPrivate');
@@ -580,6 +696,7 @@
             bookingDate.min = localDate(new Date());
             loadAvailability();
             bookingToken.warm();
+            bookingCheck.warm();
             showBookingForm();
             if (typeof booking.showModal === 'function') booking.showModal();
             else booking.setAttribute('open', '');
@@ -624,10 +741,10 @@
         bookingStatus.hidden = true;
 
         // Same as the letter: Apps Script answers without CORS headers, so the response is opaque.
-        bookingToken
-            .take()
-            .then(function (token) {
-                data.set('token', token);
+        Promise.all([bookingToken.take(), bookingCheck.take()])
+            .then(function (answers) {
+                data.set('token', answers[0]);
+                if (answers[1]) data.set('cf-turnstile-response', answers[1]);
                 return fetch(bookingForm.action, { method: 'POST', mode: 'no-cors', body: data });
             })
             .then(function () {
