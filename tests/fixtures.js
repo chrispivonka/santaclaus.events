@@ -29,6 +29,16 @@ export const test = base.extend({
         await page.route(/^https:\/\/script\.google(usercontent)?\.com\//, (route) =>
             route.fulfill({ status: 200, body: new URL(route.request().url()).searchParams.has('token') ? FORM_TOKEN : 'ok' }),
         );
+        // Cloudflare Turnstile: a stand-in that passes every visitor straight away.
+        await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) =>
+            route.fulfill({
+                contentType: 'text/javascript',
+                body: `window.turnstile = {
+                    render(el, o) { setTimeout(() => o.callback('test-turnstile-answer'), 10); return 'w1'; },
+                    reset() {},
+                };`,
+            }),
+        );
         await use(page);
         expect(errors, 'the page logged errors').toEqual([]);
     },
