@@ -2159,6 +2159,10 @@ h3 {
     font-size: 0.9rem;
     color: #5b6475;
 }
+/* Cloudflare Turnstile shows here only when it needs the visitor to tick a box. */
+.human-check:not(:empty) {
+    margin-top: 1rem;
+}
 .honeypot {
     position: absolute;
     left: -9999px;

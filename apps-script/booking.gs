@@ -77,8 +77,10 @@ var KINDS = {
 
 // GET ?availability=1&date=YYYY-MM-DD&formType=...: the busy stretches on Santa's calendar that day,
 // as [start, end] minutes after midnight in the calendar's time zone. Only times go out, never event details.
+// GET ?token=1: a form token for the next request (see tokenOk in common.gs).
 function doGet(e) {
     var p = (e && e.parameter) || {};
+    if (p.token) return reply(issueToken());
     var kind = KINDS[p.formType] || KINDS['private-booking'];
     if (!p.availability || !isBookableDate(String(p.date || ''))) return json({ error: 'bad request' });
     return json({ date: p.date, duration: durationOf(kind), busy: busyOn(p.date) });
@@ -87,14 +89,18 @@ function doGet(e) {
 function doPost(e) {
     var p = (e && e.parameter) || {};
 
-    // The honeypot field is invisible to people, so anything in it came from a bot.
-    if (p.website) return reply('ok');
+    // The honeypot field is invisible to people, so anything in it came from a bot. A post without a
+    // fresh form token didn't come through the page. Spam gets the same answer as a real request.
+    if (p.website || !tokenOk(p.token)) return reply('ok');
     var kind = Object.prototype.hasOwnProperty.call(KINDS, p.formType) ? KINDS[p.formType] : null;
     if (!kind) return reply('unknown form');
     // The site checks the same rules, so only a request that skipped the site gets turned away here.
     var checked = checkFields(kind.fields, p);
     if (checked.errors) return reply('invalid: ' + checked.errors.join('; '));
     var v = checked.values;
+    // Venues sometimes share a website in the notes, so links are allowed here; the block lists still apply.
+    if (isSpam(v)) return reply('ok');
+    if (!turnstileOk(p['cf-turnstile-response'])) return reply('ok');
     if (tooMany(v.email, BOOKING_LIMITS)) return reply('too many requests');
 
     var props = PropertiesService.getScriptProperties();

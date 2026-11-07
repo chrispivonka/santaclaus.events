@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, FORM_TOKEN } from './fixtures.js';
 
 // Parses "default-src 'self'; img-src 'self' data:" into { 'default-src': ["'self'"], ... }
 function parseCsp(text) {
@@ -19,9 +19,10 @@ test.describe('content security policy', () => {
         expect(csp['object-src']).toEqual(["'none'"]);
         expect(csp['base-uri']).toEqual(["'self'"]);
         expect(csp['form-action']).toEqual(['https://script.google.com']);
-        // Trusted Types: no script can turn a string into markup or code.
+        // Trusted Types: no script can turn a string into markup or code. The only policy loads Turnstile.
         expect(csp['require-trusted-types-for']).toEqual(["'script'"]);
-        expect(csp['trusted-types']).toEqual(["'none'"]);
+        expect(csp['trusted-types']).toEqual(['turnstile']);
+        expect(csp['script-src'].filter((s) => s.startsWith('https:'))).toEqual(['https://challenges.cloudflare.com']);
         for (const [directive, sources] of Object.entries(csp)) {
             for (const source of sources) {
                 if (directive === 'img-src' && source === 'data:') continue;
@@ -129,6 +130,72 @@ test.describe('markup hygiene', () => {
         expect(params.get('website')).toBe('');
         expect(params.get('name')).toBe('Ava');
         expect(params.get('message')).toBe('Hello Santa');
+    });
+
+    test('with a Turnstile site key, the letter loads Cloudflare’s check on first use and posts its answer', async ({ page }) => {
+        // Serve the page with a site key, and a stand-in for Cloudflare's script that answers at once.
+        await page.route('/', async (route) => {
+            const response = await route.fetch();
+            const html = (await response.text()).replace(
+                '<meta name="turnstile-site-key" content="" />',
+                '<meta name="turnstile-site-key" content="test-site-key" />',
+            );
+            await route.fulfill({ response, body: html });
+        });
+        const loaded = [];
+        await page.route(/^https:\/\/challenges\.cloudflare\.com\//, (route) => {
+            loaded.push(route.request().url());
+            return route.fulfill({
+                contentType: 'text/javascript',
+                body: `window.turnstile = {
+                    render(el, o) { window.turnstileOptions = o; setTimeout(() => o.callback('answer-1'), 50); return 'w1'; },
+                    reset(id) { window.turnstileReset = id; },
+                };`,
+            });
+        });
+        await page.goto('/');
+        expect(loaded).toEqual([]);
+        await page.locator('#name').fill('Ava');
+        await page.locator('#email').fill('ava@example.com');
+        await page.locator('#message').fill('Hello Santa');
+        const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().startsWith('https://script.google.com/'));
+        await page.locator('#submitButton').click();
+        const params = new URLSearchParams((await posted).postData());
+        expect(params.get('cf-turnstile-response')).toBe('answer-1');
+        expect(loaded).toEqual(['https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit']);
+        const options = await page.evaluate(() => window.turnstileOptions);
+        expect(options).toMatchObject({ sitekey: 'test-site-key', action: 'letter', appearance: 'interaction-only' });
+        expect(await page.evaluate(() => window.turnstileReset)).toBe('w1');
+    });
+
+    test('without a site key, the forms never load Turnstile or send an answer', async ({ page }) => {
+        const loaded = [];
+        page.on('request', (r) => {
+            if (r.url().startsWith('https://challenges.cloudflare.com/')) loaded.push(r.url());
+        });
+        await page.goto('/');
+        await page.locator('#name').fill('Ava');
+        await page.locator('#email').fill('ava@example.com');
+        await page.locator('#message').fill('Hello Santa');
+        const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().startsWith('https://script.google.com/'));
+        await page.locator('#submitButton').click();
+        expect(new URLSearchParams((await posted).postData()).has('cf-turnstile-response')).toBe(false);
+        expect(loaded).toEqual([]);
+    });
+
+    test('a letter fetches its form token once someone starts on it and posts it no sooner than 3 seconds later', async ({ page }) => {
+        await page.goto('/');
+        const asked = page.waitForRequest((r) => r.method() === 'GET' && /[?&]token=1/.test(r.url()));
+        await page.locator('#name').fill('Ava');
+        await asked;
+        const askedAt = Date.now();
+        await page.locator('#email').fill('ava@example.com');
+        await page.locator('#message').fill('Hello Santa');
+        const posted = page.waitForRequest((r) => r.method() === 'POST' && r.url().startsWith('https://script.google.com/'));
+        await page.locator('#submitButton').click();
+        const params = new URLSearchParams((await posted).postData());
+        expect(Date.now() - askedAt).toBeGreaterThanOrEqual(3000);
+        expect(params.get('token')).toBe(FORM_TOKEN);
     });
 });
 

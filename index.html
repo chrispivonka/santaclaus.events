@@ -11,6 +11,8 @@
         <link rel="canonical" href="https://santaclaus.events/" />
         <meta name="theme-color" content="#0d1626" />
         <meta name="color-scheme" content="dark light" />
+        <!-- Cloudflare Turnstile site key for the forms' spam check; empty turns the check off. -->
+        <meta name="turnstile-site-key" content="" />
 
         <!-- Social previews -->
         <meta property="og:type" content="website" />
@@ -604,6 +606,7 @@
                             <label for="website">Leave this empty</label>
                             <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
                         </div>
+                        <div class="human-check" id="letterCheck" data-action="letter"></div>
                         <div class="letter-footer">
                             <button class="btn btn-primary" id="submitButton" type="submit">
                                 <span class="btn-label">Send my letter</span>
@@ -1062,6 +1065,7 @@
                     <p class="form-privacy">
                         We use your details only to answer this request. We never share them or add them to a mailing list.
                     </p>
+                    <div class="human-check" id="bookingCheck" data-action="booking"></div>
                     <div class="booking-actions">
                         <button class="btn btn-primary" id="bookingSubmit" type="submit">
                             <span class="btn-label">Send my request</span>

@@ -8,18 +8,20 @@ import { defineConfig } from 'vite-plus';
 // scanners see) and as a <meta> tag for defense in depth.
 const csp = {
     'default-src': ["'self'"],
-    'script-src': ["'self'"],
+    // Cloudflare Turnstile, the forms' spam check, is the one outside script (loaded only on the forms).
+    'script-src': ["'self'", 'https://challenges.cloudflare.com'],
     'style-src': ["'self'"],
     'font-src': ["'self'"],
     'img-src': ["'self'", 'data:'],
-    'frame-src': ['https://calendar.google.com'],
+    'frame-src': ['https://calendar.google.com', 'https://challenges.cloudflare.com'],
     'connect-src': ["'self'", 'https://script.google.com', 'https://script.googleusercontent.com'],
     'form-action': ['https://script.google.com'],
     'base-uri': ["'self'"],
     'object-src': ["'none'"],
-    // No script may write markup through innerHTML, document.write or eval-like sinks.
+    // No script may write markup through innerHTML, document.write or eval-like sinks. The one policy,
+    // 'turnstile', can only produce the Turnstile script's address (js/main.js).
     'require-trusted-types-for': ["'script'"],
-    'trusted-types': ["'none'"],
+    'trusted-types': ['turnstile'],
 };
 // Only valid as a header, so these go in the header policy but not the <meta> tag.
 const headerOnly = { 'frame-ancestors': ["'none'"], 'upgrade-insecure-requests': [] };

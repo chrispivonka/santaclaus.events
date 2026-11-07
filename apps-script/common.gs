@@ -124,6 +124,139 @@ function tooMany(email, limits) {
     }
 }
 
+// ---- Spam filters ----
+// Anything these catch gets the same 'ok' a real request gets, so a spammer can't tell it was dropped.
+// Apps Script never sees the sender's IP address, so the filters look at what the request carries.
+
+// A form token is handed out by doGet when someone opens the form and must come back with the post.
+// It proves the post came through the page (a bot posting straight to this web app has none), that
+// at least TOKEN_MIN_SECONDS passed since the form was opened (people take longer than that to type)
+// and it works once. Tokens last at most six hours, the longest CacheService remembers a used one.
+var TOKEN_MIN_SECONDS = 3;
+var TOKEN_MAX_SECONDS = 6 * 60 * 60;
+
+// The key tokens are signed with, made on first use and kept in Script Properties as FORM_SECRET.
+// Deleting the property makes a new key, which turns away every token already handed out.
+function formSecret() {
+    var props = PropertiesService.getScriptProperties();
+    var secret = props.getProperty('FORM_SECRET');
+    if (secret) return secret;
+    var lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+        secret = props.getProperty('FORM_SECRET');
+        if (!secret) {
+            secret = Utilities.getUuid() + Utilities.getUuid();
+            props.setProperty('FORM_SECRET', secret);
+        }
+        return secret;
+    } finally {
+        lock.releaseLock();
+    }
+}
+
+function signed(text) {
+    return Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(text, formSecret())).replace(/=+$/, '');
+}
+
+// A new token: when it was made (base 36 milliseconds), a random id, and the signature of both.
+function issueToken() {
+    var body = Date.now().toString(36) + '.' + Utilities.getUuid().replace(/-/g, '');
+    return body + '.' + signed(body);
+}
+
+// True when token is one this script made, between TOKEN_MIN_SECONDS and TOKEN_MAX_SECONDS ago,
+// that hasn't been used. Checking a good token uses it up.
+function tokenOk(token) {
+    var m = /^([0-9a-z]{1,12})\.([0-9a-f]{32})\.([\w-]{43})$/.exec(String(token || ''));
+    if (!m || !sameText(signed(m[1] + '.' + m[2]), m[3])) return false;
+    var age = (Date.now() - parseInt(m[1], 36)) / 1000;
+    if (!(age >= TOKEN_MIN_SECONDS && age <= TOKEN_MAX_SECONDS)) return false;
+    var cache = CacheService.getScriptCache();
+    var key = 'token:' + m[2];
+    if (cache.get(key)) return false;
+    cache.put(key, '1', TOKEN_MAX_SECONDS);
+    return true;
+}
+
+// Compares two strings in the same time whatever they hold, so timing doesn't leak the signature.
+function sameText(a, b) {
+    if (a.length !== b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return diff === 0;
+}
+
+// Cloudflare Turnstile: once the TURNSTILE_SECRET script property is set, a post must carry an answer
+// from the Turnstile check on the page that Cloudflare confirms. Without the property it's off. If
+// Cloudflare can't be reached, the post goes through rather than losing a real letter.
+var TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+function turnstileOk(answer) {
+    var secret = PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
+    if (!secret) return true;
+    answer = String(answer || '');
+    if (!answer || answer.length > 2048) return false;
+    var response;
+    try {
+        response = UrlFetchApp.fetch(TURNSTILE_VERIFY, {
+            method: 'post',
+            payload: { secret: secret, response: answer },
+            muteHttpExceptions: true,
+        });
+    } catch (err) {
+        console.error('Turnstile check could not reach Cloudflare: ' + err);
+        return true;
+    }
+    if (response.getResponseCode() !== 200) {
+        console.error('Turnstile check answered ' + response.getResponseCode());
+        return true;
+    }
+    var result = JSON.parse(response.getContentText());
+    return result.success === true;
+}
+
+// Web links: http(s)://, www. or a domain followed by a path.
+var LINK_PATTERN = /https?:\/\/|\bwww\.|\b[a-z0-9-]+\.[a-z]{2,}\/\S/i;
+
+// True when a request should be dropped:
+// - its email is in the BLOCKED_EMAILS script property (comma-separated addresses, or @domain.com
+//   for a whole domain);
+// - any of its text contains a phrase from BLOCKED_WORDS (comma-separated, any case);
+// - options.noLinks is set and its text has a web link.
+// Both properties can be changed in Project Settings at any time, with no redeploy.
+function isSpam(values, options) {
+    var props = PropertiesService.getScriptProperties();
+    var email = String(values.email || '').toLowerCase();
+    var blockedEmail = listOf(props.getProperty('BLOCKED_EMAILS')).some(function (entry) {
+        return entry.charAt(0) === '@' ? email.slice(-entry.length) === entry : email === entry;
+    });
+    if (blockedEmail) return true;
+    var text = Object.keys(values)
+        .filter(function (key) {
+            return key !== 'email';
+        })
+        .map(function (key) {
+            return values[key];
+        })
+        .join('\n');
+    if (options && options.noLinks && LINK_PATTERN.test(text)) return true;
+    var lower = text.toLowerCase();
+    return listOf(props.getProperty('BLOCKED_WORDS')).some(function (word) {
+        return lower.indexOf(word) !== -1;
+    });
+}
+
+// A comma-separated script property as trimmed, lower-case entries.
+function listOf(value) {
+    return String(value || '')
+        .split(/[,\n]/)
+        .map(function (entry) {
+            return entry.trim().toLowerCase();
+        })
+        .filter(Boolean);
+}
+
 // A sheet treats a value starting with =, +, - or @ as a formula, so those are stored as plain text.
 function asText(value) {
     return /^[=+\-@]/.test(value) ? "'" + value : value;

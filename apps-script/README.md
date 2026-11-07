@@ -6,8 +6,31 @@ The site has two forms, and each posts to its own Google Apps Script web app: `b
 - cut free text down to letters and accents in any language, digits, spaces and everyday punctuation, removing symbols, emoji, angle brackets and control characters;
 - accept only one plain email address, which becomes the email's Reply-To;
 - drop anything a bot fills into the hidden honeypot field;
+- drop spam without telling the sender (see [Spam](#spam));
 - limit how many requests come in an hour (3 per email address, and 30 bookings or 60 letters in all), so a script posting to the public web app can't use up the account's daily email quota (100 recipients a day on a personal Gmail account, 1,500 on Google Workspace);
 - keep recipient addresses in Script Properties, never in this repository.
+
+## Spam
+
+Anything the scripts treat as spam gets the same `ok` answer a real letter or request gets, and no email goes out, so a spammer can't tell their messages are being thrown away and has no reason to try something new.
+
+- **Form tokens.** When someone starts on a form, the page asks its script for a one-time token (`GET ?token=1`) and sends it back with the form. The script drops a post with no token, a made-up one, one used before, one used within 3 seconds of being handed out (people can't type a letter that fast), or one older than six hours. Bots that post straight to the web app address, which is public in the page, don't have one. Tokens are signed with a key the script makes on first use and keeps as the `FORM_SECRET` script property; deleting it makes a new key and cancels every token already handed out. Nobody needs to set it.
+- **Links.** A letter with a web link in it (`http://`, `https://`, `www.` or `something.com/page`) is dropped, since children's letters don't need them. Booking requests may include a venue's website, so links are allowed there.
+- **Block lists.** Add these script properties (**Project Settings** → **Script Properties**) to either project whenever a spammer gets through. They take effect on the next post, with no redeploy:
+  - `BLOCKED_EMAILS`: addresses or whole domains, separated by commas, for example `spammer@example.com, @spam-domain.example`.
+  - `BLOCKED_WORDS`: words or phrases that only spam would contain, separated by commas, any case, for example `seo services, crypto`.
+
+- **Cloudflare Turnstile** (off until set up). When the page has a Turnstile site key, each form loads Cloudflare's check once someone starts on it. Most people never see it; it shows a box to tick only when it isn't sure. The script asks Cloudflare whether the answer is real and drops the post if it isn't. If Cloudflare can't be reached, the post goes through (and the error is logged) rather than losing a real letter. To turn it on:
+  1. In the Cloudflare dashboard, open **Turnstile** → **Add widget**. Name it "santaclaus.events", add the hostnames `santaclaus.events` and `preview.santaclaus.events`, and pick **Managed** mode. Copy the **site key** and the **secret key**.
+  2. Put the site key in `index.html` (`<meta name="turnstile-site-key" content="...">`) and release. The site key is public; it's fine in the repository.
+  3. After that release, open each Apps Script project in the editor and run `doPost` once to approve the new permission ("Connect to an external service", which the script uses to ask Cloudflare). If that doesn't prompt, see the fix in [Changing the scripts](#changing-the-scripts).
+  4. Add the secret key as the `TURNSTILE_SECRET` script property in both projects. The check starts on the next post. Never put the secret key in the repository.
+
+  To turn it off again, delete `TURNSTILE_SECRET` from Script Properties.
+
+Dropped spam doesn't count toward the hourly limits, so it can't crowd out real letters.
+
+Apps Script never tells a script the sender's IP address, so the scripts can't block by IP. Blocking by IP would need a server of our own in front of the scripts (for example on AWS, next to the site), and spammers usually switch addresses as easily as they switch emails, so tokens and content checks catch more.
 
 ## Letters to Santa (`letter.gs`)
 

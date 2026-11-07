@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, FORM_TOKEN } from './fixtures.js';
 
 test.describe('home page', () => {
     test.beforeEach(async ({ page }) => {
@@ -91,6 +91,7 @@ test.describe('home page', () => {
     test('the private booking pop-up checks its fields, sends the request and confirms', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (new URL(route.request().url()).searchParams.has('token')) return route.fallback();
             if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
             sent = new URLSearchParams(route.request().postData());
             return route.fulfill({ status: 200, body: 'ok' });
@@ -144,6 +145,7 @@ test.describe('home page', () => {
             photo: 'Yes, but only from behind (no faces)',
             notes: 'Christmas Eve surprise',
             website: '',
+            token: FORM_TOKEN,
         });
 
         await dialog.getByRole('button', { name: 'Close the booking request' }).click();
@@ -156,6 +158,7 @@ test.describe('home page', () => {
     test('the photo shoot request asks only what the photographers need and is sent as a photo shoot', async ({ page }) => {
         let sent;
         await page.route(/^https:\/\/script\.google\.com\//, (route) => {
+            if (new URL(route.request().url()).searchParams.has('token')) return route.fallback();
             if (route.request().method() === 'GET') return route.fulfill({ json: { busy: [[17 * 60, 18 * 60]], duration: 60 } });
             sent = new URLSearchParams(route.request().postData());
             return route.fulfill({ status: 200, body: 'ok' });
@@ -195,7 +198,11 @@ test.describe('home page', () => {
     });
 
     test('a fully booked day can’t be requested', async ({ page }) => {
-        await page.route(/^https:\/\/script\.google\.com\//, (route) => route.fulfill({ json: { busy: [[0, 24 * 60]], duration: 60 } }));
+        await page.route(/^https:\/\/script\.google\.com\//, (route) =>
+            new URL(route.request().url()).searchParams.has('token')
+                ? route.fallback()
+                : route.fulfill({ json: { busy: [[0, 24 * 60]], duration: 60 } }),
+        );
         await page.getByRole('button', { name: 'Request a private booking' }).click();
         await page.locator('#bk-date').fill('2026-12-24');
         await expect(page.locator('#bk-date-error')).toHaveText('Santa is fully booked that day. Please pick another date.');

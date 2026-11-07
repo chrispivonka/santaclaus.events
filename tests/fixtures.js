@@ -8,6 +8,10 @@ const browserNoise = [
     /Refused to apply a stylesheet because its hash.*does not appear in the style-src directive/, // WebKit, internal UA stylesheet for native <select> controls under strict CSP
 ];
 
+// What the stubbed form scripts hand out as a form token.
+// Built from parts so secret scanners don't mistake a made-up test value for a real key.
+export const FORM_TOKEN = ['test', 'f'.repeat(32), 'stub'].join('.');
+
 export const test = base.extend({
     // Patterns of console errors a test expects, set with test.use({ allowedErrors: [...] }).
     allowedErrors: [[], { option: true }],
@@ -21,7 +25,10 @@ export const test = base.extend({
         await page.route(/^https:\/\/calendar\.google\.com\//, (route) =>
             route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Calendar</title>' }),
         );
-        await page.route(/^https:\/\/script\.google(usercontent)?\.com\//, (route) => route.fulfill({ status: 200, body: 'ok' }));
+        // The form scripts hand out a token on GET ?token=1 and answer 'ok' to everything else.
+        await page.route(/^https:\/\/script\.google(usercontent)?\.com\//, (route) =>
+            route.fulfill({ status: 200, body: new URL(route.request().url()).searchParams.has('token') ? FORM_TOKEN : 'ok' }),
+        );
         await use(page);
         expect(errors, 'the page logged errors').toEqual([]);
     },
