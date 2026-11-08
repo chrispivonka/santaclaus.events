@@ -137,7 +137,7 @@ test.describe('markup hygiene', () => {
         await page.route('/', async (route) => {
             const response = await route.fetch();
             const html = (await response.text()).replace(
-                '<meta name="turnstile-site-key" content="" />',
+                /<meta name="turnstile-site-key" content="[^"]*" \/>/,
                 '<meta name="turnstile-site-key" content="test-site-key" />',
             );
             await route.fulfill({ response, body: html });
@@ -169,6 +169,14 @@ test.describe('markup hygiene', () => {
     });
 
     test('without a site key, the forms never load Turnstile or send an answer', async ({ page }) => {
+        await page.route('/', async (route) => {
+            const response = await route.fetch();
+            const html = (await response.text()).replace(
+                /<meta name="turnstile-site-key" content="[^"]*" \/>/,
+                '<meta name="turnstile-site-key" content="" />',
+            );
+            await route.fulfill({ response, body: html });
+        });
         const loaded = [];
         page.on('request', (r) => {
             if (r.url().startsWith('https://challenges.cloudflare.com/')) loaded.push(r.url());
