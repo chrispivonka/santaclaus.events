@@ -9,6 +9,11 @@ updates:
     # Wait a few days after a release before proposing it; most malicious package versions are caught and pulled in that window.
     cooldown:
       default-days: 3
+    # Playwright 1.65 ships Firefox 159, which crashes the page in the a11y "every interactive state" test.
+    # Skip 1.65.x; 1.66 will be proposed as usual.
+    ignore:
+      - dependency-name: '@playwright/test'
+        versions: ['1.65.x']
     groups:
       bun-minor-and-patch:
         update-types: [minor, patch]
